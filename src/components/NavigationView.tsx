@@ -9,6 +9,7 @@ import BOPCONLogo from '../assets/icons/BOPCONLogo.svg';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import Search from '../assets/icons/search.svg';
 import Menu from '../assets/icons/menu.svg';
+import { useNavigation } from '@react-navigation/native';
 
 interface NavigationViewProps extends Omit<StackProps, 'direction' | 'flexible'> {
   children?: ReactNode;
@@ -23,17 +24,19 @@ const NavigationView = ({
   scrollable,
   ...stackProps
 }: NavigationViewProps) => {
+  const navigation = useNavigation();
+
   return (
     <Layout scrollable={navigationViewScrollable}>
       <Stack direction='horizontal' style={{paddingHorizontal: 16, paddingVertical: 8}}>
-        <BOPCONLogo width={120} height={40}>BOPCON</BOPCONLogo>
+        <BOPCONLogo width={110} height={40}>BOPCON</BOPCONLogo>
         <Spacer/>
         <Stack direction='horizontal' spacing={14}>
           <TouchableOpacity>
             <Search width={26} height={26} style={{margin: 10}}/>
           </TouchableOpacity>
-          <TouchableOpacity>
-            <Menu width={26} height={26} style={{margin: 10}}/>
+          <TouchableOpacity onPress={()=>{navigation.navigate('MenuScreen')}}>
+            <Menu width={26} height={26} style={{margin: 10}} />
           </TouchableOpacity>
         </Stack>
       </Stack>

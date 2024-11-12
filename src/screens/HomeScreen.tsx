@@ -1,4 +1,4 @@
-import { useNavigation } from "@react-navigation/native";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
 import NavigationView from "../components/NavigationView";
 import {Dimensions, Image, Text} from 'react-native';
 import Sample1 from '../assets/images/sampleimg1.jpg';
@@ -9,9 +9,10 @@ import MenuTitle from "../components/MenuTitle";
 import ConcertComponent from '../components/ConcertComponent';
 import ConcertListComponent from "../components/ConcertListComponent";
 import { gestureHandlerRootHOC } from "react-native-gesture-handler";
+import AppNavigationParamList from "../navigation/AppNavigatorParamList";
 
 function HomeScreen () {
-    const navigation = useNavigation()
+    const navigation = useNavigation<NavigationProp<AppNavigationParamList>>()
     const concerts = [{
         title: "concert name",
         singer: "singer",
@@ -51,7 +52,7 @@ function HomeScreen () {
                 fontSize: 24,
                 color: 'white', 
                 paddingHorizontal: 16,
-                paddingTop: 20}}>카야코 아야노 내한</Text>
+                paddingTop: 170}}>카야코 아야노 내한</Text>
           </Stack>
           <MenuTitle title={"NEW"}/>
           <ConcertListComponent concerts={concerts}/>
