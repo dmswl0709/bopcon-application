@@ -52,6 +52,9 @@ const LoginForm = () => {
   );
 };
 
+const inputSpacing = 25; // 이메일 인풋과 비밀번호 인풋 사이의 간격
+const buttonSpacing = 2;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -69,30 +72,30 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     width: '80%',
-    marginBottom: 12,
+    marginBottom: inputSpacing, // 이메일/비밀번호 인풋 사이 간격 설정
   },
   input: {
-    height: 50,
+    height: 65,
     borderWidth: 1,
-    borderColor: '#000',
-    borderRadius: 25,
+    borderColor: '#9D9D9D',
+    borderRadius: 10,
     paddingHorizontal: 16,
     fontSize: 16,
   },
   loginButton: {
     width: '80%',
-    height: 50,
+    height: 70,
     backgroundColor: 'white',
     borderColor: '#000',
     borderWidth: 1,
-    borderRadius: 25,
+    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: buttonSpacing, // 비밀번호 인풋과 로그인 버튼 사이 간격 설정
   },
   loginButtonText: {
     color: '#000',
-    fontSize: 18,
+    fontSize: 15,
   },
   signupContainer: {
     flexDirection: 'row',
@@ -109,5 +112,6 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
 });
+
 
 export default LoginForm;
