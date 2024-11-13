@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import logo from '../assets/icons/BOPCONLogo.svg'; // 로고 파일을 PNG 형식으로 변경
+import BOPCONLogo from "../assets/icons/BOPCONLogo.svg";
 
 const SignUpForm = () => {
   const navigation = useNavigation();
@@ -32,7 +32,7 @@ const SignUpForm = () => {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.logoContainer} onPress={handleLogoClick}>
-        <Image source={logo} style={styles.logo} />
+      <BOPCONLogo width={170} height={60}/>
       </TouchableOpacity>
 
       <View style={styles.inputContainer}>

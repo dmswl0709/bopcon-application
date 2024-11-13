@@ -55,11 +55,11 @@ function HomeScreen () {
                 paddingTop: 170}}>카야코 아야노 내한</Text>
           </Stack>
           <MenuTitle title={"NEW"}/>
-          <ConcertListComponent concerts={concerts}/>
+          <ConcertListComponent horizontal concerts={concerts}/>
           <MenuTitle title={"ALL"}/>
-          <ConcertListComponent concerts={concerts.reverse()}/>
+          <ConcertListComponent horizontal concerts={concerts.reverse()}/>
           <MenuTitle title={"JPOP"}/>
-          <ConcertListComponent concerts={concerts}/>
+          <ConcertListComponent horizontal concerts={concerts}/>
         
        </NavigationView>
     )
