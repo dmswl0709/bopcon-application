@@ -4,7 +4,6 @@ import AppNavigationParamList from "../navigation/AppNavigatorParamList";
 import NavigationView from "../components/NavigationView";
 import ConcertListComponent from "../components/ConcertListComponent";
 import { gestureHandlerRootHOC } from "react-native-gesture-handler";
-import { TouchableOpacity } from 'react-native-gesture-handler';
 import Sample1 from '../assets/images/sampleimg1.jpg';
 
 export type ContentCategoryScreenProps = StackScreenProps<AppNavigationParamList, "ContentCategoryScreen">;
