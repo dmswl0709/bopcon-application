@@ -10,6 +10,13 @@ import ContentCategoryScreen from '../screens/ContentCategoryScreen';
 import NewContentScreen from '../screens/NewContentScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 
+export type AppNavigationParamList = {
+  HomeScreen: undefined;
+  MenuScreen: undefined;
+  ContentCategoryScreen: { name: string; type: string };
+  LoginScreen: undefined;
+  SignUpScreen: undefined;
+};
 
 const Stack = createStackNavigator<AppNavigationParamList>();
 

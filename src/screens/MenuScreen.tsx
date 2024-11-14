@@ -43,7 +43,7 @@ const MenuScreen = () => {
         {
           pageList.map((item, idx) =>
             <TouchableOpacity key={idx} style={{ width: '100%' }} onPress={() => { navigation.navigate('ContentCategoryScreen', { name: item.name, type: item.type }) }}>
-              <Text style={{ fontSize: 20, fontWeight: 'bold', paddingVertical: 10, paddingHorizontal: 16, marginLeft: 10, width: '100%' }}>{item.name}</Text>
+              <Text style={{ fontSize: 25, fontWeight: 'bold', paddingVertical: 10, paddingHorizontal: 16, marginLeft: 10, width: '100%' }}>{item.name}</Text>
             </TouchableOpacity>)
         }
 
@@ -51,11 +51,11 @@ const MenuScreen = () => {
 
 
         <TouchableOpacity onPress={() => { }} style={{ width: '100%' }}>
-          <Text style={{ fontSize: 20, fontWeight: 'bold', paddingVertical: 16, paddingHorizontal: 16, marginLeft: 10, width: '100%' }}>문의하기</Text>
+          <Text style={{ fontSize: 25, fontWeight: 'bold', paddingVertical: 16, paddingHorizontal: 16, marginLeft: 10, width: '100%' }}>문의하기</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => { }} style={{ width: '100%' }}>
-          <Text style={{ fontSize: 20, fontWeight: 'bold', paddingVertical: 16, paddingHorizontal: 16, marginLeft: 10, width: '100%' }}>서비스 소개</Text>
+          <Text style={{ fontSize: 25, fontWeight: 'bold', paddingVertical: 16, paddingHorizontal: 16, marginLeft: 10, width: '100%' }}>서비스 소개</Text>
         </TouchableOpacity>
       </Stack>
     </Layout>
