@@ -8,7 +8,7 @@ type AppNavigationParamList = {
     SignUpScreen: undefined;
     ContentScreen: undefined;
     ContentCategoryScreen: { name: string; type: string };
-    ConcertScreen: { concert: { 
+    ConcertScreen: { concert: {
         image: string; 
         title: string; 
         details: string; 
