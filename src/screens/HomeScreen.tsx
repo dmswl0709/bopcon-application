@@ -1,6 +1,6 @@
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import NavigationView from "../components/NavigationView";
-import {Dimensions, Image, Text} from 'react-native';
+import { Dimensions, Image, Text} from 'react-native';
 import Sample1 from '../assets/images/sampleimg1.jpg';
 import Sample2 from '../assets/images/sampleimg2.png';
 import Sample3 from '../assets/images/sampleimg3.png';

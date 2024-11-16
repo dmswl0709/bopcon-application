@@ -7,16 +7,9 @@ import HomeScreen from '../screens/HomeScreen';
 import MenuScreen from '../screens/MenuScreen';
 import LoginScreen from '../screens/LoginScreen';
 import ContentCategoryScreen from '../screens/ContentCategoryScreen';
-import NewContentScreen from '../screens/NewContentScreen';
+import ContentScreen from '../screens/ContentScreen';
 import SignUpScreen from '../screens/SignUpScreen';
-
-export type AppNavigationParamList = {
-  HomeScreen: undefined;
-  MenuScreen: undefined;
-  ContentCategoryScreen: { name: string; type: string };
-  LoginScreen: undefined;
-  SignUpScreen: undefined;
-};
+import ConcertScreen from '../screens/ConcertScreen';
 
 const Stack = createStackNavigator<AppNavigationParamList>();
 
@@ -28,8 +21,9 @@ const AppNavigator = () => {
         <Stack.Screen name="MenuScreen" component={MenuScreen} /> 
         <Stack.Screen name="LoginScreen" component={LoginScreen} />
         <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
-        <Stack.Screen name="NewContentScreen" component={NewContentScreen} />
+        <Stack.Screen name="ContentScreen" component={ContentScreen} />
         <Stack.Screen name="ContentCategoryScreen" component={ContentCategoryScreen} />
+        <Stack.Screen name="ConcertScreen" component={ConcertScreen} />
       </Stack.Navigator>
       <StatusBar style="auto" />
     </NavigationContainer>

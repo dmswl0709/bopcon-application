@@ -1,7 +1,7 @@
 import { useNavigation } from "@react-navigation/native";
 import { View, Button } from "react-native";
 
-function NewContentScreen () {
+function ContentScreen () {
     const navigation = useNavigation()
     return (
         <View>
@@ -12,4 +12,4 @@ function NewContentScreen () {
     )
 }
 
-export default NewContentScreen;
+export default ContentScreen;
