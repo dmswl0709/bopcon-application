@@ -1,8 +1,9 @@
-import { useNavigation } from "@react-navigation/native";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { View, Button } from "react-native";
+import AppNavigationParamList from "../navigation/AppNavigatorParamList";
 
 function ContentScreen () {
-    const navigation = useNavigation()
+    const navigation = useNavigation<NavigationProp<AppNavigationParamList>>()
     return (
         <View>
             <Button title="btn" onPress={() => {
