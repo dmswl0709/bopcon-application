@@ -3,18 +3,28 @@ import { View, Text, Image, StyleSheet, ScrollView } from "react-native";
 import { StackScreenProps } from "@react-navigation/stack";
 import Header from "../components/Header";
 import ButtonGroup from "../components/ButtonGroup";
-import FavoriteButton from "../components/FavoriteButton"; // FavoriteButton 추가
+import FavoriteButton from "../components/FavoriteButton";
+import SetlistItem from "../components/SetlistItem"; // SetlistItem 컴포넌트 가져오기
 import AppNavigationParamList from "../navigation/AppNavigatorParamList";
-import PastsetlistScreen from "./PastsetlistScreen";
-
 
 type ConcertScreenProps = StackScreenProps<AppNavigationParamList, "ConcertScreen">;
 
 const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
   const { concert } = route.params;
 
+  // 예시 셋리스트 데이터 추가
+  const exampleSetlist = [
+    "Song of the Stars",
+    "Melody of the Night",
+    "Dreamcatcher",
+    "Lost Horizons",
+    "Eternal Echoes",
+  ];
+
+  // `concert.setlist`가 없거나 비어있는 경우 예시 데이터를 사용
+  const setlist = concert.setlist && concert.setlist.length > 0 ? concert.setlist : exampleSetlist;
+
   const handleBackPress = () => {
-    console.log("Navigating back...");
     navigation.goBack();
   };
 
@@ -23,7 +33,9 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
   };
 
   const handlePastSetlistPress = () => {
-    console.log("지난 공연 셋리스트 버튼 클릭");
+    navigation.navigate("PastSetListScreen", {
+      artistName: concert.singer,
+    });
   };
 
   return (
@@ -68,22 +80,21 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
         </View>
 
         <ButtonGroup
-         onArtistInfoPress={handleArtistInfoPress}
-         onPastSetlistPress={() =>
-           navigation.navigate("PastSetListScreen", {
-             artistName: concert.singer, // Pass the artist name dynamically
-           })
-         }
-       />
-
+          onArtistInfoPress={handleArtistInfoPress}
+          onPastSetlistPress={handlePastSetlistPress}
+        />
 
         <Text style={styles.setlistTitle}>예상 셋리스트</Text>
         <View style={styles.divider} />
-        {(concert.setlist || ["셋리스트 정보 없음"]).map((song: string, index: number) => (
-          <Text key={index} style={styles.setlistItem}>
-            {index + 1}. {song}
-          </Text>
-        ))}
+
+        {/* setlist가 존재하는 경우만 map 실행 */}
+        {setlist.length > 0 ? (
+          setlist.map((song: string, index: number) => (
+            <SetlistItem key={index} index={index + 1} songName={song} />
+          ))
+        ) : (
+          <Text style={styles.noSetlist}>셋리스트 정보 없음</Text>
+        )}
       </ScrollView>
     </View>
   );
@@ -151,20 +162,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: "Pretendard-Regular", // Pretendard-Regular 적용
     marginHorizontal: 16,
-    marginTop: 24,
+    marginTop: 30,
   },
   divider: {
     borderBottomColor: '#D3D3D3', // 연회색 경계선
     borderBottomWidth: 1,
     width: '92%', // 선의 길이를 조정
     alignSelf: 'center', // 중앙 정렬
-    marginVertical: 8,
+    marginVertical: 15,
   },
-  setlistItem: {
-    fontSize: 16,
-    fontFamily: "Pretendard-Regular", // Pretendard-Regular 적용
-    marginHorizontal: 16,
-    marginVertical: 4,
+  noSetlist: {
+    fontSize: 14,
+    color: "gray",
+    textAlign: "center",
+    marginVertical: 16,
+    fontFamily: "Pretendard-Regular",
   },
 });
 
