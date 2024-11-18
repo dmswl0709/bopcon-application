@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
       justifyContent: "space-between", // 아티스트 이름과 FavoriteButton 양 끝 배치
       paddingHorizontal: 16,
       marginVertical: 16,
+      marginLeft: 3,
     },
     artistName: {
       fontSize: 22,
@@ -145,6 +146,7 @@ const styles = StyleSheet.create({
       fontFamily: "Pretendard-Bold", // Pretendard-Bold 적용
       marginHorizontal: 16,
       marginVertical: 8,
+      marginLeft:19,
     },
     scrollView: {
       paddingHorizontal: 16,

@@ -122,6 +122,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between", // 공간을 양 끝으로 배치
     marginHorizontal: 16,
     marginBottom: 16,
+    marginLeft: 23,
+    marginRight: 25,
   },
   textContainer: {
     flex: 1, // 텍스트가 버튼과 동일한 공간 차지
@@ -142,17 +144,20 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: "white",
     borderRadius: 8,
+    marginVertical: 1,
   },
   infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
+    marginVertical: 10,
   },
   infoLabel: {
     fontSize: 14,
     color: "black",
     fontFamily: "Pretendard-Regular", // Pretendard-Regular 적용
+    marginLeft: -7,
   },
   infoValue: {
     fontSize: 14,
