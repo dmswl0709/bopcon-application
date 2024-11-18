@@ -71,6 +71,7 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
         />
 
         <Text style={styles.setlistTitle}>예상 셋리스트</Text>
+        <View style={styles.divider} />
         {(concert.setlist || ["셋리스트 정보 없음"]).map((song: string, index: number) => (
           <Text key={index} style={styles.setlistItem}>
             {index + 1}. {song}
@@ -144,6 +145,13 @@ const styles = StyleSheet.create({
     fontFamily: "Pretendard-Regular", // Pretendard-Regular 적용
     marginHorizontal: 16,
     marginTop: 24,
+  },
+  divider: {
+    borderBottomColor: '#D3D3D3', // 연회색 경계선
+    borderBottomWidth: 1,
+    width: '92%', // 선의 길이를 조정
+    alignSelf: 'center', // 중앙 정렬
+    marginVertical: 8,
   },
   setlistItem: {
     fontSize: 16,
