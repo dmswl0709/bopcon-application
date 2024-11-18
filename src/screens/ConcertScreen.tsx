@@ -141,8 +141,7 @@ const styles = StyleSheet.create({
   },
   setlistTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    fontFamily: "Pretendard-Bold", // Pretendard-Bold 적용
+    fontFamily: "Pretendard-Regular", // Pretendard-Regular 적용
     marginHorizontal: 16,
     marginTop: 24,
   },
