@@ -7,17 +7,17 @@ import { NavigationProp, useNavigation } from "@react-navigation/native";
 import AppNavigationParamList from "../navigation/AppNavigatorParamList";
 import { Dimensions } from 'react-native';
 
-interface ConcertComponentProps {
-    concerts: Concert[];
+type ConcertComponentProps = {
+    concerts: any[];
     horizontal?: boolean;
-}
+    onConcertPress: (concert: any) => void;  
+};
 
-const ConcertListComponent = ({ concerts, horizontal }: ConcertComponentProps) => {
-    const navigation = useNavigation<NavigationProp<AppNavigationParamList>>();
-
-    const handlePress = (concert: Concert) => {
-        navigation.navigate('ConcertScreen', { concert }); // 선택한 콘서트 데이터를 ConcertScreen으로 전달
-    };
+const ConcertListComponent: React.FC<ConcertComponentProps> = ({
+    concerts,
+    horizontal = false,
+    onConcertPress,
+  }) => {
 
     return (
         <FlatList
