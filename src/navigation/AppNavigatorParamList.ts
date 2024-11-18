@@ -21,6 +21,9 @@ type AppNavigationParamList = {
       navigateName?: string;
     };
   };
+  PastSetListScreen: {
+    artistName: string; // Artist name to display at the top of the screen
+  };
 };
 
 export default AppNavigationParamList;

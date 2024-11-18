@@ -5,6 +5,8 @@ import Header from "../components/Header";
 import ButtonGroup from "../components/ButtonGroup";
 import FavoriteButton from "../components/FavoriteButton"; // FavoriteButton 추가
 import AppNavigationParamList from "../navigation/AppNavigatorParamList";
+import PastsetlistScreen from "./PastsetlistScreen";
+
 
 type ConcertScreenProps = StackScreenProps<AppNavigationParamList, "ConcertScreen">;
 
@@ -66,9 +68,14 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
         </View>
 
         <ButtonGroup
-          onArtistInfoPress={handleArtistInfoPress}
-          onPastSetlistPress={handlePastSetlistPress}
-        />
+         onArtistInfoPress={handleArtistInfoPress}
+         onPastSetlistPress={() =>
+           navigation.navigate("PastSetListScreen", {
+             artistName: concert.singer, // Pass the artist name dynamically
+           })
+         }
+       />
+
 
         <Text style={styles.setlistTitle}>예상 셋리스트</Text>
         <View style={styles.divider} />
