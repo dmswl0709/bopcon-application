@@ -1,2 +1,3 @@
 Run Development Server
-: npx expo start
+: npm i
+  npm start
