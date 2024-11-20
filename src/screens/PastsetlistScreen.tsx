@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, ScrollView } from "react-native";
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from "react-native"; // TouchableOpacity 추가
 import Header from "../components/Header";
 import FavoriteButton from "../components/FavoriteButton";
 
@@ -88,10 +88,21 @@ const PastSetListScreen = ({ route, navigation }) => {
             </View>
 
             {/* Next 버튼 아이콘 */}
-            <Image
-              source={require("../assets/icons/next.png")}
-              style={styles.nextIcon}
-            />
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate("SetListScreen", {
+                  concertName: "Benson Boone at Austin City Limits 2024",
+                  venueName: "The Zoo Amphitheatre",
+                  location: "Oklahoma City, OK, USA",
+                  setlist: ["Song 1", "Song 2", "Song 3"], // 예시 데이터
+                })
+              }
+            >
+              <Image
+                source={require("../assets/icons/next.png")}
+                style={styles.nextIcon}
+              />
+            </TouchableOpacity>
           </View>
         ))}
       </ScrollView>
@@ -100,111 +111,111 @@ const PastSetListScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: "white",
-    },
-    imageContainer: {
-      width: "100%",
-      alignItems: "center", // 센터 정렬
-      marginVertical: 16,
-    },
-    topImage: {
-      width: "80%", // 화면 너비의 80%로 줄임
-      height: undefined, // 높이는 비율에 맞게 자동 조정
-      aspectRatio: 16 / 9, // 원본 비율 유지 (16:9)
-      resizeMode: "contain", // 이미지 자르지 않음
-    },
-    artistRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between", // 아티스트 이름과 FavoriteButton 양 끝 배치
-      paddingHorizontal: 16,
-      marginVertical: 16,
-      marginLeft: 3,
-    },
-    artistName: {
-      fontSize: 22,
-      fontWeight: "bold",
-      fontFamily: "Pretendard-Bold", // Pretendard-Bold 적용
-    },
-    artistDetail: {
-      fontSize: 12,
-      color: "gray",
-      fontFamily: "Pretendard-Regular",
-      marginTop: 4, // Singer 아래에 간격 추가
-    },
-    divider: {
-      borderBottomWidth: 2, // 굵은 경계선
-      borderBottomColor: "black", // 경계선 색상
-      marginHorizontal: 20,
-      marginVertical: 8, // 위아래 공간 추가
-    },
-    pastConcertTitle: {
-      fontSize: 17,
-      fontWeight: "bold",
-      fontFamily: "Pretendard-Bold", // Pretendard-Bold 적용
-      marginHorizontal: 16,
-      marginVertical: 8,
-      marginLeft:19,
-    },
-    scrollView: {
-      paddingHorizontal: 16,
-      paddingBottom: 16,
-    },
-    concertItem: {
-      flexDirection: "row", // 날짜 박스, 정보, Next 버튼 수평 배치
-      alignItems: "center",
-      marginBottom: 2, // 간격을 좁힘
-      marginLeft: -12,
-      backgroundColor: "white", // 배경색을 화이트로 변경
-      borderRadius: 8,
-      padding: 16,
-      overflow: "hidden",
-    },
-    dateBox: {
-      backgroundColor: "black",
-      padding: 8,
-      alignItems: "center",
-      justifyContent: "center",
-      width: 50,
-      height: 50,
-      borderRadius: 1,
-    },
-    dateYear: {
-      color: "white",
-      fontSize: 12,
-      fontWeight: "bold",
-      fontFamily: "Pretendard-Regular",
-    },
-    dateDay: {
-      color: "white",
-      fontSize: 16,
-      fontWeight: "bold",
-      fontFamily: "Pretendard-Bold",
-    },
-    concertInfo: {
-      flex: 1,
-      marginLeft: 16,
-    },
-    concertLocation: {
-      fontSize: 14,
-      color: "black",
-      fontFamily: "Pretendard-Bold",
-      marginBottom: 4,
-    },
-    concertDescription: {
-      fontSize: 11,
-      color: "gray",
-      fontFamily: "Pretendard-Regular",
-    },
-    nextIcon: {
-      width: 35, // 크기 줄임
-      height: 35, // 크기 줄임
-      marginRight: -18,
-      resizeMode: "contain",
-      tintColor: "gray",
-    },
-  });
-  
+  container: {
+    flex: 1,
+    backgroundColor: "white",
+  },
+  imageContainer: {
+    width: "100%",
+    alignItems: "center", // 센터 정렬
+    marginVertical: 16,
+  },
+  topImage: {
+    width: "80%", // 화면 너비의 80%로 줄임
+    height: undefined, // 높이는 비율에 맞게 자동 조정
+    aspectRatio: 16 / 9, // 원본 비율 유지 (16:9)
+    resizeMode: "contain", // 이미지 자르지 않음
+  },
+  artistRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between", // 아티스트 이름과 FavoriteButton 양 끝 배치
+    paddingHorizontal: 16,
+    marginVertical: 16,
+    marginLeft: 3,
+  },
+  artistName: {
+    fontSize: 22,
+    fontWeight: "bold",
+    fontFamily: "Pretendard-Bold", // Pretendard-Bold 적용
+  },
+  artistDetail: {
+    fontSize: 12,
+    color: "gray",
+    fontFamily: "Pretendard-Regular",
+    marginTop: 4, // Singer 아래에 간격 추가
+  },
+  divider: {
+    borderBottomWidth: 2, // 굵은 경계선
+    borderBottomColor: "black", // 경계선 색상
+    marginHorizontal: 20,
+    marginVertical: 8, // 위아래 공간 추가
+  },
+  pastConcertTitle: {
+    fontSize: 17,
+    fontWeight: "bold",
+    fontFamily: "Pretendard-Bold", // Pretendard-Bold 적용
+    marginHorizontal: 16,
+    marginVertical: 8,
+    marginLeft: 19,
+  },
+  scrollView: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  concertItem: {
+    flexDirection: "row", // 날짜 박스, 정보, Next 버튼 수평 배치
+    alignItems: "center",
+    marginBottom: 2, // 간격을 좁힘
+    marginLeft: -12,
+    backgroundColor: "white", // 배경색을 화이트로 변경
+    borderRadius: 8,
+    padding: 16,
+    overflow: "hidden",
+  },
+  dateBox: {
+    backgroundColor: "black",
+    padding: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    width: 50,
+    height: 50,
+    borderRadius: 1,
+  },
+  dateYear: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
+    fontFamily: "Pretendard-Regular",
+  },
+  dateDay: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+    fontFamily: "Pretendard-Bold",
+  },
+  concertInfo: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  concertLocation: {
+    fontSize: 14,
+    color: "black",
+    fontFamily: "Pretendard-Bold",
+    marginBottom: 4,
+  },
+  concertDescription: {
+    fontSize: 11,
+    color: "gray",
+    fontFamily: "Pretendard-Regular",
+  },
+  nextIcon: {
+    width: 35, // 크기 줄임
+    height: 35, // 크기 줄임
+    marginRight: -18,
+    resizeMode: "contain",
+    tintColor: "gray",
+  },
+});
+
 export default PastSetListScreen;

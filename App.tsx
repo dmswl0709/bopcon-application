@@ -1,7 +1,14 @@
-import AppNavigator from './src/navigation/AppNavigator';
+import React from 'react';
+import { Provider } from 'react-redux';
+import store from './src/store'; // Redux store import
+import AppNavigator from './src/navigation/AppNavigator'; // 앱의 메인 네비게이션
 
-export default function App() {
+const App: React.FC = () => {
   return (
-    <AppNavigator/>
+    <Provider store={store}>
+      <AppNavigator />
+    </Provider>
   );
-}
+};
+
+export default App;

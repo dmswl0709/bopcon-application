@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useDispatch } from 'react-redux';
+import { signup } from '../apis/auth.api';
+import { login as loginAction } from '../store/slices/authSlice';
 import BOPCONLogo from "../assets/icons/BOPCONLogo.svg";
 
 const SignUpForm = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
 
-  // 체크박스 상태
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [nickname, setNickname] = useState('');
   const [checks, setChecks] = useState({
     lengthCheck: false,
     specialCharCheck: false,
@@ -29,10 +36,45 @@ const SignUpForm = () => {
     });
   };
 
+  // 회원가입 처리
+  const handleSignUp = async () => {
+    if (!email || !password || !confirmPassword || !nickname) {
+      Alert.alert('오류', '모든 필드를 입력해주세요.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('오류', '비밀번호와 비밀번호 확인이 일치하지 않습니다.');
+      return;
+    }
+
+    try {
+      const response = await signup({ email, password, nickname });
+
+      // Redux 상태 업데이트
+      dispatch(
+        loginAction({
+          token: response.accessToken,
+          refreshToken: response.refreshToken,
+          nickname: response.nickname,
+        })
+      );
+
+      Alert.alert('회원가입 성공!', '로그인 페이지로 이동합니다.');
+      navigation.navigate('LoginScreen');
+    } catch (error: any) {
+      console.error('회원가입 오류:', error);
+      Alert.alert(
+        '회원가입 실패',
+        error.response?.data?.message || '알 수 없는 에러가 발생했습니다.'
+      );
+    }
+  };
+
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.logoContainer} onPress={handleLogoClick}>
-      <BOPCONLogo width={170} height={60}/>
+        <BOPCONLogo width={170} height={60} />
       </TouchableOpacity>
 
       <View style={styles.inputContainer}>
@@ -40,6 +82,8 @@ const SignUpForm = () => {
           placeholder="이메일"
           keyboardType="email-address"
           style={styles.input}
+          value={email}
+          onChangeText={setEmail}
         />
       </View>
 
@@ -47,6 +91,8 @@ const SignUpForm = () => {
         <TextInput
           placeholder="닉네임"
           style={styles.input}
+          value={nickname}
+          onChangeText={setNickname}
         />
       </View>
 
@@ -55,6 +101,8 @@ const SignUpForm = () => {
           placeholder="비밀번호"
           secureTextEntry
           style={styles.input}
+          value={password}
+          onChangeText={setPassword}
         />
       </View>
 
@@ -63,6 +111,8 @@ const SignUpForm = () => {
           placeholder="비밀번호 확인"
           secureTextEntry
           style={styles.input}
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
         />
       </View>
 
@@ -84,7 +134,7 @@ const SignUpForm = () => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.loginButton}>
+      <TouchableOpacity style={styles.loginButton} onPress={handleSignUp}>
         <Text style={styles.loginButtonText}>회원가입</Text>
       </TouchableOpacity>
     </View>
@@ -103,11 +153,6 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     marginBottom: 30,
-  },
-  logo: {
-    width: 150,
-    height: 80,
-    resizeMode: 'contain',
   },
   inputContainer: {
     width: '80%',
@@ -143,7 +188,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   checkboxChecked: {
-    backgroundColor: '#000', // 체크된 상태의 배경색
+    backgroundColor: '#000',
   },
   loginButton: {
     width: '80%',
@@ -159,20 +204,6 @@ const styles = StyleSheet.create({
   loginButtonText: {
     color: '#000',
     fontSize: 15,
-  },
-  signupContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  signupText: {
-    color: '#a7a7a7',
-    fontSize: 12,
-  },
-  signupLink: {
-    color: '#000',
-    fontSize: 12,
-    marginLeft: 4,
   },
 });
 

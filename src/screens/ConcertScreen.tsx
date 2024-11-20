@@ -29,7 +29,9 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
   };
 
   const handleArtistInfoPress = () => {
-    console.log("아티스트 정보 버튼 클릭");
+    navigation.navigate("ArtistScreen", {
+      artistName: concert.singer,
+    });
   };
 
   const handlePastSetlistPress = () => {

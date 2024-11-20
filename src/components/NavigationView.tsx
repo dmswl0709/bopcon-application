@@ -1,7 +1,5 @@
-import React, {memo, ReactNode} from 'react';
-import {
-  Text,
-} from 'react-native';
+import React, { memo, ReactNode } from 'react';
+import { Text } from 'react-native';
 import Layout from './Layout';
 import Stack, { StackProps } from './Stack';
 import Spacer from './Spacer';
@@ -15,7 +13,6 @@ interface NavigationViewProps extends Omit<StackProps, 'direction' | 'flexible'>
   children?: ReactNode;
   navigationViewScrollable?: boolean;
   scrollable?: boolean;
-
 }
 
 const NavigationView = ({
@@ -28,19 +25,29 @@ const NavigationView = ({
 
   return (
     <Layout scrollable={navigationViewScrollable}>
-      <Stack direction='horizontal' style={{paddingHorizontal: 16, paddingVertical: 8}}>
-        <BOPCONLogo width={110} height={40}>BOPCON</BOPCONLogo>
-        <Spacer/>
-        <Stack direction='horizontal' spacing={14}>
+      <Stack direction="horizontal" style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+        {/* BOPCONLogo를 TouchableOpacity로 감싸고 onPress 이벤트 추가 */}
+        <TouchableOpacity onPress={() => navigation.navigate('HomeScreen')}>
+          <BOPCONLogo width={110} height={40}>BOPCON</BOPCONLogo>
+        </TouchableOpacity>
+        <Spacer />
+        <Stack direction="horizontal" spacing={14}>
           <TouchableOpacity>
-            <Search width={26} height={26} style={{margin: 10}}/>
+            <Search width={26} height={26} style={{ margin: 10 }} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={()=>{navigation.navigate('MenuScreen')}}>
-            <Menu width={26} height={26} style={{margin: 10}} />
+          <TouchableOpacity onPress={() => navigation.navigate('MenuScreen')}>
+            <Menu width={26} height={26} style={{ margin: 10 }} />
           </TouchableOpacity>
         </Stack>
       </Stack>
-      <Stack scrollable={scrollable} direction='vertical' justifyContent='start' flexible fullHeight {...stackProps}>
+      <Stack
+        scrollable={scrollable}
+        direction="vertical"
+        justifyContent="start"
+        flexible
+        fullHeight
+        {...stackProps}
+      >
         {children}
       </Stack>
     </Layout>

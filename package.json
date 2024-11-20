@@ -11,9 +11,12 @@
   "dependencies": {
     "@emotion/native": "^11.11.0",
     "@emotion/react": "^11.13.3",
+    "@react-native-async-storage/async-storage": "1.23.1",
     "@react-navigation/native": "^7.0.3",
     "@react-navigation/stack": "^7.0.3",
+    "@reduxjs/toolkit": "^2.3.0",
     "@types/styled-components-react-native": "^5.2.5",
+    "axios": "^1.7.7",
     "babel-plugin-inline-import": "^3.0.0",
     "babel-plugin-module-resolver": "^5.0.2",
     "expo": "~51.0.28",
@@ -25,10 +28,13 @@
     "react-native-safe-area-context": "^4.14.0",
     "react-native-screens": "^4.1.0",
     "react-native-svg": "15.2.0",
-    "react-native-svg-transformer": "^1.5.0"
+    "react-native-svg-transformer": "^1.5.0",
+    "react-redux": "^9.1.2",
+    "reselect": "^5.1.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@types/axios": "^0.9.36",
     "@types/react": "~18.2.45",
     "typescript": "^5.1.3"
   },
