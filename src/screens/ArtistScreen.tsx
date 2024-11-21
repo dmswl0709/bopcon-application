@@ -98,9 +98,8 @@ const ArtistScreen = ({ route, navigation }) => {
   const renderRankingContent = () => (
     <View>
       <Text style={styles.sectionTitle}>
-        곡 랭킹 (최근 20개 콘서트 기준)
+        최근 20개 콘서트 기준
       </Text>
-      <View style={styles.divider} />
       {visibleSongs.length === 0 ? (
         <Text style={{ textAlign: "center", marginTop: 16 }}>
           곡 데이터가 없습니다.
@@ -136,8 +135,6 @@ const ArtistScreen = ({ route, navigation }) => {
 
   const renderPastConcertContent = () => (
     <View>
-      <Text style={styles.pastConcertTitle}>지난 공연 셋리스트</Text>
-      <View style={styles.divider} />
       <FlatList
         data={visibleConcerts}
         keyExtractor={(item, index) => index.toString()}
@@ -171,12 +168,11 @@ const ArtistScreen = ({ route, navigation }) => {
   const renderBoardContent = () => (
     <View>
       <View style={styles.boardHeader}>
-        <Text style={styles.sectionTitle}>게시판</Text>
+        <Text style={styles.boardTitle}>게시판</Text>
         <TouchableOpacity onPress={() => navigation.navigate("BoardScreen")}>
           <Text style={styles.moreButtonGray}>더보기</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.divider} />
       {tempBoardData.map((post, index) => (
         <View key={index} style={styles.boardRow}>
           <Text style={styles.boardTitle}>{post.title}</Text>
@@ -249,6 +245,11 @@ const ArtistScreen = ({ route, navigation }) => {
             dateYear={upcomingConcert.dateYear}
             dateDay={upcomingConcert.dateDay}
             description={upcomingConcert.description}
+            onPress={() =>
+              navigation.navigate("ConcertScreen", {
+                concertDetails: upcomingConcert, // 필요시 전달할 데이터
+              })
+            }
           />
           <View style={styles.tabRow}>
             {["곡 랭킹", "지난 공연", "게시판"].map((tab) => (
@@ -392,13 +393,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     color: "gray",
   },
-  pastConcertTitle: {
-    fontSize: 16, // 타이틀의 폰트 크기
-    fontWeight: "bold", // Pretendard-Bold와 같은 효과
-    fontFamily: "Pretendard-Bold", // Pretendard-Bold로 폰트 설정
-    marginLeft: 16, // 타이틀 왼쪽 여백
-    marginBottom: 8, // Divider와 타이틀 사이 여백
-    },
   concertRowContainer: {
     marginLeft: 16, // ConcertRow의 왼쪽 여백
     },
@@ -410,7 +404,7 @@ const styles = StyleSheet.create({
     marginRight: 16, // 오른쪽 여백 설정
     alignSelf: "stretch", // 부모 컨테이너의 가로 공간을 채움
       },
- boardHeader: {
+  boardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -420,16 +414,16 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   boardTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 4,
-    marginLeft:16,
+    fontSize: 15,
+    fontFamily: "Pretendard-Bold",
+    marginBottom: 10,
+    marginLeft:18,
   },
   boardContent: {
     fontSize: 14,
     color: "gray",
     marginBottom: 4,
-    marginLeft: 16,
+    marginLeft: 18,
   },
   boardDate: {
     fontSize: 12,
@@ -447,19 +441,18 @@ const styles = StyleSheet.create({
     marginRight: 32,
     marginBottom: 4,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    fontFamily: "Pretendard-Bold", // Pretendard-Bold로 변경
-    marginBottom: 8, // Divider와 타이틀 사이 여백
-    marginLeft: 16, // 타이틀 왼쪽 여백
-  },
   divider: {
     borderBottomWidth: 2,
     borderBottomColor: "black",
     marginBottom: 16,
     marginLeft: 16, // Divider 시작 위치를 왼쪽으로 정렬
     width: "90%", // Divider의 길이 설정
+  },
+  sectionTitle: {
+    fontSize: 14, // 폰트 크기
+    fontFamily: "Pretendard-Regular", // Pretendard-Regular 적용
+    marginLeft: 16, // 좌측 여백
+    marginBottom: 12, // 아래 여백 추가
   },
 });
 

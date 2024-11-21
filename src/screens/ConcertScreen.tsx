@@ -10,19 +10,32 @@ import AppNavigationParamList from "../navigation/AppNavigatorParamList";
 type ConcertScreenProps = StackScreenProps<AppNavigationParamList, "ConcertScreen">;
 
 const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
-  const { concert } = route.params;
+  // 콘서트 정보가 없을 경우 기본값 제공
+  const { concertDetails: concert = {} } = route.params || {};
 
-  // 예시 셋리스트 데이터 추가
-  const exampleSetlist = [
-    "Song of the Stars",
-    "Melody of the Night",
-    "Dreamcatcher",
-    "Lost Horizons",
-    "Eternal Echoes",
-  ];
+  // 임시 데이터 추가
+  const defaultConcert = {
+    title: "임시 콘서트 제목",
+    details: "이 콘서트에 대한 자세한 정보가 없습니다.",
+    date: "2024/01/01",
+    location: "알 수 없는 장소",
+    ticket: "정보 없음",
+    image: require("../assets/images/sampleimg2.png"), // 임시 이미지
+    singer: "알 수 없는 아티스트",
+    setlist: [
+      "임시 곡 1",
+      "임시 곡 2",
+      "임시 곡 3",
+      "임시 곡 4",
+      "임시 곡 5",
+    ],
+  };
 
-  // `concert.setlist`가 없거나 비어있는 경우 예시 데이터를 사용
-  const setlist = concert.setlist && concert.setlist.length > 0 ? concert.setlist : exampleSetlist;
+  // `concert`가 비어있을 경우 `defaultConcert`를 사용
+  const concertData = {
+    ...defaultConcert,
+    ...concert, // 전달된 데이터가 있으면 덮어씌움
+  };
 
   const handleBackPress = () => {
     navigation.goBack();
@@ -30,13 +43,13 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
 
   const handleArtistInfoPress = () => {
     navigation.navigate("ArtistScreen", {
-      artistName: concert.singer,
+      artistName: concertData.singer || "Unknown Artist",
     });
   };
 
   const handlePastSetlistPress = () => {
     navigation.navigate("PastSetListScreen", {
-      artistName: concert.singer,
+      artistName: concertData.singer || "Unknown Artist",
     });
   };
 
@@ -48,9 +61,9 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
         <View style={styles.imageContainer}>
           <Image
             source={
-              typeof concert.image === "string"
-                ? { uri: concert.image }
-                : concert.image || require("../assets/images/sampleimg2.png")
+              typeof concertData.image === "string"
+                ? { uri: concertData.image }
+                : concertData.image
             }
             style={styles.image}
           />
@@ -59,8 +72,8 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
         {/* 타이틀과 즐겨찾기 버튼 */}
         <View style={styles.titleRow}>
           <View style={styles.textContainer}>
-            <Text style={styles.title}>{concert.title || "콘서트 제목 없음"}</Text>
-            <Text style={styles.details}>{concert.details || "세부 정보 없음"}</Text>
+            <Text style={styles.title}>{concertData.title}</Text>
+            <Text style={styles.details}>{concertData.details}</Text>
           </View>
           <FavoriteButton />
         </View>
@@ -69,15 +82,15 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
         <View style={styles.infoContainer}>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>공연 일정</Text>
-            <Text style={styles.infoValue}>{concert.date || "날짜 미정"}</Text>
+            <Text style={styles.infoValue}>{concertData.date}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>공연 장소</Text>
-            <Text style={styles.infoValue}>{concert.location || "장소 미정"}</Text>
+            <Text style={styles.infoValue}>{concertData.location}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>티켓 예매</Text>
-            <Text style={styles.infoValue}>{concert.ticket || "정보 없음"}</Text>
+            <Text style={styles.infoValue}>{concertData.ticket}</Text>
           </View>
         </View>
 
@@ -89,9 +102,9 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
         <Text style={styles.setlistTitle}>예상 셋리스트</Text>
         <View style={styles.divider} />
 
-        {/* setlist가 존재하는 경우만 map 실행 */}
-        {setlist.length > 0 ? (
-          setlist.map((song: string, index: number) => (
+        {/* 셋리스트 */}
+        {concertData.setlist && concertData.setlist.length > 0 ? (
+          concertData.setlist.map((song: string, index: number) => (
             <SetlistItem key={index} index={index + 1} songName={song} />
           ))
         ) : (
@@ -113,7 +126,7 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   image: {
-    width: "80%",
+    width: "70%",
     height: undefined,
     aspectRatio: 3 / 4,
     resizeMode: "contain",
@@ -131,7 +144,7 @@ const styles = StyleSheet.create({
     flex: 1, // 텍스트가 버튼과 동일한 공간 차지
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     fontFamily: "Pretendard-Bold", // Pretendard-Bold 적용
     marginBottom: 4,
