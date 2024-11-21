@@ -147,7 +147,11 @@ const ArtistScreen = ({ route, navigation }) => {
             dateYear={item.dateYear}
             dateDay={item.dateDay}
             description={item.description}
-            onPress={() => console.log(`Navigate to ${item.description}`)}
+            onPress={() =>
+              navigation.navigate("SetListScreen", {
+                concertDetails: item, // 필요시 item 데이터 전달
+              })
+            }
           />
         </View>
         )}
