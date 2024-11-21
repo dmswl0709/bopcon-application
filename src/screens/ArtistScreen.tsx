@@ -77,19 +77,19 @@ const ArtistScreen = ({ route, navigation }) => {
   const tempBoardData = [
     {
       title: "벤슨 분 첫 단독 내한 공연",
-      content: "와 정말 기대돼요. ㅎㅎ\n내용 미리보기 내용 미리보기 내용 미리보기",
+      content: "와 정말 기대돼요. ㅎㅎ",
       date: "2024/09/09 16:00",
       nickname: "닉네임",
     },
     {
       title: "벤슨 분 첫 단독 내한 공연",
-      content: "와 정말 기대돼요. ㅎㅎ\n내용 미리보기 내용 미리보기 내용 미리보기",
+      content: "와 정말 기대돼요. ㅎㅎ",
       date: "2024/09/09 16:00",
       nickname: "닉네임",
     },
     {
       title: "벤슨 분 첫 단독 내한 공연",
-      content: "와 정말 기대돼요. ㅎㅎ\n내용 미리보기 내용 미리보기 내용 미리보기",
+      content: "와 정말 기대돼요. ㅎㅎ",
       date: "2024/09/09 16:00",
       nickname: "닉네임",
     },
