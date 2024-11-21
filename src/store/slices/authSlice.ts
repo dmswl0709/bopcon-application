@@ -35,11 +35,19 @@ const authSlice = createSlice({
       state.nickname = action.payload.nickname;
 
       // AsyncStorage에 값 저장
-      AsyncStorage.setItem('token', action.payload.token);
+      AsyncStorage.setItem('token', action.payload.token).catch((error) => {
+        console.error('Failed to save token to AsyncStorage:', error);
+      });
       if (action.payload.refreshToken) {
-        AsyncStorage.setItem('refreshToken', action.payload.refreshToken);
+        AsyncStorage.setItem('refreshToken', action.payload.refreshToken).catch(
+          (error) => {
+            console.error('Failed to save refreshToken to AsyncStorage:', error);
+          }
+        );
       }
-      AsyncStorage.setItem('nickname', action.payload.nickname);
+      AsyncStorage.setItem('nickname', action.payload.nickname).catch((error) => {
+        console.error('Failed to save nickname to AsyncStorage:', error);
+      });
     },
     logout: (state) => {
       state.isLoggedIn = false;
@@ -48,7 +56,11 @@ const authSlice = createSlice({
       state.nickname = null;
 
       // AsyncStorage 값 삭제
-      AsyncStorage.multiRemove(['token', 'refreshToken', 'nickname']);
+      AsyncStorage.multiRemove(['token', 'refreshToken', 'nickname']).catch(
+        (error) => {
+          console.error('Failed to remove auth data from AsyncStorage:', error);
+        }
+      );
     },
     loadAuthState: (state, action: PayloadAction<AuthState>) => {
       state.isLoggedIn = action.payload.isLoggedIn;

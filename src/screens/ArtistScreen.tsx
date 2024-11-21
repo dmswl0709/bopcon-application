@@ -279,7 +279,7 @@ const ArtistScreen = ({ route, navigation }) => {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    marginTop: -60,
+    marginTop: -55,
     paddingHorizontal: 16,
   },
   artistInfoSection: {
@@ -292,6 +292,7 @@ const styles = StyleSheet.create({
     height: 165,
     borderRadius: 4,
     resizeMode: "cover",
+    marginTop: 10,
   },
   socialMediaContainer: {
     marginLeft: 18,
