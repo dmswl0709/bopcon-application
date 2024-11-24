@@ -22,8 +22,7 @@ const ConcertRow: React.FC<ConcertRowProps> = ({
       </View>
       <Text style={styles.concertDescription}>{description}</Text>
       <TouchableOpacity onPress={onPress}>
-        <Image
-          source={require("../assets/icons/next.png")}
+        <Image source={require("../assets/icons/next.png")}
           style={styles.nextIcon}
         />
       </TouchableOpacity>

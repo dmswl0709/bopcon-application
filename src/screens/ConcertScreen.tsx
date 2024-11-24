@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, Image, StyleSheet, ScrollView } from "react-native";
 import { StackScreenProps } from "@react-navigation/stack";
 import Header from "../components/Header";
@@ -6,15 +6,17 @@ import ButtonGroup from "../components/ButtonGroup";
 import FavoriteButton from "../components/FavoriteButton";
 import SetlistItem from "../components/SetlistItem"; // SetlistItem 컴포넌트 가져오기
 import AppNavigationParamList from "../navigation/AppNavigatorParamList";
+import axios from "axios";
 
 type ConcertScreenProps = StackScreenProps<AppNavigationParamList, "ConcertScreen">;
 
 const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
-  // 콘서트 정보가 없을 경우 기본값 제공
-  const { concertDetails: concert = {} } = route.params || {};
+  const { concertId } = route.params || {};
+  const [concertData, setConcertData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   // 임시 데이터 추가
-  const defaultConcert = {
+  const fallbackData = {
     title: "임시 콘서트 제목",
     details: "이 콘서트에 대한 자세한 정보가 없습니다.",
     date: "2024/01/01",
@@ -22,20 +24,28 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
     ticket: "정보 없음",
     image: require("../assets/images/sampleimg2.png"), // 임시 이미지
     singer: "알 수 없는 아티스트",
-    setlist: [
-      "임시 곡 1",
-      "임시 곡 2",
-      "임시 곡 3",
-      "임시 곡 4",
-      "임시 곡 5",
-    ],
+    setlist: ["임시 곡 1", "임시 곡 2", "임시 곡 3", "임시 곡 4", "임시 곡 5"],
   };
 
-  // `concert`가 비어있을 경우 `defaultConcert`를 사용
-  const concertData = {
-    ...defaultConcert,
-    ...concert, // 전달된 데이터가 있으면 덮어씌움
-  };
+  useEffect(() => {
+    const fetchConcertData = async () => {
+      try {
+        if (concertId) {
+          const response = await axios.get(`/api/new-concerts/${concertId}`);
+          setConcertData(response.data);
+        } else {
+          setConcertData(fallbackData); // concertId가 없는 경우 임시 데이터 사용
+        }
+      } catch (error) {
+        console.error("Error fetching concert data:", error);
+        setConcertData(fallbackData); // 오류 발생 시 임시 데이터 사용
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConcertData();
+  }, [concertId]);
 
   const handleBackPress = () => {
     navigation.goBack();
@@ -43,15 +53,31 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
 
   const handleArtistInfoPress = () => {
     navigation.navigate("ArtistScreen", {
-      artistName: concertData.singer || "Unknown Artist",
+      artistName: concertData?.singer || "Unknown Artist",
     });
   };
 
   const handlePastSetlistPress = () => {
     navigation.navigate("PastSetListScreen", {
-      artistName: concertData.singer || "Unknown Artist",
+      artistName: concertData?.singer || "Unknown Artist",
     });
   };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (!concertData) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Concert data could not be loaded.</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -120,59 +146,76 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "white",
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "gray",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  errorText: {
+    fontSize: 16,
+    color: "red",
+  },
   imageContainer: {
     width: "100%",
     alignItems: "center",
     marginVertical: 16,
   },
   image: {
-    width: "70%",
+    width: "75%",
     height: undefined,
     aspectRatio: 3 / 4,
     resizeMode: "contain",
   },
   titleRow: {
-    flexDirection: "row", // 타이틀과 버튼을 수평으로 배치
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between", // 공간을 양 끝으로 배치
+    justifyContent: "space-between",
     marginHorizontal: 16,
     marginBottom: 16,
-    marginLeft: 23,
-    marginRight: 25,
   },
   textContainer: {
-    flex: 1, // 텍스트가 버튼과 동일한 공간 차지
+    flex: 1,
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    fontFamily: "Pretendard-Bold", // Pretendard-Bold 적용
+    fontFamily: "Pretendard-Bold",
     marginBottom: 4,
+    marginLeft:10,
   },
   details: {
     fontSize: 14,
     color: "gray",
-    fontFamily: "Pretendard-Regular", // Pretendard-Regular 적용
+    fontFamily: "Pretendard-Regular",
+    marginLeft:10,
   },
   infoContainer: {
     margin: 16,
     padding: 16,
     backgroundColor: "white",
     borderRadius: 8,
-    marginVertical: 1,
   },
   infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
-    marginVertical: 10,
   },
   infoLabel: {
     fontSize: 14,
     color: "black",
-    fontFamily: "Pretendard-Regular", // Pretendard-Regular 적용
-    marginLeft: -7,
+    fontFamily: "Pretendard-Regular",
   },
   infoValue: {
     fontSize: 14,
@@ -180,15 +223,15 @@ const styles = StyleSheet.create({
   },
   setlistTitle: {
     fontSize: 18,
-    fontFamily: "Pretendard-Regular", // Pretendard-Regular 적용
+    fontFamily: "Pretendard-Regular",
     marginHorizontal: 16,
     marginTop: 30,
   },
   divider: {
-    borderBottomColor: '#D3D3D3', // 연회색 경계선
+    borderBottomColor: "#D3D3D3",
     borderBottomWidth: 1,
-    width: '92%', // 선의 길이를 조정
-    alignSelf: 'center', // 중앙 정렬
+    width: "92%",
+    alignSelf: "center",
     marginVertical: 15,
   },
   noSetlist: {

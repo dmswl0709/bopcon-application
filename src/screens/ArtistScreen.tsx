@@ -1,27 +1,45 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-} from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet } from "react-native";
 import Header from "../components/Header";
 import FavoriteButton from "../components/FavoriteButton";
 import ConcertRow from "../components/ConcertRow";
 import { SafeAreaView } from "react-native";
-
+import axios from "axios";
 
 const ArtistScreen = ({ route, navigation }) => {
+  // route.params 확인 및 기본값 설정
   const {
-    artistName = "Artist Name",
+    artistName = "Default Artist Name",
     artistDetail = "This is a brief artist detail or bio.",
     instagramUrl = "https://instagram.com",
     spotifyUrl = "https://spotify.com",
   } = route.params || {};
 
+  const [artistData, setArtistData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("곡 랭킹");
+
+  useEffect(() => {
+    if (!artistName) {
+      console.error("artistName is undefined in route.params");
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchArtistData = async () => {
+      try {
+        const encodedArtistName = encodeURIComponent(artistName);
+        const response = await axios.get(`http://localhost:8080/api/artists/${artistId}`);
+        setArtistData(response.data);
+      } catch (error) {
+        console.error("Error fetching artist data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchArtistData();
+  }, [artistName]);
 
   const upcomingConcert = {
     dateYear: "2025",
@@ -70,9 +88,7 @@ const ArtistScreen = ({ route, navigation }) => {
       description: "콘서트 제목 4",
     },
   ];
-  const [visibleConcerts, setVisibleConcerts] = useState(
-    tempConcertData.slice(0, 3)
-  );
+  const [visibleConcerts, setVisibleConcerts] = useState(tempConcertData.slice(0, 3));
 
   const tempBoardData = [
     {
@@ -97,9 +113,7 @@ const ArtistScreen = ({ route, navigation }) => {
 
   const renderRankingContent = () => (
     <View>
-      <Text style={styles.sectionTitle}>
-        최근 20개 콘서트 기준
-      </Text>
+      <Text style={styles.sectionTitle}>최근 20개 콘서트 기준</Text>
       {visibleSongs.length === 0 ? (
         <Text style={{ textAlign: "center", marginTop: 16 }}>
           곡 데이터가 없습니다.
@@ -139,18 +153,18 @@ const ArtistScreen = ({ route, navigation }) => {
         data={visibleConcerts}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
-        <View style={styles.concertRowContainer}>
-          <ConcertRow
-            dateYear={item.dateYear}
-            dateDay={item.dateDay}
-            description={item.description}
-            onPress={() =>
-              navigation.navigate("SetListScreen", {
-                concertDetails: item, // 필요시 item 데이터 전달
-              })
-            }
-          />
-        </View>
+          <View style={styles.concertRowContainer}>
+            <ConcertRow
+              dateYear={item.dateYear}
+              dateDay={item.dateDay}
+              description={item.description}
+              onPress={() =>
+                navigation.navigate("SetListScreen", {
+                  concertDetails: item, // 필요시 item 데이터 전달
+                })
+              }
+            />
+          </View>
         )}
       />
       {visibleConcerts.length < tempConcertData.length && (
@@ -199,88 +213,88 @@ const ArtistScreen = ({ route, navigation }) => {
   };
 
   return (
-   <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
-    <FlatList
-      ListHeaderComponent={
-        <View style={styles.headerContainer}>
-          <Header title="Artist" onBackPress={() => navigation.goBack()} />
-          <View style={styles.artistInfoSection}>
-            <Image
-              source={require("../assets/images/sampleimg4.png")}
-              style={styles.artistImage}
-            />
-            <View style={styles.socialMediaContainer}>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate("WebViewScreen", { url: instagramUrl })
-                }
-              >
-                <Image
-                  source={require("../assets/icons/InstagramLogo.png")}
-                  style={styles.socialIcon}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate("WebViewScreen", { url: spotifyUrl })
-                }
-              >
-                <Image
-                  source={require("../assets/icons/SpotifyLogo.png")}
-                  style={styles.socialIcon}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View style={styles.artistNameRow}>
-            <View style={styles.artistNameContainer}>
-              <Text style={styles.artistName}>{artistName}</Text>
-              <Text style={styles.artistDetail}>{artistDetail}</Text>
-            </View>
-            <FavoriteButton />
-          </View>
-          <Text style={styles.upcomingTitle}>내한 예정</Text>
-          <View style={styles.divider1} />
-          <ConcertRow
-            dateYear={upcomingConcert.dateYear}
-            dateDay={upcomingConcert.dateDay}
-            description={upcomingConcert.description}
-            onPress={() =>
-              navigation.navigate("ConcertScreen", {
-                concertDetails: upcomingConcert, // 필요시 전달할 데이터
-              })
-            }
-          />
-          <View style={styles.tabRow}>
-            {["곡 랭킹", "지난 공연", "게시판"].map((tab) => (
-              <TouchableOpacity
-                key={tab}
-                onPress={() => setActiveTab(tab)}
-                style={[
-                  styles.tabButton,
-                  activeTab === tab && styles.activeTabButton,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.tabText,
-                    activeTab === tab && styles.activeTabText,
-                  ]}
+    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+      <FlatList
+        ListHeaderComponent={
+          <View style={styles.headerContainer}>
+            <Header title="Artist" onBackPress={() => navigation.goBack()} />
+            <View style={styles.artistInfoSection}>
+              <Image
+                source={require("../assets/images/sampleimg4.png")}
+                style={styles.artistImage}
+              />
+              <View style={styles.socialMediaContainer}>
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate("WebViewScreen", { url: instagramUrl })
+                  }
                 >
-                  {tab}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      }
-      data={[]} // 데이터는 렌더링하지 않음
-      renderItem={null}
-      ListFooterComponent={renderContent()}
-    />
-    </SafeAreaView>
-  );
-};
+                  <Image
+                    source={require("../assets/icons/InstagramLogo.png")}
+                    style={styles.socialIcon}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate("WebViewScreen", { url: spotifyUrl })
+                  }
+                >
+                  <Image
+                    source={require("../assets/icons/SpotifyLogo.png")}
+                    style={styles.socialIcon}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.artistNameRow}>
+              <View style={styles.artistNameContainer}>
+                <Text style={styles.artistName}>{artistName}</Text>
+                <Text style={styles.artistDetail}>{artistDetail}</Text>
+              </View>
+              <FavoriteButton />
+            </View>
+            <Text style={styles.upcomingTitle}>내한 예정</Text>
+            <View style={styles.divider1} />
+            <ConcertRow
+              dateYear={upcomingConcert.dateYear}
+              dateDay={upcomingConcert.dateDay}
+              description={upcomingConcert.description}
+              onPress={() =>
+                navigation.navigate("ConcertScreen", {
+                  concertDetails: upcomingConcert, // 필요시 전달할 데이터
+                })
+              }
+            />
+            <View style={styles.tabRow}>
+              {["곡 랭킹", "지난 공연", "게시판"].map((tab) => (
+                <TouchableOpacity
+                  key={tab}
+                  onPress={() => setActiveTab(tab)}
+                  style={[
+                    styles.tabButton,
+                    activeTab === tab && styles.activeTabButton,
+                  ]}
+                  >
+                    <Text
+                      style={[
+                        styles.tabText,
+                        activeTab === tab && styles.activeTabText,
+                      ]}
+                    >
+                      {tab}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          }
+          data={[]} // 데이터는 렌더링하지 않음
+          renderItem={null}
+          ListFooterComponent={renderContent()}
+        />
+      </SafeAreaView>
+    );
+  };
 
 const styles = StyleSheet.create({
   headerContainer: {
