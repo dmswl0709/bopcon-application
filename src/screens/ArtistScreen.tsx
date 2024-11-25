@@ -9,37 +9,37 @@ import axios from "axios";
 const ArtistScreen = ({ route, navigation }) => {
   // route.params 확인 및 기본값 설정
   const {
-    artistName = "Default Artist Name",
-    artistDetail = "This is a brief artist detail or bio.",
-    instagramUrl = "https://instagram.com",
-    spotifyUrl = "https://spotify.com",
-  } = route.params || {};
+      artistId = null, // 반드시 추가
+      artistName = "Default Artist Name",
+      artistDetail = "This is a brief artist detail or bio.",
+      instagramUrl = "https://instagram.com",
+      spotifyUrl = "https://spotify.com",
+    } = route.params || {};
 
   const [artistData, setArtistData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("곡 랭킹");
 
   useEffect(() => {
-    if (!artistName) {
-      console.error("artistName is undefined in route.params");
-      setIsLoading(false);
+    if (!artistId) {
+      console.error("artistId is undefined in route.params");
+      setIsLoading(false); // 로딩 상태를 종료합니다.
       return;
     }
-
+  
     const fetchArtistData = async () => {
       try {
-        const encodedArtistName = encodeURIComponent(artistName);
         const response = await axios.get(`http://localhost:8080/api/artists/${artistId}`);
-        setArtistData(response.data);
+        setArtistData(response.data); // 데이터를 상태에 저장
       } catch (error) {
         console.error("Error fetching artist data:", error);
       } finally {
         setIsLoading(false);
       }
     };
-
+  
     fetchArtistData();
-  }, [artistName]);
+  }, [artistId]); // artistId가 변경될 때마다 데이터를 다시 가져옵니다.
 
   const upcomingConcert = {
     dateYear: "2025",

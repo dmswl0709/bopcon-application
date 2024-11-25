@@ -53,7 +53,11 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
 
   const handleArtistInfoPress = () => {
     navigation.navigate("ArtistScreen", {
-      artistName: concertData?.singer || "Unknown Artist",
+      artistId: "12345", // 반드시 추가
+      artistName: "벤슨 분",
+      artistDetail: "Benson Boone",
+      instagramUrl: "https://instagram.com", // Instagram profile URL
+      spotifyUrl: "https://spotifyUrl",
     });
   };
 

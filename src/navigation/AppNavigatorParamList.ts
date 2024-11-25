@@ -31,6 +31,7 @@ type AppNavigationParamList = {
     setlist: string[]; // Array of setlist items
   };
   ArtistScreen: {
+    artistId?: string;
     artistName: string; // Artist's name
     artistDetail: string; // Brief description of the artist
     instagramUrl?: string; // Instagram profile URL
