@@ -22,7 +22,6 @@ const ConcertListComponent: React.FC<ConcertListComponentProps> = ({
   onConcertPress,
   horizontal = false,
 }) => {
-  // 콘서트 데이터가 없을 때 처리
   if (!concerts || concerts.length === 0) {
     return (
       <View style={styles.emptyContainer}>
@@ -60,6 +59,7 @@ const ConcertListComponent: React.FC<ConcertListComponentProps> = ({
     />
   );
 };
+
 
 const styles = StyleSheet.create({
   emptyContainer: {

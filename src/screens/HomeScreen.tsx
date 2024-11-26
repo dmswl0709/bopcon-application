@@ -6,23 +6,18 @@ import Stack from "../components/Stack";
 import MenuTitle from "../components/MenuTitle";
 import ConcertListComponent from "../components/ConcertListComponent";
 import AppNavigatorParamList from "../navigation/AppNavigatorParamList";
-import { fetchConcerts } from "../apis/concerts"; // API 호출 함수 임포트
-import Sample1 from "../assets/images/sampleimg1.jpg";
-import Sample2 from "../assets/images/sampleimg2.png";
-import Sample3 from "../assets/images/sampleimg3.png";
+import { fetchConcerts } from "../apis/concerts";
 
 function HomeScreen() {
   const navigation = useNavigation<NavigationProp<AppNavigatorParamList>>();
-  const [concerts, setConcerts] = useState([]); // 콘서트 데이터 상태 관리
+  const [concerts, setConcerts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 임시 데이터
   const temporaryConcerts = [
     {
       id: "1",
-      posterUrl: Sample1, // Sample 이미지 사용
+      posterUrl: "",
       title: "임시 콘서트 1",
-      subTitle: "이 콘서트는 임시 데이터입니다.",
       date: "2024-12-01",
       venueName: "서울 월드컵 경기장",
       cityName: "서울",
@@ -30,9 +25,8 @@ function HomeScreen() {
     },
     {
       id: "2",
-      posterUrl: Sample2, // Sample 이미지 사용
+      posterUrl: "",
       title: "임시 콘서트 2",
-      subTitle: "이 콘서트는 임시 데이터입니다.",
       date: "2024-12-10",
       venueName: "부산 아시아드 주경기장",
       cityName: "부산",
@@ -40,9 +34,8 @@ function HomeScreen() {
     },
     {
       id: "3",
-      posterUrl: Sample3, // Sample 이미지 사용
+      posterUrl: "",
       title: "임시 콘서트 3",
-      subTitle: "이 콘서트는 임시 데이터입니다.",
       date: "2024-12-20",
       venueName: "인천 문학 경기장",
       cityName: "인천",
@@ -50,32 +43,43 @@ function HomeScreen() {
     },
   ];
 
-  // 콘서트 데이터 로드 함수
   const loadConcerts = async () => {
     try {
       setIsLoading(true);
-      const concertData = await fetchConcerts(); // API 호출
-      if (concertData && concertData.length > 0) {
-        setConcerts(concertData); // 데이터 저장
-      } else {
-        console.warn("No concerts available, using temporary data.");
-        setConcerts(temporaryConcerts); // 임시 데이터 사용
-      }
+      const data = await fetchConcerts();
+      setConcerts(
+        data.map((concert) => ({
+          ...concert,
+          posterUrl: concert.posterUrl || "https://via.placeholder.com/150", // 기본 이미지 URL 설정
+        }))
+      );
     } catch (error) {
       console.error("Error loading concerts:", error);
       Alert.alert("오류", "콘서트 데이터를 불러오지 못했습니다. 임시 데이터를 사용합니다.");
-      setConcerts(temporaryConcerts); // 오류 발생 시 임시 데이터 사용
+      setConcerts(
+        temporaryConcerts.map((concert) => ({
+          ...concert,
+          posterUrl: "https://via.placeholder.com/150", // 기본 이미지 URL 설정
+        }))
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadConcerts(); // 컴포넌트 마운트 시 데이터 로드
+    loadConcerts();
   }, []);
 
-  const handleConcertPress = (concert: any) => {
-    navigation.navigate("ConcertScreen", { concert });
+  const handleConcertPress = (concert) => {
+    if (concert && concert.id) {
+      navigation.navigate("ConcertScreen", {
+        concertId: concert.id, // 정확한 ID 전달
+      });
+    } else {
+      console.error("Invalid concert data:", concert);
+      Alert.alert("오류", "콘서트 ID가 올바르지 않습니다.");
+    }
   };
 
   return (
@@ -84,7 +88,11 @@ function HomeScreen() {
         {concerts.length > 0 && (
           <TouchableOpacity onPress={() => handleConcertPress(concerts[0])}>
             <Image
-              source={concerts[0].posterUrl}
+              source={
+                concerts[0].posterUrl
+                  ? { uri: concerts[0].posterUrl }
+                  : require("../assets/images/sampleimg1.jpg")
+              }
               style={{
                 width: Dimensions.get("window").width,
                 height: Dimensions.get("window").width * 0.6,
@@ -107,22 +115,40 @@ function HomeScreen() {
         )}
       </Stack>
 
+      {/* NEW Section */}
       <MenuTitle title={"NEW"} />
       <ConcertListComponent
         horizontal
-        concerts={concerts}
+        concerts={concerts.map((concert) => ({
+          ...concert,
+          posterUrl: concert.posterUrl || "https://via.placeholder.com/150",
+        }))}
         onConcertPress={handleConcertPress}
       />
+
+      {/* JPOP Section */}
       <MenuTitle title={"JPOP"} />
       <ConcertListComponent
         horizontal
-        concerts={concerts}
+        concerts={concerts
+          .filter((concert) => concert.genre === "JPOP")
+          .map((concert) => ({
+            ...concert,
+            posterUrl: concert.posterUrl || "https://via.placeholder.com/150",
+          }))}
         onConcertPress={handleConcertPress}
       />
+
+      {/* POP Section */}
       <MenuTitle title={"POP"} />
       <ConcertListComponent
         horizontal
-        concerts={concerts}
+        concerts={concerts
+          .filter((concert) => concert.genre === "POP")
+          .map((concert) => ({
+            ...concert,
+            posterUrl: concert.posterUrl || "https://via.placeholder.com/150",
+          }))}
         onConcertPress={handleConcertPress}
       />
     </NavigationView>

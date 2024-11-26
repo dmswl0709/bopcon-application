@@ -36,27 +36,27 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 12,
-    borderRadius: 5,
+    paddingVertical: 14, // 버튼 크기 살짝 증가
+    borderRadius: 8, // 버튼 모서리를 더 둥글게 변경
     marginHorizontal: 4,
   },
   artistButton: {
-    backgroundColor: "black", // 검은 배경
+    backgroundColor: "#000000", // 검은 배경
   },
   setlistButton: {
-    backgroundColor: "white", // 흰 배경
+    backgroundColor: "#FFFFFF", // 흰 배경
     borderWidth: 1,
-    borderColor: "black", // 검은 테두리
+    borderColor: "#000000", // 검은 테두리
   },
   buttonText: {
-    fontSize: 13,
+    fontSize: 14, // 버튼 텍스트 크기 증가
     fontFamily: "Pretendard-Regular", // 폰트 적용
   },
   artistButtonText: {
-    color: "white", // 흰 텍스트
+    color: "#FFFFFF", // 흰 텍스트
   },
   setlistButtonText: {
-    color: "black", // 검은 텍스트
+    color: "#000000", // 검은 텍스트
   },
 });
 

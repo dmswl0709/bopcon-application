@@ -9,17 +9,7 @@ type AppNavigationParamList = {
   ContentScreen: undefined;
   ContentCategoryScreen: { name: string; type: string };
   ConcertScreen: {
-    concert: {
-      image: string;
-      title: string;
-      details: string;
-      date: string;
-      location: string;
-      ticket: string;
-      setlist: string[];
-      singer: string;
-      navigateName?: string;
-    };
+    concertId: string;
   };
   PastSetListScreen: {
     artistName: string; // Artist name to display at the top of the screen

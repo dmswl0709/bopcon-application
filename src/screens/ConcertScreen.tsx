@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, StyleSheet, ScrollView } from "react-native";
+import { View, Text, Image, StyleSheet, ScrollView, Alert } from "react-native";
 import { StackScreenProps } from "@react-navigation/stack";
 import Header from "../components/Header";
 import ButtonGroup from "../components/ButtonGroup";
 import FavoriteButton from "../components/FavoriteButton";
-import SetlistItem from "../components/SetlistItem"; // SetlistItem 컴포넌트 가져오기
+import SetlistItem from "../components/SetlistItem";
 import AppNavigationParamList from "../navigation/AppNavigatorParamList";
-import axios from "axios";
+import { fetchConcertData } from "../apis/concerts"; // concerts.ts에서 가져옴
+import SampleImage from "../assets/images/sampleimg2.png"; // 기본 이미지 추가
 
 type ConcertScreenProps = StackScreenProps<AppNavigationParamList, "ConcertScreen">;
 
@@ -15,55 +16,39 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
   const [concertData, setConcertData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // 임시 데이터 추가
-  const fallbackData = {
-    title: "임시 콘서트 제목",
-    details: "이 콘서트에 대한 자세한 정보가 없습니다.",
-    date: "2024/01/01",
-    location: "알 수 없는 장소",
-    ticket: "정보 없음",
-    image: require("../assets/images/sampleimg2.png"), // 임시 이미지
-    singer: "알 수 없는 아티스트",
-    setlist: ["임시 곡 1", "임시 곡 2", "임시 곡 3", "임시 곡 4", "임시 곡 5"],
-  };
-
   useEffect(() => {
-    const fetchConcertData = async () => {
+    const loadConcertData = async () => {
       try {
-        if (concertId) {
-          const response = await axios.get(`/api/new-concerts/${concertId}`);
-          setConcertData(response.data);
-        } else {
-          setConcertData(fallbackData); // concertId가 없는 경우 임시 데이터 사용
+        if (!concertId) throw new Error("Concert ID가 전달되지 않았습니다.");
+        const data = await fetchConcertData(concertId);
+        if (!data || !data.title) {
+          throw new Error("잘못된 콘서트 데이터입니다.");
         }
-      } catch (error) {
-        console.error("Error fetching concert data:", error);
-        setConcertData(fallbackData); // 오류 발생 시 임시 데이터 사용
+        setConcertData(data);
+      } catch (error: any) {
+        console.error("ConcertScreen에서 콘서트 데이터를 불러오는 중 오류 발생:", error.message);
+        Alert.alert("오류", error.message || "콘서트 데이터를 불러올 수 없습니다.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchConcertData();
+    loadConcertData();
   }, [concertId]);
 
-  const handleBackPress = () => {
-    navigation.goBack();
-  };
+  const handleBackPress = () => navigation.goBack();
 
   const handleArtistInfoPress = () => {
     navigation.navigate("ArtistScreen", {
-      artistId: "12345", // 반드시 추가
-      artistName: "벤슨 분",
-      artistDetail: "Benson Boone",
-      instagramUrl: "https://instagram.com", // Instagram profile URL
-      spotifyUrl: "https://spotifyUrl",
+      artistId: concertData?.artistId || "unknown",
+      artistName: concertData?.title || "알 수 없는 아티스트",
+      artistDetail: concertData?.subTitle || "알 수 없는 아티스트",
     });
   };
 
   const handlePastSetlistPress = () => {
     navigation.navigate("PastSetListScreen", {
-      artistName: concertData?.singer || "Unknown Artist",
+      artistName: concertData?.title || "Unknown Artist",
     });
   };
 
@@ -78,7 +63,7 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
   if (!concertData) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Concert data could not be loaded.</Text>
+        <Text style={styles.errorText}>콘서트 데이터를 불러올 수 없습니다.</Text>
       </View>
     );
   }
@@ -87,23 +72,23 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
     <View style={styles.container}>
       <Header title="Concert" onBackPress={handleBackPress} />
       <ScrollView contentContainerStyle={{ paddingBottom: 16 }}>
-        {/* 이미지 표시 */}
+        {/* 이미지 */}
         <View style={styles.imageContainer}>
           <Image
             source={
-              typeof concertData.image === "string"
-                ? { uri: concertData.image }
-                : concertData.image
+              concertData.posterUrl
+                ? { uri: concertData.posterUrl } // API에서 받은 URL 이미지
+                : SampleImage // 기본 이미지
             }
             style={styles.image}
           />
         </View>
 
-        {/* 타이틀과 즐겨찾기 버튼 */}
+        {/* 제목과 즐겨찾기 */}
         <View style={styles.titleRow}>
           <View style={styles.textContainer}>
             <Text style={styles.title}>{concertData.title}</Text>
-            <Text style={styles.details}>{concertData.details}</Text>
+            <Text style={styles.subTitle}>{concertData.subTitle}</Text>
           </View>
           <FavoriteButton />
         </View>
@@ -116,11 +101,11 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>공연 장소</Text>
-            <Text style={styles.infoValue}>{concertData.location}</Text>
+            <Text style={styles.infoValue}>{`${concertData.venueName}, ${concertData.cityName}, ${concertData.countryName}`}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>티켓 예매</Text>
-            <Text style={styles.infoValue}>{concertData.ticket}</Text>
+            <Text style={styles.infoValue}>{concertData.ticketUrl || "정보 없음"}</Text>
           </View>
         </View>
 
@@ -129,13 +114,12 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
           onPastSetlistPress={handlePastSetlistPress}
         />
 
+        {/* 셋리스트 */}
         <Text style={styles.setlistTitle}>예상 셋리스트</Text>
         <View style={styles.divider} />
-
-        {/* 셋리스트 */}
-        {concertData.setlist && concertData.setlist.length > 0 ? (
+        {concertData.setlist?.length ? (
           concertData.setlist.map((song: string, index: number) => (
-            <SetlistItem key={index} index={index + 1} songName={song} />
+            <SetlistItem key={`setlist-item-${index}`} index={index + 1} songName={song} />
           ))
         ) : (
           <Text style={styles.noSetlist}>셋리스트 정보 없음</Text>
@@ -144,6 +128,8 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
     </View>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   container: {
