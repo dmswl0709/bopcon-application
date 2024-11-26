@@ -8,6 +8,8 @@ import SetlistItem from "../components/SetlistItem";
 import AppNavigationParamList from "../navigation/AppNavigatorParamList";
 import { fetchConcertData } from "../apis/concerts"; // concerts.ts에서 가져옴
 import SampleImage from "../assets/images/sampleimg2.png"; // 기본 이미지 추가
+import TicketButton from "../components/TicketButton";
+import { TouchableOpacity } from "react-native";
 
 type ConcertScreenProps = StackScreenProps<AppNavigationParamList, "ConcertScreen">;
 
@@ -104,10 +106,12 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
             <Text style={styles.infoValue}>{`${concertData.venueName}, ${concertData.cityName}, ${concertData.countryName}`}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>티켓 예매</Text>
-            <Text style={styles.infoValue}>{concertData.ticketUrl || "정보 없음"}</Text>
-          </View>
+          <Text style={styles.infoLabel}>티켓 예매</Text>
+          <TicketButton ticketUrl={concertData.ticketUrl} />
         </View>
+        </View>
+
+
 
         <ButtonGroup
           onArtistInfoPress={handleArtistInfoPress}
@@ -185,7 +189,7 @@ const styles = StyleSheet.create({
     marginLeft:10,
   },
   details: {
-    fontSize: 14,
+    fontSize: 11,
     color: "gray",
     fontFamily: "Pretendard-Regular",
     marginLeft:10,
