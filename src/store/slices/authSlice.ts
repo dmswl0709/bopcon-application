@@ -1,97 +1,40 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-// 네트워크 API에서 받아오는 payload 참고 후 맞춰서 작성
-interface LoginPayload {
-  token: string;
-  refreshToken?: string;
-  nickname: string;
-}
-
+// 초기 상태 정의
 interface AuthState {
-  isLoggedIn: boolean;
-  token: string | null;
+  isAuthenticated: boolean;
+  accessToken: string | null;
   refreshToken: string | null;
   nickname: string | null;
 }
 
-// 초기 상태
 const initialState: AuthState = {
-  isLoggedIn: false, // 기본값
-  token: null,
+  isAuthenticated: false,
+  accessToken: null,
   refreshToken: null,
   nickname: null,
 };
 
-// Redux Slice
+// Auth Slice 생성
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
-    login: (state, action: PayloadAction<LoginPayload>) => {
-      state.isLoggedIn = true;
-      state.token = action.payload.token;
-      state.refreshToken = action.payload.refreshToken || null;
-      state.nickname = action.payload.nickname;
-
-      // AsyncStorage에 값 저장
-      AsyncStorage.setItem('token', action.payload.token).catch((error) => {
-        console.error('Failed to save token to AsyncStorage:', error);
-      });
-      if (action.payload.refreshToken) {
-        AsyncStorage.setItem('refreshToken', action.payload.refreshToken).catch(
-          (error) => {
-            console.error('Failed to save refreshToken to AsyncStorage:', error);
-          }
-        );
-      }
-      AsyncStorage.setItem('nickname', action.payload.nickname).catch((error) => {
-        console.error('Failed to save nickname to AsyncStorage:', error);
-      });
-    },
-    logout: (state) => {
-      state.isLoggedIn = false;
-      state.token = null;
-      state.refreshToken = null;
-      state.nickname = null;
-
-      // AsyncStorage 값 삭제
-      AsyncStorage.multiRemove(['token', 'refreshToken', 'nickname']).catch(
-        (error) => {
-          console.error('Failed to remove auth data from AsyncStorage:', error);
-        }
-      );
-    },
-    loadAuthState: (state, action: PayloadAction<AuthState>) => {
-      state.isLoggedIn = action.payload.isLoggedIn;
-      state.token = action.payload.token;
+    loginSuccess(state, action: PayloadAction<{ accessToken: string; refreshToken: string; nickname: string }>) {
+      state.isAuthenticated = true;
+      state.accessToken = action.payload.accessToken;
       state.refreshToken = action.payload.refreshToken;
       state.nickname = action.payload.nickname;
+    },
+    logoutSuccess(state) {
+      state.isAuthenticated = false;
+      state.accessToken = null;
+      state.refreshToken = null;
+      state.nickname = null;
     },
   },
 });
 
-export const { login, logout, loadAuthState } = authSlice.actions;
+// 액션과 리듀서를 내보냄
+export const { loginSuccess, logoutSuccess } = authSlice.actions;
 export default authSlice.reducer;
-
-// 비동기 액션
-export const loadAuthFromStorage = () => async (dispatch: any) => {
-  try {
-    const token = await AsyncStorage.getItem('token');
-    const refreshToken = await AsyncStorage.getItem('refreshToken');
-    const nickname = await AsyncStorage.getItem('nickname');
-
-    if (token) {
-      dispatch(
-        loadAuthState({
-          isLoggedIn: true,
-          token,
-          refreshToken,
-          nickname,
-        })
-      );
-    }
-  } catch (error) {
-    console.error('Failed to load auth state from AsyncStorage:', error);
-  }
-};

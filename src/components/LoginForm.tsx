@@ -1,9 +1,10 @@
+// 파일명: src/components/LoginForm.tsx
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useDispatch } from 'react-redux';
-import { login as loginAction } from '../store/slices/authSlice';
-import { login } from '../apis/auth.api';
+import { login as loginAction } from '../store/slices/authSlice'; // Redux 액션
+import { login } from '../apis/auth'; // Axios API 호출
 import BOPCONLogo from '../assets/icons/BOPCONLogo.svg';
 
 const LoginForm = () => {
@@ -33,7 +34,10 @@ const LoginForm = () => {
     }
 
     try {
+      // Axios를 사용하여 API 호출
       const response = await login({ email, password });
+      console.log('로그인 성공:', response);
+
       // Redux 상태 업데이트
       dispatch(
         loginAction({
@@ -42,15 +46,19 @@ const LoginForm = () => {
           nickname: response.nickname,
         })
       );
+
       Alert.alert('로그인 성공!', `환영합니다, ${response.nickname}님!`);
+
+      // 홈 화면으로 리셋 이동
       navigation.reset({
         index: 0,
         routes: [{ name: 'HomeScreen' }],
       });
     } catch (error: any) {
+      console.error('로그인 실패:', error.response?.data || error.message);
       Alert.alert(
         '로그인 실패',
-        error.response?.data?.message || '알 수 없는 오류가 발생했습니다.'
+        error.response?.data?.error || '알 수 없는 오류가 발생했습니다.'
       );
     }
   };

@@ -1,9 +1,10 @@
+// 파일명: src/components/SignUpForm.tsx
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useDispatch } from 'react-redux';
-import { signup } from '../apis/auth.api';
-import { login as loginAction } from '../store/slices/authSlice';
+import { signup } from '../apis/auth'; // Axios API 호출
+import { login as loginAction } from '../store/slices/authSlice'; // Redux 액션
 import BOPCONLogo from "../assets/icons/BOPCONLogo.svg";
 
 const SignUpForm = () => {
@@ -49,7 +50,9 @@ const SignUpForm = () => {
     }
 
     try {
+      // Axios를 사용하여 API 호출
       const response = await signup({ email, password, nickname });
+      console.log('회원가입 성공:', response);
 
       // Redux 상태 업데이트
       dispatch(
@@ -60,13 +63,16 @@ const SignUpForm = () => {
         })
       );
 
-      Alert.alert('회원가입 성공!', '로그인 페이지로 이동합니다.');
-      navigation.navigate('LoginScreen');
+      Alert.alert('회원가입 성공!', `환영합니다, ${response.nickname}님!`);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'HomeScreen' }],
+      });
     } catch (error: any) {
-      console.error('회원가입 오류:', error);
+      console.error('회원가입 실패:', error.response?.data || error.message);
       Alert.alert(
         '회원가입 실패',
-        error.response?.data?.message || '알 수 없는 에러가 발생했습니다.'
+        error.response?.data?.error || '알 수 없는 에러가 발생했습니다.'
       );
     }
   };

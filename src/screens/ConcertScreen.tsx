@@ -6,35 +6,36 @@ import ButtonGroup from "../components/ButtonGroup";
 import FavoriteButton from "../components/FavoriteButton";
 import SetlistItem from "../components/SetlistItem";
 import AppNavigationParamList from "../navigation/AppNavigatorParamList";
-import { fetchConcertData } from "../apis/concerts"; // concerts.ts에서 가져옴
+import { fetchConcertData, fetchPredictedSetlist } from "../apis/concerts"; // concerts.ts에서 가져옴
 import SampleImage from "../assets/images/sampleimg2.png"; // 기본 이미지 추가
 import TicketButton from "../components/TicketButton";
-import { TouchableOpacity } from "react-native";
 
 type ConcertScreenProps = StackScreenProps<AppNavigationParamList, "ConcertScreen">;
 
 const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
   const { concertId } = route.params || {};
   const [concertData, setConcertData] = useState<any>(null);
+  const [predictedSetlist, setPredictedSetlist] = useState<{ order: number; title: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadConcertData = async () => {
       try {
         if (!concertId) throw new Error("Concert ID가 전달되지 않았습니다.");
-        const data = await fetchConcertData(concertId);
-        if (!data || !data.title) {
-          throw new Error("잘못된 콘서트 데이터입니다.");
+        const concert = await fetchConcertData(concertId);
+        setConcertData(concert);
+
+        if (concert.artistId) {
+          const setlist = await fetchPredictedSetlist(concert.artistId);
+          setPredictedSetlist(setlist);
         }
-        setConcertData(data);
       } catch (error: any) {
-        console.error("ConcertScreen에서 콘서트 데이터를 불러오는 중 오류 발생:", error.message);
-        Alert.alert("오류", error.message || "콘서트 데이터를 불러올 수 없습니다.");
+        console.error("ConcertScreen에서 데이터를 불러오는 중 오류 발생:", error.message);
+        Alert.alert("오류", error.message);
       } finally {
         setLoading(false);
       }
     };
-
     loadConcertData();
   }, [concertId]);
 
@@ -106,34 +107,30 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
             <Text style={styles.infoValue}>{`${concertData.venueName}, ${concertData.cityName}, ${concertData.countryName}`}</Text>
           </View>
           <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>티켓 예매</Text>
-          <TicketButton ticketUrl={concertData.ticketUrl} />
+            <Text style={styles.infoLabel}>티켓 예매</Text>
+            <TicketButton ticketUrl={concertData.ticketUrl} />
+          </View>
         </View>
-        </View>
-
-
 
         <ButtonGroup
           onArtistInfoPress={handleArtistInfoPress}
           onPastSetlistPress={handlePastSetlistPress}
         />
 
-        {/* 셋리스트 */}
+        {/* 예상 셋리스트 */}
         <Text style={styles.setlistTitle}>예상 셋리스트</Text>
         <View style={styles.divider} />
-        {concertData.setlist?.length ? (
-          concertData.setlist.map((song: string, index: number) => (
-            <SetlistItem key={`setlist-item-${index}`} index={index + 1} songName={song} />
+        {predictedSetlist.length > 0 ? (
+          predictedSetlist.map((song, index) => (
+            <SetlistItem key={`predicted-setlist-item-${index}`} index={song.order} songName={song.title} />
           ))
         ) : (
-          <Text style={styles.noSetlist}>셋리스트 정보 없음</Text>
+          <Text style={styles.noSetlist}>예상 셋리스트 정보 없음</Text>
         )}
       </ScrollView>
     </View>
   );
 };
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -186,13 +183,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Pretendard-Bold",
     marginBottom: 4,
-    marginLeft:10,
   },
-  details: {
+  subTitle: {
     fontSize: 11,
     color: "gray",
     fontFamily: "Pretendard-Regular",
-    marginLeft:10,
   },
   infoContainer: {
     margin: 16,
