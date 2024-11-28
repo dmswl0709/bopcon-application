@@ -8,12 +8,7 @@ interface ConcertRowProps {
   onPress: () => void;
 }
 
-const ConcertRow: React.FC<ConcertRowProps> = ({
-  dateYear,
-  dateDay,
-  description,
-  onPress,
-}) => {
+const ConcertRow: React.FC<ConcertRowProps> = ({ dateYear, dateDay, description, onPress }) => {
   return (
     <View style={styles.concertRow}>
       <View style={styles.dateBox}>
@@ -22,9 +17,7 @@ const ConcertRow: React.FC<ConcertRowProps> = ({
       </View>
       <Text style={styles.concertDescription}>{description}</Text>
       <TouchableOpacity onPress={onPress}>
-        <Image source={require("../assets/icons/next.png")}
-          style={styles.nextIcon}
-        />
+        <Image source={require("../assets/icons/next.png")} style={styles.nextIcon} />
       </TouchableOpacity>
     </View>
   );
@@ -49,20 +42,18 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 10,
     fontWeight: "bold",
-    fontFamily: "Pretendard-Regular",
   },
   dateDay: {
     color: "white",
     fontSize: 10,
     fontWeight: "bold",
-    fontFamily: "Pretendard-Bold",
   },
   concertDescription: {
     flex: 1,
     fontSize: 14,
     color: "black",
     marginLeft: 16,
-    fontFamily: "Pretendard-Bold",
+    fontWeight: "bold",
   },
   nextIcon: {
     width: 24,

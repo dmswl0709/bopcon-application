@@ -1,5 +1,6 @@
 import axios from "axios";
 
+// API 기본 URL
 const API_BASE_URL = "http://localhost:8080";
 
 // Concert 데이터 타입 정의
@@ -36,6 +37,54 @@ const apiClient = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+// Artist 이름 가져오기
+export const fetchArtistName = async (artistId: string): Promise<string> => {
+  if (!artistId) {
+    console.warn("artistId가 누락되었습니다.");
+    return "";
+  }
+  try {
+    const response = await apiClient.get<{ name: string }>(`/api/artists/${artistId}`);
+    console.log("Fetched artist name:", response.data.name);
+    return response.data.name;
+  } catch (error: any) {
+    console.error("Error fetching artist name:", error.message);
+    throw new Error("Failed to fetch artist name");
+  }
+};
+
+// Past Concerts 가져오기
+export const fetchPastConcerts = async (artistName: string): Promise<Concert[]> => {
+  if (!artistName) {
+    console.warn("artistName이 누락되었습니다.");
+    return [];
+  }
+  try {
+    console.log(`Fetching past concerts for artistName: ${artistName}`);
+    const response = await apiClient.get<Concert[]>(`/api/past-concerts/artist/${artistName}`);
+    console.log("Fetched past concerts:", response.data);
+    return response.data.map((concert) => ({
+      id: concert.id || concert.newConcertId || "",
+      artistId: concert.artistId,
+      title: concert.title,
+      subTitle: concert.subTitle,
+      date: concert.date,
+      venueName: concert.venueName,
+      cityName: concert.cityName,
+      countryName: concert.countryName,
+      posterUrl: concert.posterUrl || "",
+      ticketUrl: concert.ticketUrl,
+      concertStatus: concert.concertStatus,
+      genre: concert.genre,
+      setlist: concert.setlist || [],
+    }));
+  } catch (error: any) {
+    console.error("Error fetching past concerts:", error.message);
+    throw new Error("Failed to fetch past concerts");
+  }
+};
+
+// 단일 Concert 데이터 가져오기
 export const fetchConcertData = async (concertId: string): Promise<Concert> => {
   try {
     const response = await apiClient.get<Concert>(`/api/new-concerts/${concertId}`);
@@ -58,6 +107,7 @@ export const fetchConcertData = async (concertId: string): Promise<Concert> => {
   }
 };
 
+// 전체 Concert 목록 가져오기
 export const fetchConcerts = async (): Promise<Concert[]> => {
   try {
     const response = await apiClient.get<Concert[]>("/api/new-concerts");
@@ -101,5 +151,38 @@ export const fetchPredictedSetlist = async (artistId: string): Promise<Song[]> =
   } catch (error: any) {
     console.error("Error fetching predicted setlist:", error.message);
     throw new Error("Failed to fetch predicted setlist");
+  }
+};
+
+export const fetchPastConcertsByArtistName = async (artistName: string): Promise<Concert[]> => {
+  if (!artistName) {
+    throw new Error("artistName이 누락되었습니다.");
+  }
+
+  try {
+    const url = `/api/past-concerts/artist/${artistName}`;
+    console.log("Fetching past concerts from URL:", url);
+
+    const response = await apiClient.get<{
+      pastConcertId: number;
+      venueName: string;
+      cityName: string;
+      date: string;
+    }[]>(url);
+
+    console.log("Fetched past concerts:", response.data);
+
+    return response.data.map((concert) => ({
+      id: concert.pastConcertId.toString(),
+      venueName: concert.venueName,
+      cityName: concert.cityName,
+      date: concert.date,
+      artistId: "", // 명세에 artistId는 없으므로 빈 값으로 설정
+      title: "", // 명세에 title은 없으므로 빈 값으로 설정
+      setlist: [], // 명세에 setlist는 없으므로 빈 배열로 설정
+    }));
+  } catch (error: any) {
+    console.error("Error fetching past concerts:", error.message);
+    throw new Error("Failed to fetch past concerts");
   }
 };

@@ -34,7 +34,7 @@ const ConcertListComponent: React.FC<ConcertListComponentProps> = ({
     <FlatList
       data={concerts}
       keyExtractor={(item) => item.id}
-      horizontal={horizontal}
+      horizontal={horizontal }
       showsHorizontalScrollIndicator={false}
       renderItem={({ item }) => (
         <TouchableOpacity style={styles.concertItem} onPress={() => onConcertPress(item)}>
