@@ -155,34 +155,62 @@ export const fetchPredictedSetlist = async (artistId: string): Promise<Song[]> =
 };
 
 export const fetchPastConcertsByArtistName = async (artistName: string): Promise<Concert[]> => {
-  if (!artistName) {
-    throw new Error("artistName이 누락되었습니다.");
-  }
-
   try {
     const url = `/api/past-concerts/artist/${artistName}`;
     console.log("Fetching past concerts from URL:", url);
 
-    const response = await apiClient.get<{
-      pastConcertId: number;
-      venueName: string;
-      cityName: string;
-      date: string;
-    }[]>(url);
-
+    const response = await apiClient.get<Concert[]>(url);
     console.log("Fetched past concerts:", response.data);
 
     return response.data.map((concert) => ({
       id: concert.pastConcertId.toString(),
       venueName: concert.venueName,
       cityName: concert.cityName,
+      countryName: concert.countryName || "",
       date: concert.date,
-      artistId: "", // 명세에 artistId는 없으므로 빈 값으로 설정
-      title: "", // 명세에 title은 없으므로 빈 값으로 설정
-      setlist: [], // 명세에 setlist는 없으므로 빈 배열로 설정
+      title: concert.title || "",
+      setlist: [],
     }));
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching past concerts:", error.message);
     throw new Error("Failed to fetch past concerts");
+  }
+};
+
+const fetchArtistInfo = async () => {
+  try {
+    const response = await axios.get<Artist>(`${API_BASE_URL}/api/artists/${artistId}`);
+
+    // 아티스트 데이터 가져오기 및 이미지 URL 확인
+    const artistData = {
+      ...response.data,
+      img_url: response.data.img_url?.startsWith("http")
+        ? response.data.img_url
+        : `${API_BASE_URL}/${response.data.img_url}` // 상대 경로 -> 절대 경로 변환
+    };
+
+    // 이미지 URL 검증
+    const isValidImage = await verifyImageUrl(artistData.img_url);
+    if (!isValidImage) {
+      artistData.img_url = "https://via.placeholder.com/150"; // 기본 이미지 URL 설정
+    }
+
+    setArtist(artistData);
+    return artistData.name;
+  } catch (error) {
+    console.error("Error fetching artist info:", error.message);
+    Alert.alert("오류", "아티스트 정보를 불러오는 데 실패했습니다.");
+    return null;
+  }
+};
+
+// 이미지 URL 유효성 검사 함수
+const verifyImageUrl = async (url: string) => {
+  try {
+    const response = await fetch(url, { method: "HEAD" });
+    return response.ok;
+  } catch (error) {
+    console.warn("Invalid image URL:", url);
+    return false;
   }
 };

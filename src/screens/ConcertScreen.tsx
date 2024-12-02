@@ -51,9 +51,11 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
 
   const handlePastSetlistPress = () => {
     navigation.navigate("PastSetListScreen", {
-      artistName: concertData?.title || "Unknown Artist",
+      artistId: concertData?.artistId || "unknown", // artistId 전달
+      artistName: concertData?.title || "Unknown Artist", // artistName 전달
     });
   };
+  
 
   if (loading) {
     return (

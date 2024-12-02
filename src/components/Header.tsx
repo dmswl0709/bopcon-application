@@ -4,8 +4,10 @@ import { useNavigation, NavigationProp } from "@react-navigation/native";
 import AppNavigationParamList from "../navigation/AppNavigatorParamList";
 import BOPCONLogo from "../assets/icons/BOPCONLogo.svg";
 
+// Props 타입 정의
 type HeaderProps = {
-  onBackPress?: () => void; // onBackPress는 선택 사항으로 설정
+  title?: string; // title은 선택 사항으로 설정
+  onBackPress?: () => void; // onBackPress도 선택 사항으로 설정
 };
 
 const Header: React.FC<HeaderProps> = ({ onBackPress }) => {
@@ -37,7 +39,10 @@ const Header: React.FC<HeaderProps> = ({ onBackPress }) => {
       <View style={{ flex: 1 }} />
 
       {/* Logo */}
-      <TouchableOpacity onPress={handleLogoPress} style={[styles.iconContainer, styles.alignContent, {marginRight: 10}]}>
+      <TouchableOpacity
+        onPress={handleLogoPress}
+        style={[styles.iconContainer, styles.alignContent, { marginRight: 10 }]}
+      >
         <BOPCONLogo width={110} height={40} />
       </TouchableOpacity>
     </View>
@@ -53,10 +58,10 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     height: 100, // Header의 전체 높이를 늘려서 아래로 정렬
   },
-   iconContainer: {
-   marginBottom: 2, // 개별 아이콘을 아래로 내림
+  iconContainer: {
+    marginBottom: 2, // 개별 아이콘을 아래로 내림
   },
-   icon: {
+  icon: {
     width: 20, // Backicon 크기 조정
     height: 40, // Backicon 크기 조정
     resizeMode: "contain",

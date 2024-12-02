@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 interface ConcertRowProps {
   dateYear: string;
@@ -17,7 +18,10 @@ const ConcertRow: React.FC<ConcertRowProps> = ({ dateYear, dateDay, description,
       </View>
       <Text style={styles.concertDescription}>{description}</Text>
       <TouchableOpacity onPress={onPress}>
-        <Image source={require("../assets/icons/next.png")} style={styles.nextIcon} />
+        <Image
+          source={require("../assets/icons/next.png")}
+          style={styles.nextIcon}
+        />
       </TouchableOpacity>
     </View>
   );
@@ -42,18 +46,20 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 10,
     fontWeight: "bold",
+    fontFamily: "Pretendard-Regular",
   },
   dateDay: {
     color: "white",
     fontSize: 10,
     fontWeight: "bold",
+    fontFamily: "Pretendard-Bold",
   },
   concertDescription: {
     flex: 1,
     fontSize: 14,
     color: "black",
     marginLeft: 16,
-    fontWeight: "bold",
+    fontFamily: "Pretendard-Bold",
   },
   nextIcon: {
     width: 24,

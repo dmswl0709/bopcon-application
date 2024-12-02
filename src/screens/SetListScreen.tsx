@@ -1,32 +1,76 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
-import { useSelector } from 'react-redux';
-import Header from '../components/Header';
-import FavoriteButton from '../components/FavoriteButton';
-import SetlistItem from '../components/SetlistItem';
-import { selectSetlist } from '../store/utils/selectors';
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, FlatList, Image, Alert, ActivityIndicator } from "react-native";
+import axios from "axios";
+import Header from "../components/Header";
+import FavoriteButton from "../components/FavoriteButton";
+import SetlistItem from "../components/SetlistItem";
+
+const API_BASE_URL = "http://localhost:8080";
 
 const SetListScreen = ({ route, navigation }) => {
-  const { concertName, venueName, location } = route.params;
+  const { artistId, pastconcertId, title, cityName, venueName } = route.params;
 
-  // Redux 상태에서 setlist를 가져옵니다.
-  const setlistFromRedux = useSelector(selectSetlist);
+  const [concertImage, setConcertImage] = useState("");
+  const [setlist, setSetlist] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Redux 데이터가 없는 경우 임시 데이터를 사용합니다.
-  const setlist = setlistFromRedux.length > 0
-    ? setlistFromRedux
-    : [
-        "Song 1",
-        "Song 2",
-        "Song 3",
-        "Song 4",
-        "Song 5",
-        "Song 6",
-        "Song 7",
-        "Song 8",
-        "Song 9",
-        "Song 10",
-      ];
+  // Fetch concert image
+  const fetchConcertImage = async () => {
+    try {
+      console.log(`Fetching artist image for artistId: ${artistId}`);
+      const response = await axios.get(`${API_BASE_URL}/api/artists/${artistId}`);
+      console.log("Artist Image API Response:", response.data);
+
+      const imgUrl = response.data.imgUrl.startsWith("http")
+        ? response.data.imgUrl
+        : `${API_BASE_URL}/${response.data.imgUrl}`;
+      setConcertImage(imgUrl);
+    } catch (error) {
+      console.error("Error fetching concert image:", error.message);
+      Alert.alert("오류", "콘서트 이미지를 불러오는 데 실패했습니다.");
+    }
+  };
+
+  // Fetch setlist for the specific past concert
+  const fetchSetlist = async () => {
+    try {
+      console.log(`Fetching setlist for pastConcertId: ${pastconcertId}`);
+      const response = await axios.get(`${API_BASE_URL}/api/setlists/past-concert/${pastconcertId}`);
+      console.log("Setlist API Response:", response.data);
+
+      const { setlist } = response.data;
+
+      if (setlist) {
+        setSetlist(setlist); // Correctly update the setlist state
+      } else {
+        setSetlist([]);
+      }
+    } catch (error) {
+      console.error("Error fetching setlist:", error.message);
+      Alert.alert("오류", "셋리스트를 불러오는 데 실패했습니다.");
+    }
+  };
+
+  // Fetch all data
+  const fetchData = async () => {
+    setLoading(true);
+    await fetchConcertImage();
+    await fetchSetlist();
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    console.log("Route Params:", route.params);
+    fetchData();
+  }, [pastconcertId, artistId]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#000" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -35,34 +79,38 @@ const SetListScreen = ({ route, navigation }) => {
 
       {/* Concert Image */}
       <View style={styles.imageContainer}>
-        <Image
-          source={require('../assets/images/sampleimg4.png')}
-          style={styles.concertImage}
-        />
+        {concertImage ? (
+          <Image source={{ uri: concertImage }} style={styles.concertImage} />
+        ) : (
+          <Text style={styles.noImageText}>이미지를 불러올 수 없습니다.</Text>
+        )}
       </View>
 
+      {/* Concert Info */}
       <View style={styles.infoContainer}>
         <View style={styles.concertInfoRow}>
-          {/* Concert Info */}
-          <Text style={styles.concertName}>{concertName || 'Concert Name'}</Text>
-          {/* Favorite Button */}
+          <Text style={styles.concertName}>{title || "Concert Name"}</Text>
           <FavoriteButton />
         </View>
-        <Text style={styles.venueName}>{venueName || 'Venue Name'}</Text>
-        <Text style={styles.location}>{location || 'Location'}</Text>
+        <Text style={styles.venueName}>{venueName || "Venue Name"}</Text>
+        <Text style={styles.location}>{cityName || "City Name"}</Text>
       </View>
 
-      {/* Setlist Title */}
+      {/* Setlist Section */}
       <Text style={styles.setlistTitle}>셋리스트</Text>
       <View style={styles.divider} />
 
-      {/* Display Setlist Items */}
+      {/* Display Setlist */}
       {setlist.length > 0 ? (
         <FlatList
           data={setlist}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item, index }) => (
-            <SetlistItem key={index} index={index + 1} songName={item} />
+          keyExtractor={(item) => item.songId.toString()} // Use songId for unique key
+          renderItem={({ item }) => (
+            <SetlistItem
+              key={item.order}
+              index={item.order}
+              songName={item.songName} // Correct the field name
+            />
           )}
         />
       ) : (
@@ -75,65 +123,74 @@ const SetListScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   imageContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: 16,
   },
   concertImage: {
-    width: '80%',
+    width: "80%",
     height: undefined,
     aspectRatio: 16 / 9,
-    resizeMode: 'contain',
+    resizeMode: "contain",
+  },
+  noImageText: {
+    fontSize: 14,
+    color: "gray",
   },
   infoContainer: {
     paddingHorizontal: 16,
     paddingTop: 16,
   },
   concertInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   concertName: {
     fontSize: 16,
-    fontWeight: 'bold',
-    fontFamily: 'Pretendard-Bold',
+    fontWeight: "bold",
+    fontFamily: "Pretendard-Bold",
     flex: 1,
   },
   venueName: {
     fontSize: 15,
-    fontFamily: 'Pretendard-Regular',
+    fontFamily: "Pretendard-Regular",
     marginTop: 4,
-    textAlign: 'left',
+    textAlign: "left",
   },
   location: {
     fontSize: 13,
-    fontFamily: 'Pretendard-Regular',
+    fontFamily: "Pretendard-Regular",
     marginTop: 4,
-    textAlign: 'left',
+    textAlign: "left",
   },
   setlistTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    fontFamily: 'Pretendard-Bold',
+    fontWeight: "bold",
+    fontFamily: "Pretendard-Bold",
     marginHorizontal: 16,
     marginTop: 24,
   },
   divider: {
-    borderBottomColor: 'black',
+    borderBottomColor: "black",
     borderBottomWidth: 2,
-    width: '92%',
-    alignSelf: 'center',
+    width: "92%",
+    alignSelf: "center",
     marginVertical: 8,
   },
   noSetlist: {
     fontSize: 14,
-    color: 'gray',
-    textAlign: 'center',
+    color: "gray",
+    textAlign: "center",
     marginTop: 16,
-    fontFamily: 'Pretendard-Regular',
+    fontFamily: "Pretendard-Regular",
   },
 });
 

@@ -12,13 +12,12 @@ type AppNavigationParamList = {
     concertId: string;
   };
   PastSetListScreen: {
-    artistName: string; // Artist name to display at the top of the screen
+    artistId: string;
   };
   SetListScreen: {
     concertName: string; // The name of the concert
     venueName: string; // The name of the venue
     location: string; // The location of the concert
-    setlist: string[]; // Array of setlist items
   };
   ArtistScreen: {
     artistId?: string;
@@ -27,6 +26,6 @@ type AppNavigationParamList = {
     instagramUrl?: string; // Instagram profile URL
     spotifyUrl?: string; // Spotify profile URL
   };
-};
+}
 
 export default AppNavigationParamList;

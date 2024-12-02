@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { FlatList, View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { FlatList, View, Text, TouchableOpacity, Image, StyleSheet, Dimensions } from "react-native";
 
 interface Concert {
   id: string;
@@ -14,7 +14,7 @@ interface Concert {
 interface ConcertListComponentProps {
   concerts: Concert[];
   onConcertPress: (concert: Concert) => void;
-  horizontal?: boolean;
+  horizontal?: boolean; // 수평 또는 수직 설정
 }
 
 const ConcertListComponent: React.FC<ConcertListComponentProps> = ({
@@ -34,10 +34,14 @@ const ConcertListComponent: React.FC<ConcertListComponentProps> = ({
     <FlatList
       data={concerts}
       keyExtractor={(item) => item.id}
-      horizontal={horizontal }
-      showsHorizontalScrollIndicator={false}
+      key={`${horizontal}-${horizontal ? 1 : 2}`} // key 변경으로 재렌더링 강제
+      horizontal={horizontal} // 수평 스크롤 활성화 여부
+      numColumns={horizontal ? 1 : 2} // 수평이면 1, 수직이면 2개씩
+      columnWrapperStyle={!horizontal && styles.row} // 열 스타일
+      showsHorizontalScrollIndicator={horizontal}
+      showsVerticalScrollIndicator={!horizontal}
       renderItem={({ item }) => (
-        <TouchableOpacity style={styles.concertItem} onPress={() => onConcertPress(item)}>
+        <TouchableOpacity style={[styles.concertItem, horizontal && styles.horizontalItem]} onPress={() => onConcertPress(item)}>
           <Image
             source={
               item.posterUrl
@@ -46,7 +50,7 @@ const ConcertListComponent: React.FC<ConcertListComponentProps> = ({
                   : item.posterUrl // 로컬 리소스
                 : require("../assets/images/sampleimg1.jpg") // 기본 이미지
             }
-            style={styles.posterImage}
+            style={[styles.posterImage, horizontal && styles.horizontalImage]}
             resizeMode="cover"
           />
           <View style={styles.concertInfo}>
@@ -60,6 +64,9 @@ const ConcertListComponent: React.FC<ConcertListComponentProps> = ({
   );
 };
 
+const screenWidth = Dimensions.get("window").width;
+const itemMargin = 36; // 아이템 간 여백
+const itemWidth = (screenWidth - itemMargin * 3) / 2; // 두 열 기준 너비 계산
 
 const styles = StyleSheet.create({
   emptyContainer: {
@@ -71,16 +78,26 @@ const styles = StyleSheet.create({
     color: "#999",
     fontSize: 16,
   },
+  row: {
+    justifyContent: "space-between", // 각 아이템 간격 조정
+    marginBottom: 16, // 열 간 여백
+  },
   concertItem: {
-    marginHorizontal: 10,
-    width: 150,
+    marginHorizontal: itemMargin / 2, // 기본 아이템 여백
+    width: itemWidth, // 수직 배치에서 너비
     alignItems: "center",
   },
+  horizontalItem: {
+    width: 120, // 수평 배치에서 너비
+  },
   posterImage: {
-    width: 120,
-    height: 180,
+    width: "100%", // 부모 요소에 맞게 너비
+    height: itemWidth * 1.5, // 비율에 맞는 높이 설정 (2:3 비율)
     backgroundColor: "#f0f0f0",
     marginBottom: 8,
+  },
+  horizontalImage: {
+    height: 180, // 수평 배치에서 고정 높이
   },
   concertInfo: {
     alignItems: "center",
