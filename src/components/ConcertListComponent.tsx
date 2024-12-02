@@ -33,7 +33,7 @@ const ConcertListComponent: React.FC<ConcertListComponentProps> = ({
   return (
     <FlatList
       data={concerts}
-      keyExtractor={(item) => item.id}
+      keyExtractor={(item, index) => `concert-${item.id}-${index}`} // 고유한 key 설정
       key={`${horizontal}-${horizontal ? 1 : 2}`} // key 변경으로 재렌더링 강제
       horizontal={horizontal} // 수평 스크롤 활성화 여부
       numColumns={horizontal ? 1 : 2} // 수평이면 1, 수직이면 2개씩

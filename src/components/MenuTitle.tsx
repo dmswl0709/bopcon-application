@@ -11,8 +11,8 @@ import AppNavigationParamList from '../navigation/AppNavigatorParamList';
 
 interface MenuTitleProps {
   title: string;
-  navigateName?: keyof AppNavigationParamList;
-  navigateParams?: any;
+  navigateName?: keyof AppNavigationParamList; // 이동할 스크린 이름
+  navigateParams?: any; // 스크린으로 전달할 파라미터
 }
 
 const MenuTitle = ({ title, navigateName, navigateParams }: MenuTitleProps) => {
@@ -20,14 +20,20 @@ const MenuTitle = ({ title, navigateName, navigateParams }: MenuTitleProps) => {
 
   return (
     <Stack direction="horizontal" style={{ paddingTop: 18, paddingBottom: 4, paddingHorizontal: 16 }}>
+      {/* 타이틀 */}
       <Text style={{ fontSize: 22, fontWeight: '900', fontFamily: 'Pretendard' }}>{title}</Text>
       <Spacer />
-      <TouchableOpacity onPress={() => {
-        if (navigateName) {
-          navigation.navigate(navigateName, navigateParams);
-        }
-      }}>
-        <Text style={{ fontSize: 16, fontWeight: '800', color: '#8C8C8C', fontFamily: 'Pretendard' }}>더보기</Text>
+      {/* 더보기 버튼 */}
+      <TouchableOpacity
+        onPress={() => {
+          if (navigateName) {
+            navigation.navigate(navigateName, navigateParams); // navigate 동작 설정
+          }
+        }}
+      >
+        <Text style={{ fontSize: 16, fontWeight: '800', color: '#8C8C8C', fontFamily: 'Pretendard' }}>
+          더보기
+        </Text>
       </TouchableOpacity>
     </Stack>
   );

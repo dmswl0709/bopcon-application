@@ -1,3 +1,5 @@
+// src/screens/HomeScreen.tsx
+
 import React, { useEffect, useState } from "react";
 import { Dimensions, Image, Text, TouchableOpacity, Alert } from "react-native";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
@@ -116,7 +118,11 @@ function HomeScreen() {
       </Stack>
 
       {/* NEW Section */}
-      <MenuTitle title={"NEW"} />
+      <MenuTitle
+        title={"NEW"}
+        navigateName="ContentCategoryScreen" // ContentCategoryScreen으로 이동
+        navigateParams={{ name: "NEW" }} // 전달할 카테고리 이름
+      />
       <ConcertListComponent
         horizontal
         concerts={concerts.map((concert) => ({
@@ -127,7 +133,11 @@ function HomeScreen() {
       />
 
       {/* JPOP Section */}
-      <MenuTitle title={"JPOP"} />
+      <MenuTitle
+        title={"JPOP"}
+        navigateName="ContentCategoryScreen"
+        navigateParams={{ name: "JPOP" }}
+      />
       <ConcertListComponent
         horizontal
         concerts={concerts
@@ -140,7 +150,11 @@ function HomeScreen() {
       />
 
       {/* POP Section */}
-      <MenuTitle title={"POP"} />
+      <MenuTitle
+        title={"POP"}
+        navigateName="ContentCategoryScreen"
+        navigateParams={{ name: "POP" }}
+      />
       <ConcertListComponent
         horizontal
         concerts={concerts

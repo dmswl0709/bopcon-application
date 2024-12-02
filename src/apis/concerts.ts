@@ -33,7 +33,7 @@ export interface Song {
 // Axios 인스턴스 설정
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000,
+  timeout: 60000,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -212,5 +212,27 @@ const verifyImageUrl = async (url: string) => {
   } catch (error) {
     console.warn("Invalid image URL:", url);
     return false;
+  }
+};
+
+const fetchConcertsByGenre = async () => {
+  console.log("Fetching concerts for genre:", name); // 디버깅용 로그 추가
+  setLoading(true); // 로딩 시작
+  setError(null); // 에러 초기화
+
+  try {
+    // API 경로 수정 (명세에 따라 경로 확인)
+    const response = await axios.get(`${API_BASE_URL}/api/concerts/genre/${name}`);
+    console.log("Fetched concerts:", response.data); // 데이터 디버깅
+    setConcerts(response.data); // 데이터를 상태에 저장
+  } catch (err: any) {
+    console.error("Error fetching concerts:", err.message);
+    if (err.response) {
+      console.error("API 응답 상태 코드:", err.response.status); // HTTP 상태 코드
+      console.error("API 응답 데이터:", err.response.data); // 응답 데이터
+    }
+    setError("콘서트 데이터를 불러오는 데 실패했습니다.");
+  } finally {
+    setLoading(false); // 로딩 종료
   }
 };
