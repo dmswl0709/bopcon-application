@@ -1,7 +1,6 @@
-// 파일명: src/components/LoginForm.tsx
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { login as loginAction } from '../store/slices/authSlice'; // Redux 액션
 import { login } from '../apis/auth'; // Axios API 호출
@@ -12,19 +11,6 @@ const LoginForm = () => {
   const dispatch = useDispatch();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  // 회원가입 페이지로 이동
-  const handleJoinClick = () => {
-    navigation.navigate('SignUpScreen'); // 'SignUpScreen' 화면으로 이동
-  };
-
-  // 메인 페이지로 이동
-  const handleLogoClick = () => {
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'HomeScreen' }],
-    });
-  };
 
   // 로그인 처리
   const handleLogin = async () => {
@@ -65,7 +51,7 @@ const LoginForm = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.logoContainer} onPress={handleLogoClick}>
+      <TouchableOpacity style={styles.logoContainer} onPress={() => navigation.navigate('HomeScreen')}>
         <BOPCONLogo width={170} height={60} />
       </TouchableOpacity>
 
@@ -95,16 +81,13 @@ const LoginForm = () => {
 
       <View style={styles.signupContainer}>
         <Text style={styles.signupText}>아직 회원이 아니신가요?</Text>
-        <TouchableOpacity onPress={handleJoinClick}>
-          <Text style={styles.signupLink}>이메일 회원가입</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('SignUpScreen')}>
+          <Text style={styles.signupLink}>회원가입</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
-
-const inputSpacing = 25; // 이메일 인풋과 비밀번호 인풋 사이의 간격
-const buttonSpacing = 2;
 
 const styles = StyleSheet.create({
   container: {
@@ -116,14 +99,9 @@ const styles = StyleSheet.create({
   logoContainer: {
     marginBottom: 30,
   },
-  logo: {
-    width: 150,
-    height: 80,
-    resizeMode: 'contain',
-  },
   inputContainer: {
     width: '80%',
-    marginBottom: inputSpacing, // 이메일/비밀번호 인풋 사이 간격 설정
+    marginBottom: 25,
   },
   input: {
     height: 65,
@@ -142,7 +120,7 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: buttonSpacing, // 비밀번호 인풋과 로그인 버튼 사이 간격 설정
+    marginTop: 15,
   },
   loginButtonText: {
     color: '#000',

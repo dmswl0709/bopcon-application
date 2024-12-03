@@ -1,4 +1,3 @@
-// 파일명: src/components/SignUpForm.tsx
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
@@ -27,14 +26,6 @@ const SignUpForm = () => {
       ...prevChecks,
       [checkName]: !prevChecks[checkName],
     }));
-  };
-
-  // 메인 페이지로 이동
-  const handleLogoClick = () => {
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'HomeScreen' }],
-    });
   };
 
   // 회원가입 처리
@@ -79,7 +70,7 @@ const SignUpForm = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.logoContainer} onPress={handleLogoClick}>
+      <TouchableOpacity style={styles.logoContainer} onPress={() => navigation.navigate('HomeScreen')}>
         <BOPCONLogo width={170} height={60} />
       </TouchableOpacity>
 
@@ -147,9 +138,6 @@ const SignUpForm = () => {
   );
 };
 
-const inputSpacing = 25; // 이메일/비밀번호 인풋 사이의 간격
-const buttonSpacing = 7; // 인풋과 버튼 사이 간격
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -162,7 +150,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     width: '80%',
-    marginBottom: inputSpacing,
+    marginBottom: 25,
   },
   input: {
     height: 65,
@@ -174,7 +162,7 @@ const styles = StyleSheet.create({
   },
   checklistContainer: {
     width: '80%',
-    marginBottom: buttonSpacing,
+    marginBottom: 15,
   },
   checklistItem: {
     flexDirection: 'row',
@@ -182,7 +170,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   checklistText: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#555',
     marginLeft: 10,
   },
@@ -205,7 +193,7 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: buttonSpacing,
+    marginTop: 15,
   },
   loginButtonText: {
     color: '#000',

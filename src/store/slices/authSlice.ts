@@ -1,40 +1,66 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import axios from 'axios';
 
-// 초기 상태 정의
-interface AuthState {
-  isAuthenticated: boolean;
-  accessToken: string | null;
-  refreshToken: string | null;
-  nickname: string | null;
-}
+const API_BASE_URL = 'http://localhost:8080/api/auth';
 
-const initialState: AuthState = {
-  isAuthenticated: false,
-  accessToken: null,
-  refreshToken: null,
-  nickname: null,
-};
+// 회원가입 비동기 액션
+export const registerUser = createAsyncThunk(
+  'auth/registerUser',
+  async (formData: { email: string; nickname: string; password: string }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/signup`, formData);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response.data.error || '회원가입 중 오류가 발생했습니다.');
+    }
+  }
+);
 
-// Auth Slice 생성
+// 로그인 비동기 액션
+export const loginUser = createAsyncThunk(
+  'auth/loginUser',
+  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/login`, credentials);
+      return response.data; // 응답 데이터를 Redux 상태에 저장
+    } catch (error: any) {
+      return rejectWithValue(error.response.data.error || '로그인 중 오류가 발생했습니다.');
+    }
+  }
+);
+
+// Redux Slice 생성
 const authSlice = createSlice({
-  name: "auth",
-  initialState,
+  name: 'auth',
+  initialState: {
+    user: null,
+    token: null,
+    loading: false,
+    error: null,
+  },
   reducers: {
-    loginSuccess(state, action: PayloadAction<{ accessToken: string; refreshToken: string; nickname: string }>) {
-      state.isAuthenticated = true;
-      state.accessToken = action.payload.accessToken;
-      state.refreshToken = action.payload.refreshToken;
-      state.nickname = action.payload.nickname;
+    logout(state) {
+      state.user = null;
+      state.token = null;
     },
-    logoutSuccess(state) {
-      state.isAuthenticated = false;
-      state.accessToken = null;
-      state.refreshToken = null;
-      state.nickname = null;
-    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(registerUser.fulfilled, (state, action) => {
+        state.user = action.payload; // 회원가입 완료 후 사용자 정보 저장
+      })
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.user = action.payload.nickname;
+        state.token = action.payload.accessToken; // 로그인 완료 후 토큰 저장
+      })
+      .addCase(registerUser.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      .addCase(loginUser.rejected, (state, action) => {
+        state.error = action.payload;
+      });
   },
 });
 
-// 액션과 리듀서를 내보냄
-export const { loginSuccess, logoutSuccess } = authSlice.actions;
+export const { logout } = authSlice.actions;
 export default authSlice.reducer;

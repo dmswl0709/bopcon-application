@@ -101,7 +101,11 @@ const PastSetlistScreen: React.FC = () => {
     <View style={styles.container}>
       <Header title="Past Setlist" />
       <View style={styles.artistContainer}>
-        <Image source={{ uri: artist.imgUrl }} style={styles.artistImage} />
+        <Image 
+          source={{ uri: artist.imgUrl }} 
+          style={styles.artistImage} 
+          resizeMode="contain" // 수정된 부분
+        />
         <View style={styles.artistInfoRow}>
           <View style={styles.artistTextContainer}>
             <Text style={styles.artistName}>{artist.name}</Text>
@@ -120,7 +124,6 @@ const PastSetlistScreen: React.FC = () => {
             dateYear={new Date(concert.date).getFullYear().toString()}
             dateDay={`${new Date(concert.date).getMonth() + 1}/${new Date(concert.date).getDate()}`}
             description={`${concert.cityName}, ${concert.countryName || concert.venueName}`}
-            // 수정: 콘서트 정보를 SetlistScreen으로 전달
             onPress={() =>
               navigation.navigate("SetListScreen", {
                 artistId,
@@ -143,7 +146,12 @@ const styles = StyleSheet.create({
   errorContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   errorText: { fontSize: 16, color: "red" },
   artistContainer: { alignItems: "center", padding: 16 },
-  artistImage: { width: 210, height: 210, marginBottom: 16, resizeMode: "cover" },
+  artistImage: {
+    width: "82%", // 줄어든 크기
+    height: undefined, 
+    aspectRatio: 1, // 원본 비율 유지
+    marginBottom: 5,
+  },
   artistInfoRow: {
     flexDirection: "row",
     alignItems: "center",

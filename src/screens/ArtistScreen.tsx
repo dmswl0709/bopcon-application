@@ -4,17 +4,20 @@ import Header from "../components/Header";
 import FavoriteButton from "../components/FavoriteButton";
 import ConcertRow from "../components/ConcertRow";
 import { SafeAreaView } from "react-native";
+import InstagramLogo from "../assets/icons/InstagramLogo.svg";
+import SpotifyLogo from "../assets/icons/SpotifyLogo.svg";
 import axios from "axios";
+import { Linking } from "react-native";
 
 const ArtistScreen = ({ route, navigation }) => {
-  // route.params 확인 및 기본값 설정
   const {
-      artistId = null, // 반드시 추가
-      artistName = "Default Artist Name",
-      artistDetail = "This is a brief artist detail or bio.",
-      instagramUrl = "https://instagram.com",
-      spotifyUrl = "https://spotify.com",
-    } = route.params || {};
+    artistId = null,
+    name = "Drfault Artist Name",
+    krName = "Default Artist KR Name",
+    snsUrl = "https://instagram.com",
+    mediaUrl = "https://spotify.com",
+  } = route.params || {};
+
 
   const [artistData, setArtistData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,23 +26,24 @@ const ArtistScreen = ({ route, navigation }) => {
   useEffect(() => {
     if (!artistId) {
       console.error("artistId is undefined in route.params");
-      setIsLoading(false); // 로딩 상태를 종료합니다.
+      setIsLoading(false);
       return;
     }
-  
+
     const fetchArtistData = async () => {
       try {
         const response = await axios.get(`http://localhost:8080/api/artists/${artistId}`);
-        setArtistData(response.data); // 데이터를 상태에 저장
+        console.log("API 응답:", response.data);
+        setArtistData(response.data);
       } catch (error) {
         console.error("Error fetching artist data:", error);
       } finally {
         setIsLoading(false);
       }
     };
-  
+
     fetchArtistData();
-  }, [artistId]); // artistId가 변경될 때마다 데이터를 다시 가져옵니다.
+  }, [artistId]);
 
   const upcomingConcert = {
     dateYear: "2025",
@@ -219,39 +223,42 @@ const ArtistScreen = ({ route, navigation }) => {
           <View style={styles.headerContainer}>
             <Header title="Artist" onBackPress={() => navigation.goBack()} />
             <View style={styles.artistInfoSection}>
-              <Image
-                source={require("../assets/images/sampleimg4.png")}
-                style={styles.artistImage}
-              />
-              <View style={styles.socialMediaContainer}>
-                <TouchableOpacity
-                  onPress={() =>
-                    navigation.navigate("WebViewScreen", { url: instagramUrl })
-                  }
-                >
-                  <Image
-                    source={require("../assets/icons/InstagramLogo.png")}
-                    style={styles.socialIcon}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() =>
-                    navigation.navigate("WebViewScreen", { url: spotifyUrl })
-                  }
-                >
-                  <Image
-                    source={require("../assets/icons/SpotifyLogo.png")}
-                    style={styles.socialIcon}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
+           <Image source={{ uri: artistData?.imgUrl }} style={styles.artistImage} />
+           <View style={styles.socialMediaRow}>
+            {/* Instagram */}
+            <TouchableOpacity
+              onPress={() => {
+                if (artistData?.snsUrl) {
+                  Linking.openURL(artistData.snsUrl);
+                } else {
+                  Linking.openURL(snsUrl); // 기본값으로 이동
+                }
+              }}
+            >
+              <InstagramLogo width={40} height={40} style={styles.socialIcon} />
+            </TouchableOpacity>
+
+            {/* Spotify */}
+            <TouchableOpacity
+              onPress={() => {
+                if (artistData?.mediaUrl) {
+                  Linking.openURL(artistData.mediaUrl);
+                } else {
+                  Linking.openURL(mediaUrl); // 기본값으로 이동
+                }
+              }}
+            >
+              <SpotifyLogo width={40} height={40} style={styles.socialIcon} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
             <View style={styles.artistNameRow}>
-              <View style={styles.artistNameContainer}>
-                <Text style={styles.artistName}>{artistName}</Text>
-                <Text style={styles.artistDetail}>{artistDetail}</Text>
-              </View>
-              <FavoriteButton />
+             <View style={styles.artistNameContainer}>
+              <Text style={styles.artistName}>{artistData?.name || "Default Artist Name"}</Text>
+              <Text style={styles.artistKrName}>{artistData?.krName || "Default Artist KR Name"}</Text>
+             </View>
+             <FavoriteButton />         
             </View>
             <Text style={styles.upcomingTitle}>내한 예정</Text>
             <View style={styles.divider1} />
@@ -261,7 +268,7 @@ const ArtistScreen = ({ route, navigation }) => {
               description={upcomingConcert.description}
               onPress={() =>
                 navigation.navigate("ConcertScreen", {
-                  concertDetails: upcomingConcert, // 필요시 전달할 데이터
+                  concertDetails: upcomingConcert,
                 })
               }
             />
@@ -274,54 +281,51 @@ const ArtistScreen = ({ route, navigation }) => {
                     styles.tabButton,
                     activeTab === tab && styles.activeTabButton,
                   ]}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      activeTab === tab && styles.activeTabText,
+                    ]}
                   >
-                    <Text
-                      style={[
-                        styles.tabText,
-                        activeTab === tab && styles.activeTabText,
-                      ]}
-                    >
-                      {tab}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                    {tab}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
-          }
-          data={[]} // 데이터는 렌더링하지 않음
-          renderItem={null}
-          ListFooterComponent={renderContent()}
-        />
-      </SafeAreaView>
-    );
-  };
-
+          </View>
+        }
+        data={[]} // 데이터는 렌더링하지 않음
+        renderItem={null}
+        ListFooterComponent={renderContent()}
+      />
+    </SafeAreaView>
+  );
+};
 const styles = StyleSheet.create({
   headerContainer: {
     marginTop: -55,
     paddingHorizontal: 16,
   },
   artistInfoSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
+    alignItems: "center", // 이미지와 로고를 수직 중앙 정렬
+    marginBottom: 16, // 전체 섹션 아래 여백
   },
   artistImage: {
-    width: 165,
-    height: 165,
-    borderRadius: 4,
+    width: 220,
+    height: 220,
+    borderRadius: 2,
     resizeMode: "cover",
-    marginTop: 10,
+    marginBottom: 10, // 로고와의 간격
   },
-  socialMediaContainer: {
-    marginLeft: 18,
-    justifyContent: "space-around",
+  socialMediaRow: {
+    flexDirection: "row", // 로고들을 가로로 정렬
+    justifyContent: "center", // 가로 중앙 정렬
+    marginTop: 10, // 이미지와 로고 간 간격
   },
   socialIcon: {
-    width: 40,
-    height: 40,
-    marginBottom: 8,
-  },
+    marginHorizontal: 15, // 로고 간 간격
+  },  
   artistNameRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -329,10 +333,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   artistName: {
-    fontSize: 22,
+    fontSize: 22, // 기존 크기 유지
     fontWeight: "bold",
     marginBottom: 4,
   },
+  artistKrName: {
+    fontSize: 16, // 크기를 살짝 줄임
+    fontWeight: "normal", // bold 제거, regular로 설정
+    color: "gray", // 약간의 시각적 구분을 위해 색상 변경 (옵션)
+  },  
   artistDetail: {
     fontSize: 14,
     color: "gray",
@@ -346,7 +355,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: "black",
     marginBottom: 16,
-    width:"98%",
+    width: "98%",
     marginLeft: 2,
   },
   tabRow: {
@@ -408,16 +417,16 @@ const styles = StyleSheet.create({
     color: "gray",
   },
   concertRowContainer: {
-    marginLeft: 16, // ConcertRow의 왼쪽 여백
-    },
+    marginLeft: 16,
+  },
   divider: {
     borderBottomWidth: 2,
     borderBottomColor: "black",
     marginBottom: 16,
-    marginLeft: 5, // 왼쪽 여백 확실히 설정
-    marginRight: 16, // 오른쪽 여백 설정
-    alignSelf: "stretch", // 부모 컨테이너의 가로 공간을 채움
-      },
+    marginLeft: 5,
+    marginRight: 16,
+    alignSelf: "stretch",
+  },
   boardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -431,7 +440,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: "Pretendard-Bold",
     marginBottom: 10,
-    marginLeft:18,
+    marginLeft: 18,
   },
   boardContent: {
     fontSize: 14,
@@ -442,7 +451,7 @@ const styles = StyleSheet.create({
   boardDate: {
     fontSize: 12,
     color: "gray",
-    marginLeft:16,
+    marginLeft: 16,
   },
   lightDivider: {
     borderBottomWidth: 1,
@@ -455,18 +464,11 @@ const styles = StyleSheet.create({
     marginRight: 32,
     marginBottom: 4,
   },
-  divider: {
-    borderBottomWidth: 2,
-    borderBottomColor: "black",
-    marginBottom: 16,
-    marginLeft: 16, // Divider 시작 위치를 왼쪽으로 정렬
-    width: "90%", // Divider의 길이 설정
-  },
   sectionTitle: {
-    fontSize: 14, // 폰트 크기
-    fontFamily: "Pretendard-Regular", // Pretendard-Regular 적용
-    marginLeft: 16, // 좌측 여백
-    marginBottom: 12, // 아래 여백 추가
+    fontSize: 14,
+    fontFamily: "Pretendard-Regular",
+    marginLeft: 16,
+    marginBottom: 12,
   },
 });
 
