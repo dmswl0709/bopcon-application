@@ -13,7 +13,7 @@ import TicketButton from "../components/TicketButton";
 type ConcertScreenProps = StackScreenProps<AppNavigationParamList, "ConcertScreen">;
 
 const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
-  const { concertId } = route.params || {};
+  const { concertId } = route.params || {}; // concertId를 받아옵니다.
   const [concertData, setConcertData] = useState<any>(null);
   const [predictedSetlist, setPredictedSetlist] = useState<{ order: number; title: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,21 +21,30 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
   useEffect(() => {
     const loadConcertData = async () => {
       try {
-        if (!concertId) throw new Error("Concert ID가 전달되지 않았습니다.");
+        if (!concertId) {
+          console.error("Concert ID is missing in route params:", route.params);
+          console.log("concertId in ConcertScreen:", concertId);
+          throw new Error("Concert ID가 전달되지 않았습니다.");
+        }
+
+        console.log("Fetching concert data for concertId:", concertId);
+
         const concert = await fetchConcertData(concertId);
         setConcertData(concert);
 
         if (concert.artistId) {
+          console.log("Fetching predicted setlist for artistId:", concert.artistId);
           const setlist = await fetchPredictedSetlist(concert.artistId);
           setPredictedSetlist(setlist);
         }
       } catch (error: any) {
-        console.error("ConcertScreen에서 데이터를 불러오는 중 오류 발생:", error.message);
+        console.error("Error fetching concert data:", error.message);
         Alert.alert("오류", error.message);
       } finally {
         setLoading(false);
       }
     };
+
     loadConcertData();
   }, [concertId]);
 
@@ -55,7 +64,6 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
       artistName: concertData?.title || "Unknown Artist", // artistName 전달
     });
   };
-  
 
   if (loading) {
     return (
@@ -124,7 +132,11 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
         <View style={styles.divider} />
         {predictedSetlist.length > 0 ? (
           predictedSetlist.map((song, index) => (
-            <SetlistItem key={`predicted-setlist-item-${index}`} index={song.order} songName={song.title} />
+            <SetlistItem
+              key={`predicted-setlist-item-${index}`}
+              index={song.order}
+              songName={song.title}
+            />
           ))
         ) : (
           <Text style={styles.noSetlist}>예상 셋리스트 정보 없음</Text>

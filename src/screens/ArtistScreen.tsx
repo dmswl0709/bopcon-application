@@ -6,6 +6,7 @@ import ConcertRow from "../components/ConcertRow";
 import { SafeAreaView } from "react-native";
 import InstagramLogo from "../assets/icons/InstagramLogo.svg";
 import SpotifyLogo from "../assets/icons/SpotifyLogo.svg";
+import { fetchUpcomingConcerts,fetchSongRanking } from '../apis/concerts'; 
 import axios from "axios";
 import { Linking } from "react-native";
 
@@ -22,6 +23,7 @@ const ArtistScreen = ({ route, navigation }) => {
   const [artistData, setArtistData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("곡 랭킹");
+  const [upcomingConcerts, setUpcomingConcerts] = useState(tempConcertData || []); // fallback 데이터로 초기화
 
   useEffect(() => {
     if (!artistId) {
@@ -45,6 +47,40 @@ const ArtistScreen = ({ route, navigation }) => {
     fetchArtistData();
   }, [artistId]);
 
+  useEffect(() => {
+    const getUpcomingConcerts = async () => {
+      try {
+        const concerts = await fetchUpcomingConcerts(artistId);
+        console.log("Upcoming concerts data in ArtistScreen:", concerts); // 콘솔 로그 추가
+        if (concerts && concerts.length > 0) {
+          setUpcomingConcerts(concerts);
+        } else {
+          console.warn("No upcoming concerts found. Using fallback data.");
+          setUpcomingConcerts(tempConcertData); // fallback
+        }
+      } catch (error) {
+        console.error("Error fetching upcoming concerts:", error);
+        setUpcomingConcerts(tempConcertData); // fallback
+      }
+    };
+  
+    getUpcomingConcerts();
+  }, [artistId]);
+
+  useEffect(() => {
+    const loadSongRanking = async () => {
+      try {
+        const ranking = await fetchSongRanking(artistId);
+        setVisibleSongs(ranking);
+      } catch (error) {
+        console.error("Error loading song ranking:", error);
+      }
+    };
+  
+    loadSongRanking();
+  }, [artistId]);
+  
+
   const upcomingConcert = {
     dateYear: "2025",
     dateDay: "01/12",
@@ -67,26 +103,31 @@ const ArtistScreen = ({ route, navigation }) => {
 
   const tempConcertData = [
     {
+      id: "temp-1", // ID를 명시적으로 추가
       dateYear: "2024",
       dateDay: "10/26",
       description: "Benson Boone at Austin City Limits 2024",
     },
     {
+      id: "temp-1", // ID를 명시적으로 추가
       dateYear: "2024",
       dateDay: "10/26",
       description: "콘서트 제목 1",
     },
     {
+      id: "temp-1", // ID를 명시적으로 추가
       dateYear: "2024",
       dateDay: "10/26",
       description: "콘서트 제목 2",
     },
     {
+      id: "temp-1", // ID를 명시적으로 추가
       dateYear: "2024",
       dateDay: "10/26",
       description: "콘서트 제목 3",
     },
     {
+      id: "temp-1", // ID를 명시적으로 추가
       dateYear: "2024",
       dateDay: "10/26",
       description: "콘서트 제목 4",
@@ -262,16 +303,39 @@ const ArtistScreen = ({ route, navigation }) => {
             </View>
             <Text style={styles.upcomingTitle}>내한 예정</Text>
             <View style={styles.divider1} />
-            <ConcertRow
-              dateYear={upcomingConcert.dateYear}
-              dateDay={upcomingConcert.dateDay}
-              description={upcomingConcert.description}
-              onPress={() =>
-                navigation.navigate("ConcertScreen", {
-                  concertDetails: upcomingConcert,
-                })
-              }
-            />
+            {Array.isArray(upcomingConcerts) && upcomingConcerts.length > 0 ? (
+              upcomingConcerts.map((concert, index) => {
+                console.log("ConcertRow data:", concert); // concert 데이터 확인
+                const [year, month, day] = (concert.date || "").split("-");
+
+              // ArtistScreen에서 ConcertRow로 전달하는 데이터 형식 수정
+              return (
+                <ConcertRow
+                  key={concert.id || concert.newConcertId || `generated-id-${index}`}
+                  dateYear={year || "N/A"} // 년도 추출
+                  dateDay={`${month}/${day}` || "N/A"} // 월/일 추출
+                  description={concert.title || concert.description}
+                  onPress={() =>
+                    navigation.navigate("ConcertScreen", {
+                      concertDetails: {
+                        ...concert,
+                        dateYear: year || "N/A", // dateYear 전달
+                        dateDay: `${month}/${day}` || "N/A", // dateDay 전달
+                        id: concert.id || concert.newConcertId || `generated-id-${index}`,
+                        artistName: artistData?.name, // 추가 데이터 전달
+                      },
+                      concertId: concert.newConcertId || `generated-id-${index}`, // newConcertId 전달
+                    })
+                  }
+                />
+              );
+              })
+            ) : (
+              <Text style={{ textAlign: "center", color: "gray" }}>내한 예정 콘서트가 없습니다.</Text>
+            )}
+
+
+
             <View style={styles.tabRow}>
               {["곡 랭킹", "지난 공연", "게시판"].map((tab) => (
                 <TouchableOpacity

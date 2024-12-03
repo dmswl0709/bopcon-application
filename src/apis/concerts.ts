@@ -236,3 +236,69 @@ const fetchConcertsByGenre = async () => {
     setLoading(false); // 로딩 종료
   }
 };
+
+export const fetchUpcomingConcerts = async (artistId: number) => {
+  try {
+    const response = await axios.get(`http://localhost:8080/api/artists/${artistId}/concerts`);
+    console.log("Fetched upcoming concerts:", response.data);
+
+    // id가 없는 경우 index를 기반으로 기본 id 생성
+    return response.data.map((concert, index) => ({
+      ...concert,
+      id: concert.id || `generated-id-${index}`, // id가 없는 경우 기본값 추가
+    }));
+  } catch (error) {
+    console.error("Failed to fetch upcoming concerts:", error);
+    throw error; // 오류 발생 시 상위에서 처리
+  }
+};
+
+
+
+const getUpcomingConcerts = async () => {
+  try {
+    const concerts = await fetchUpcomingConcerts(artistId); // concert.ts에서 fetchUpcomingConcerts 호출
+    if (Array.isArray(concerts) && concerts.length > 0) {
+      setUpcomingConcerts(concerts); // API 데이터 설정
+    } else {
+      console.warn("No upcoming concerts found, using fallback data");
+      setUpcomingConcerts(tempConcertData); // fallback 데이터로 설정
+    }
+  } catch (error) {
+    console.error("Error fetching upcoming concerts:", error);
+    setUpcomingConcerts(tempConcertData); // fallback 데이터로 설정
+  }
+};
+
+export const fetchSongRanking = async (artistId: string): Promise<Record<string, number>> => {
+  try {
+    if (!artistId) {
+      console.error("Invalid artistId: artistId is missing or null.");
+      throw new Error("artistId가 제공되지 않았습니다.");
+    }
+
+    const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (!isValidUUID(artistId)) {
+      console.error("Invalid MBID format:", artistId);
+      throw new Error("Invalid MBID format provided.");
+    }
+
+    const url = `/api/song-ranking/artist/${artistId}`;
+    console.log("Fetching song ranking data from URL:", url);
+
+    const response = await apiClient.get<Record<string, number>>(url);
+    console.log("Fetched song ranking data:", response.data);
+
+    return response.data; // 성공적으로 가져온 데이터 반환
+  } catch (error: any) {
+    console.error("Error fetching song ranking:", error.message);
+
+    // 상세한 오류 디버깅
+    if (error.response) {
+      console.error("Response status:", error.response.status);
+      console.error("Response data:", error.response.data);
+    }
+
+    throw new Error("Failed to fetch song ranking data.");
+  }
+};

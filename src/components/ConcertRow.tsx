@@ -10,6 +10,7 @@ interface ConcertRowProps {
 }
 
 const ConcertRow: React.FC<ConcertRowProps> = ({ dateYear, dateDay, description, onPress }) => {
+  console.log("Props in ConcertRow:", { dateYear, dateDay, description });
   return (
     <View style={styles.concertRow}>
       <View style={styles.dateBox}>
@@ -18,14 +19,12 @@ const ConcertRow: React.FC<ConcertRowProps> = ({ dateYear, dateDay, description,
       </View>
       <Text style={styles.concertDescription}>{description}</Text>
       <TouchableOpacity onPress={onPress}>
-        <Image
-          source={require("../assets/icons/next.png")}
-          style={styles.nextIcon}
-        />
+        <Image source={require("../assets/icons/next.png")} style={styles.nextIcon} />
       </TouchableOpacity>
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   concertRow: {
