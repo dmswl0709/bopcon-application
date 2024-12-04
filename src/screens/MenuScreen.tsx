@@ -1,61 +1,83 @@
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useSelector } from 'react-redux'; // Redux 상태 가져오기
 import Layout from '../components/Layout';
 import Stack from '../components/Stack';
 import Spacer from '../components/Spacer';
 import Dismiss from '../assets/icons/Dismiss.svg';
 import Person from '../assets/icons/Person.svg';
 import AppNavigationParamList from '../navigation/AppNavigatorParamList';
+import { RootState } from '../store'; // Redux RootState 타입
 
 const MenuScreen = () => {
   const navigation = useNavigation<NavigationProp<AppNavigationParamList>>();
 
+  // Redux 상태에서 로그인 여부 확인
+  const user = useSelector((state: RootState) => state.auth.user);
+
   const pageList = [
-    { name: "NEW", type: "NEW" },
-    { name: "ALL", type: "ALL" },
-    { name: "POP", type: "POP" },
-    { name: "ROCK", type: "ROCK" },
-    { name: "HIPHOP", type: "HIPHOP" },
-    { name: "R&B", type: "R&B" },
-    { name: "JPOP", type: "JPOP" }
+    { name: 'NEW', type: 'NEW' },
+    { name: 'ALL', type: 'ALL' },
+    { name: 'POP', type: 'POP' },
+    { name: 'ROCK', type: 'ROCK' },
+    { name: 'HIPHOP', type: 'HIPHOP' },
+    { name: 'R&B', type: 'R&B' },
+    { name: 'JPOP', type: 'JPOP' },
   ];
 
   return (
     <Layout>
-      <Stack direction='horizontal' style={{ paddingHorizontal: 16 }}>
+      {/* 상단 헤더 */}
+      <Stack direction="horizontal" style={styles.header}>
         <Spacer />
-        <Stack direction='horizontal' spacing={14}>
-          <TouchableOpacity onPress={() => { navigation.goBack() }}>
-            <Dismiss width={26} height={26} style={{ marginHorizontal: 10 }} />
-          </TouchableOpacity>
-        </Stack>
-      </Stack>
-      <Stack direction='horizontal' justifyContent='start' style={{ paddingHorizontal: 16, paddingVertical: 8, marginBottom: 10 }}>
-        <TouchableOpacity onPress={() => { navigation.navigate('LoginScreen') }}>
-          <Stack direction='horizontal' spacing={10}>
-            <Person width={26} height={26} />
-            <Text style={{ fontSize: 16 }}>로그인</Text>
-          </Stack>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Dismiss width={26} height={26} style={styles.dismissIcon} />
         </TouchableOpacity>
       </Stack>
-      <Stack direction='vertical' justifyContent='start' flexible fullHeight fullWidth>
-        {
-          pageList.map((item, idx) =>
-            <TouchableOpacity key={idx} style={{ width: '100%' }} onPress={() => { navigation.navigate('ContentCategoryScreen', { name: item.name, type: item.type }) }}>
-              <Text style={{ fontSize: 25, fontWeight: 'bold', paddingVertical: 10, paddingHorizontal: 16, marginLeft: 10, width: '100%' }}>{item.name}</Text>
-            </TouchableOpacity>)
-        }
 
+      {/* 로그인 상태 확인 */}
+      <Stack direction="horizontal" justifyContent="start" style={styles.loginContainer}>
+        {user ? (
+          // 로그인 상태일 때 사용자 이름 표시
+          <Stack direction="horizontal" spacing={10}>
+            <Person width={26} height={26} />
+            <Text style={styles.userText}>{user}</Text>
+          </Stack>
+        ) : (
+          // 비로그인 상태일 때 로그인 버튼 표시
+          <TouchableOpacity onPress={() => navigation.navigate('LoginScreen')}>
+            <Stack direction="horizontal" spacing={10}>
+              <Person width={26} height={26} />
+              <Text style={styles.loginText}>로그인</Text>
+            </Stack>
+          </TouchableOpacity>
+        )}
+      </Stack>
+
+      {/* 페이지 리스트 */}
+      <Stack direction="vertical" justifyContent="start" flexible fullHeight fullWidth>
+        {pageList.map((item, idx) => (
+          <TouchableOpacity
+            key={idx}
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('ContentCategoryScreen', { name: item.name, type: item.type })}
+          >
+            <Text style={styles.menuText}>{item.name}</Text>
+          </TouchableOpacity>
+        ))}
+
+        {/* 구분선 */}
         <View style={styles.divider} />
 
-
-        <TouchableOpacity onPress={() => { }} style={{ width: '100%' }}>
-          <Text style={{ fontSize: 25, fontWeight: 'bold', paddingVertical: 16, paddingHorizontal: 16, marginLeft: 10, width: '100%' }}>문의하기</Text>
+        {/* 문의하기 */}
+        <TouchableOpacity onPress={() => {}} style={styles.menuItem}>
+          <Text style={styles.menuText}>문의하기</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => { }} style={{ width: '100%' }}>
-          <Text style={{ fontSize: 25, fontWeight: 'bold', paddingVertical: 16, paddingHorizontal: 16, marginLeft: 10, width: '100%' }}>서비스 소개</Text>
+        {/* 서비스 소개 */}
+        <TouchableOpacity onPress={() => {}} style={styles.menuItem}>
+          <Text style={styles.menuText}>서비스 소개</Text>
         </TouchableOpacity>
       </Stack>
     </Layout>
@@ -63,11 +85,40 @@ const MenuScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  header: {
+    paddingHorizontal: 16,
+  },
+  dismissIcon: {
+    marginHorizontal: 10,
+  },
+  loginContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginBottom: 10,
+  },
+  loginText: {
+    fontSize: 16,
+  },
+  userText: {
+    fontSize: 16,
+    color: 'black',
+    fontWeight: 'bold',
+  },
+  menuItem: {
+    width: '100%',
+  },
+  menuText: {
+    fontSize: 25,
+    fontWeight: 'bold',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginLeft: 10,
+  },
   divider: {
-    borderBottomColor: '#D3D3D3', // 연회색 경계선
+    borderBottomColor: '#D3D3D3',
     borderBottomWidth: 1,
-    width: '88%', // 선의 길이를 조정
-    alignSelf: 'center', // 중앙 정렬
+    width: '88%',
+    alignSelf: 'center',
     marginVertical: 8,
   },
 });

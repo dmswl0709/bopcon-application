@@ -1,8 +1,7 @@
-// src/screens/HomeScreen.tsx
-
 import React, { useEffect, useState } from "react";
 import { Dimensions, Image, Text, TouchableOpacity, Alert } from "react-native";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import NavigationView from "../components/NavigationView";
 import Stack from "../components/Stack";
 import MenuTitle from "../components/MenuTitle";
@@ -57,7 +56,6 @@ function HomeScreen() {
       );
     } catch (error) {
       console.error("Error loading concerts:", error);
-      Alert.alert("오류", "콘서트 데이터를 불러오지 못했습니다. 임시 데이터를 사용합니다.");
       setConcerts(
         temporaryConcerts.map((concert) => ({
           ...concert,
@@ -70,7 +68,7 @@ function HomeScreen() {
   };
 
   useEffect(() => {
-    loadConcerts();
+    loadConcerts(); // 콘서트 데이터 로드
   }, []);
 
   const handleConcertPress = (concert) => {
