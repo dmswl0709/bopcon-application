@@ -15,7 +15,7 @@ type ConcertScreenProps = StackScreenProps<AppNavigationParamList, "ConcertScree
 const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
   const { concertId } = route.params || {}; // concertId를 받아옵니다.
   const [concertData, setConcertData] = useState<any>(null);
-  const [predictedSetlist, setPredictedSetlist] = useState<{ order: number; title: string }[]>([]);
+  const [predictedSetlist, setPredictedSetlist] = useState<{ order: number; songTitle: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,8 +33,8 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
         setConcertData(concert);
 
         if (concert.artistId) {
-          console.log("Fetching predicted setlist for artistId:", concert.artistId);
-          const setlist = await fetchPredictedSetlist(concert.artistId);
+          console.log("Fetching predicted setlist for artistId:", concert.newConcertId);
+          const setlist = await fetchPredictedSetlist(concert.newConcertId);
           setPredictedSetlist(setlist);
         }
       } catch (error: any) {
@@ -135,7 +135,7 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
             <SetlistItem
               key={`predicted-setlist-item-${index}`}
               index={song.order}
-              songName={song.title}
+              songName={song.songTitle}
             />
           ))
         ) : (

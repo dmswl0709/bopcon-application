@@ -25,7 +25,7 @@ export interface Concert {
 // Song 데이터 타입 정의
 export interface Song {
   order: number;
-  title: string;
+  songTitle: string;
   songId: number;
   ytLink: string | null;
 }
@@ -54,14 +54,14 @@ export const fetchArtistName = async (artistId: string): Promise<string> => {
 };
 
 // Past Concerts 가져오기
-export const fetchPastConcerts = async (artistName: string): Promise<Concert[]> => {
-  if (!artistName) {
+export const fetchPastConcerts = async (artistId: number): Promise<Concert[]> => {
+  if (!artistId) {
     console.warn("artistName이 누락되었습니다.");
     return [];
   }
   try {
-    console.log(`Fetching past concerts for artistName: ${artistName}`);
-    const response = await apiClient.get<Concert[]>(`/api/past-concerts/artist/${artistName}`);
+    console.log(`Fetching past concerts for artistName: ${artistId}`);
+    const response = await apiClient.get<Concert[]>(`/api/artists/${artistId}/past-concerts`);
     console.log("Fetched past concerts:", response.data);
     return response.data.map((concert) => ({
       id: concert.id || concert.newConcertId || "",
@@ -96,7 +96,7 @@ export const fetchConcertData = async (concertId: string): Promise<Concert> => {
       id: data.id || data.newConcertId || "", // id 매핑 수정
       setlist: data.setlist?.map((item: any) => ({
         order: item.order,
-        title: item.title, // JSON에 맞는 필드명
+        songTitle: item.songTitle, // JSON에 맞는 필드명
         songId: item.songId,
         ytLink: item.ytLink,
       })) || [],
@@ -133,18 +133,18 @@ export const fetchConcerts = async (): Promise<Concert[]> => {
 };
 
 // 예측된 Setlist 가져오기
-export const fetchPredictedSetlist = async (artistId: string): Promise<Song[]> => {
-  if (!artistId) {
+export const fetchPredictedSetlist = async (newConcertId: string): Promise<Song[]> => {
+  if (!newConcertId) {
     console.warn("artistId가 누락되었습니다.");
     return [];
   }
   try {
-    console.log(`Fetching predicted setlist for artistId: ${artistId}`);
-    const response = await apiClient.get<Song[]>(`/api/setlists/predict/artist/${artistId}`);
+    console.log(`Fetching predicted setlist for newConcertId: ${newConcertId}`);
+    const response = await apiClient.get<Song[]>(`/api/concerts/${newConcertId}/predicted-setlist`);
     console.log("Fetched predicted setlist:", response.data);
     return response.data.map((item) => ({
       order: item.order,
-      title: item.title,
+      songTitle: item.songTitle,
       songId: item.songId,
       ytLink: item.ytLink,
     }));
@@ -153,6 +153,7 @@ export const fetchPredictedSetlist = async (artistId: string): Promise<Song[]> =
     throw new Error("Failed to fetch predicted setlist");
   }
 };
+
 
 export const fetchPastConcertsByArtistName = async (artistName: string): Promise<Concert[]> => {
   try {
@@ -255,6 +256,9 @@ export const fetchUpcomingConcerts = async (artistId: number) => {
 
 
 
+
+
+
 const getUpcomingConcerts = async () => {
   try {
     const concerts = await fetchUpcomingConcerts(artistId); // concert.ts에서 fetchUpcomingConcerts 호출
@@ -270,35 +274,53 @@ const getUpcomingConcerts = async () => {
   }
 };
 
-export const fetchSongRanking = async (artistId: string): Promise<Record<string, number>> => {
+// export const fetchSongRanking = async (artistId: string): Promise<Record<string, number>> => {
+//   try {
+//     if (!artistId) {
+//       console.error("Invalid artistId: artistId is missing or null.");
+//       throw new Error("artistId가 제공되지 않았습니다.");
+//     }
+
+//     const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+//     if (!isValidUUID(artistId)) {
+//       console.error("Invalid MBID format:", artistId);
+//       throw new Error("Invalid MBID format provided.");
+//     }
+//     const url = `/api/song-ranking/artist/${artistId}`;
+//     console.log("Fetching song ranking data from URL:", url);
+
+//     const response = await apiClient.get<Record<string, number>>(url);
+//     console.log("Fetched song ranking data:", response.data);
+
+//     return response.data; // 성공적으로 가져온 데이터 반환
+//   } catch (error: any) {
+//     console.error("Error fetching song ranking:", error.message);
+
+//     // 상세한 오류 디버깅
+//     if (error.response) {
+//       console.error("Response status:", error.response.status);
+//       console.error("Response data:", error.response.data);
+//     }
+
+//     throw new Error("Failed to fetch song ranking data.");
+//   }
+// };
+
+
+export const fetchSongRanking = async (artistId) => {
+  if (!artistId) {
+    throw new Error("mbid is required to fetch song ranking.");
+  }
+
   try {
-    if (!artistId) {
-      console.error("Invalid artistId: artistId is missing or null.");
-      throw new Error("artistId가 제공되지 않았습니다.");
-    }
-
-    const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    if (!isValidUUID(artistId)) {
-      console.error("Invalid MBID format:", artistId);
-      throw new Error("Invalid MBID format provided.");
-    }
-
-    const url = `/api/song-ranking/artist/${artistId}`;
-    console.log("Fetching song ranking data from URL:", url);
-
-    const response = await apiClient.get<Record<string, number>>(url);
-    console.log("Fetched song ranking data:", response.data);
-
-    return response.data; // 성공적으로 가져온 데이터 반환
-  } catch (error: any) {
-    console.error("Error fetching song ranking:", error.message);
-
-    // 상세한 오류 디버깅
-    if (error.response) {
-      console.error("Response status:", error.response.status);
-      console.error("Response data:", error.response.data);
-    }
-
-    throw new Error("Failed to fetch song ranking data.");
+    const response = await axios.get(`http://localhost:8080/api/artists/${artistId}/song-ranking`);
+    const topSongs = Object.entries(response.data)
+      .sort(([, a], [, b]) => b - a) // 점수 내림차순 정렬
+      .slice(0, 10) // 상위 10개 선택
+      .map(([song]) => song); // 곡 제목만 반환
+    return topSongs;
+  } catch (error) {
+    console.error("Error fetching song ranking:", error.response?.data || error.message);
+    throw error;
   }
 };

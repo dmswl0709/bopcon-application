@@ -6,25 +6,27 @@ import ConcertRow from "../components/ConcertRow";
 import { SafeAreaView } from "react-native";
 import InstagramLogo from "../assets/icons/InstagramLogo.svg";
 import SpotifyLogo from "../assets/icons/SpotifyLogo.svg";
-import { fetchUpcomingConcerts,fetchSongRanking } from '../apis/concerts'; 
+import { fetchUpcomingConcerts, fetchSongRanking } from "../apis/concerts";
 import axios from "axios";
 import { Linking } from "react-native";
 
 const ArtistScreen = ({ route, navigation }) => {
   const {
     artistId = null,
-    name = "Drfault Artist Name",
+    name = "Default Artist Name",
     krName = "Default Artist KR Name",
     snsUrl = "https://instagram.com",
     mediaUrl = "https://spotify.com",
   } = route.params || {};
 
-
   const [artistData, setArtistData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("곡 랭킹");
-  const [upcomingConcerts, setUpcomingConcerts] = useState(tempConcertData || []); // fallback 데이터로 초기화
+  const [visibleSongs, setVisibleSongs] = useState([]);
+  const [upcomingConcerts, setUpcomingConcerts] = useState([]);
+  const [pastConcerts, setPastConcerts] = useState([]); // 지난 공연 데이터 상태
 
+  // Fetch artist data
   useEffect(() => {
     if (!artistId) {
       console.error("artistId is undefined in route.params");
@@ -35,7 +37,7 @@ const ArtistScreen = ({ route, navigation }) => {
     const fetchArtistData = async () => {
       try {
         const response = await axios.get(`http://localhost:8080/api/artists/${artistId}`);
-        console.log("API 응답:", response.data);
+        console.log("Artist API Response:", response.data);
         setArtistData(response.data);
       } catch (error) {
         console.error("Error fetching artist data:", error);
@@ -67,105 +69,50 @@ const ArtistScreen = ({ route, navigation }) => {
     getUpcomingConcerts();
   }, [artistId]);
 
-  useEffect(() => {
-    const loadSongRanking = async () => {
-      try {
-        const ranking = await fetchSongRanking(artistId);
-        setVisibleSongs(ranking);
-      } catch (error) {
-        console.error("Error loading song ranking:", error);
-      }
-    };
-  
-    loadSongRanking();
-  }, [artistId]);
-  
+// 곡 랭킹 불러오기 useEffect
+useEffect(() => {
+  const loadSongRanking = async () => {
+    try {
+      // artistData에서 mbid 가져오기
+      const artistId = artistData?.artistId;
 
-  const upcomingConcert = {
-    dateYear: "2025",
-    dateDay: "01/12",
-    description: "벤슨 분 첫 단독 내한 공연",
+      if (!artistId) {
+        console.error("artistId가 없습니다. 곡 랭킹을 불러올 수 없습니다.");
+        return;
+      }
+
+      console.log(`Fetching song rankings for artistId: ${artistId}`);
+      const response = await axios.get(`http://localhost:8080/api/artists/${artistId}/song-ranking`);
+      console.log("Fetched song rankings:", response.data);
+
+      // API 응답 데이터를 그대로 사용
+      setVisibleSongs(response.data || []); // 데이터가 없으면 빈 배열로 설정
+    } catch (error) {
+      console.error("Error fetching song rankings:", error);
+    }
   };
 
-  const tempSongData = [
-    "Song 1",
-    "Song 2",
-    "Song 3",
-    "Song 4",
-    "Song 5",
-    "Song 6",
-    "Song 7",
-    "Song 8",
-    "Song 9",
-    "Song 10",
-  ];
-  const [visibleSongs, setVisibleSongs] = useState(tempSongData.slice(0, 6));
+  if (artistData) {
+    loadSongRanking(); // artistData가 있을 때만 실행
+  }
+}, [artistData]);
 
-  const tempConcertData = [
-    {
-      id: "temp-1", // ID를 명시적으로 추가
-      dateYear: "2024",
-      dateDay: "10/26",
-      description: "Benson Boone at Austin City Limits 2024",
-    },
-    {
-      id: "temp-1", // ID를 명시적으로 추가
-      dateYear: "2024",
-      dateDay: "10/26",
-      description: "콘서트 제목 1",
-    },
-    {
-      id: "temp-1", // ID를 명시적으로 추가
-      dateYear: "2024",
-      dateDay: "10/26",
-      description: "콘서트 제목 2",
-    },
-    {
-      id: "temp-1", // ID를 명시적으로 추가
-      dateYear: "2024",
-      dateDay: "10/26",
-      description: "콘서트 제목 3",
-    },
-    {
-      id: "temp-1", // ID를 명시적으로 추가
-      dateYear: "2024",
-      dateDay: "10/26",
-      description: "콘서트 제목 4",
-    },
-  ];
-  const [visibleConcerts, setVisibleConcerts] = useState(tempConcertData.slice(0, 3));
 
-  const tempBoardData = [
-    {
-      title: "벤슨 분 첫 단독 내한 공연",
-      content: "와 정말 기대돼요. ㅎㅎ",
-      date: "2024/09/09 16:00",
-      nickname: "닉네임",
-    },
-    {
-      title: "벤슨 분 첫 단독 내한 공연",
-      content: "와 정말 기대돼요. ㅎㅎ",
-      date: "2024/09/09 16:00",
-      nickname: "닉네임",
-    },
-    {
-      title: "벤슨 분 첫 단독 내한 공연",
-      content: "와 정말 기대돼요. ㅎㅎ",
-      date: "2024/09/09 16:00",
-      nickname: "닉네임",
-    },
-  ];
+// 곡 랭킹 표시
+const renderRankingContent = () => {
+  // 곡 데이터를 정렬한 후 상위 10개만 선택
+  const sortedSongs = visibleSongs
+    .sort((a, b) => b.count - a.count) // count 기준으로 내림차순 정렬
+    .slice(0, 20); // 상위 10개 선택
 
-  const renderRankingContent = () => (
+  return (
     <View>
       <Text style={styles.sectionTitle}>최근 20개 콘서트 기준</Text>
-      {visibleSongs.length === 0 ? (
-        <Text style={{ textAlign: "center", marginTop: 16 }}>
-          곡 데이터가 없습니다.
-        </Text>
+      {sortedSongs.length === 0 ? (
+        <Text style={{ textAlign: "center", marginTop: 16 }}>곡 데이터가 없습니다.</Text>
       ) : (
         <FlatList
-          data={visibleSongs}
+          data={sortedSongs} // 정렬된 데이터 전달
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item, index }) => (
             <View style={styles.rankRow}>
@@ -179,83 +126,164 @@ const ArtistScreen = ({ route, navigation }) => {
               >
                 {index + 1 < 10 ? `0${index + 1}` : index + 1}
               </Text>
-              <Text style={styles.rankSong}>{item}</Text>
+              <Text style={styles.rankSong}>{item.title}</Text>
             </View>
           )}
         />
       )}
-      {visibleSongs.length < tempSongData.length && (
-        <TouchableOpacity onPress={() => setVisibleSongs(tempSongData)}>
-          <Text style={styles.moreButton}>더보기</Text>
-        </TouchableOpacity>
-      )}
     </View>
   );
+};
 
-  const renderPastConcertContent = () => (
+  const upcomingConcert = {
+    dateYear: "2025",
+    dateDay: "01/12",
+    description: "벤슨 분 첫 단독 내한 공연",
+  };
+
+
+
+  const renderUpcomingConcerts = () => (
     <View>
-      <FlatList
-        data={visibleConcerts}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.concertRowContainer}>
+      {upcomingConcerts.length > 0 ? (
+        upcomingConcerts.map((concert, index) => {
+          // date가 배열인지 확인하고 처리
+          let year = "N/A";
+          let month = "N/A";
+          let day = "N/A";
+  
+          if (Array.isArray(concert.date) && concert.date.length === 3) {
+            [year, month, day] = concert.date.map((item) => item.toString()); // 숫자를 문자열로 변환
+          }
+  
+          console.log("Props to ConcertRow:", {
+            dateYear: year,
+            dateDay: `${month}/${day}`,
+            description: concert.title,
+          });
+  
+          return (
             <ConcertRow
-              dateYear={item.dateYear}
-              dateDay={item.dateDay}
-              description={item.description}
+              key={index}
+              dateYear={year} // 문자열 타입으로 전달
+              dateDay={`${month}/${day}`} // 문자열 타입으로 전달
+              description={concert.title || "No title"}
               onPress={() =>
-                navigation.navigate("SetListScreen", {
-                  concertDetails: item, // 필요시 item 데이터 전달
+                navigation.navigate("ConcertScreen", {
+                  concertDetails: {
+                    ...concert,
+                    dateYear: year,
+                    dateDay: `${month}/${day}`,
+                    id: concert.id || concert.newConcertId || `generated-id-${index}`,
+                    artistName: artistData?.name, // 추가 데이터 전달
+                  },
+                  concertId: concert.newConcertId || `generated-id-${index}`,
                 })
               }
             />
-          </View>
-        )}
-      />
-      {visibleConcerts.length < tempConcertData.length && (
-        <TouchableOpacity
-          onPress={() => setVisibleConcerts(tempConcertData)}
-          style={{ alignItems: "center" }}
-        >
-          <Text style={styles.moreButton}>더보기</Text>
-        </TouchableOpacity>
+          );
+        })
+      ) : (
+        <Text style={{ textAlign: "center", color: "gray" }}>
+          내한 예정 콘서트가 없습니다.
+        </Text>
       )}
-      <View style={styles.lightDivider} />
     </View>
   );
-
-  const renderBoardContent = () => (
-    <View>
-      <View style={styles.boardHeader}>
-        <Text style={styles.boardTitle}>게시판</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("BoardScreen")}>
-          <Text style={styles.moreButtonGray}>더보기</Text>
-        </TouchableOpacity>
-      </View>
-      {tempBoardData.map((post, index) => (
-        <View key={index} style={styles.boardRow}>
-          <Text style={styles.boardTitle}>{post.title}</Text>
-          <Text style={styles.boardContent}>{post.content}</Text>
-          <Text style={styles.boardDate}>
-            {post.date} | {post.nickname}
-          </Text>
-        </View>
-      ))}
-    </View>
-  );
+  
+  
+  
 
   const renderContent = () => {
     switch (activeTab) {
       case "곡 랭킹":
         return renderRankingContent();
       case "지난 공연":
-        return renderPastConcertContent();
+        return renderPastConcertContent(); // 
       case "게시판":
-        return renderBoardContent();
+        return <Text style={{ textAlign: "center" }}>게시판 콘텐츠가 여기에 표시됩니다.</Text>;
       default:
         return null;
     }
   };
+
+  useEffect(() => {
+    const loadPastConcerts = async () => {
+      try {
+        const artistName = artistData?.artistId;
+        if (!artistId) {
+          console.error("아티스트 이름이 없습니다.");
+          return;
+        }
+        console.log(`Fetching past concerts for artist: ${artistId}`);
+        const response = await axios.get(`http://localhost:8080/api/artists/${artistId}/past-concerts`);
+        console.log("Fetched past concerts:", response.data);
+  
+        if (Array.isArray(response.data)) {
+          setPastConcerts(response.data); // 올바른 데이터 배열 설정
+        } else {
+          console.error("API 응답이 배열 형태가 아닙니다.");
+          setPastConcerts([]); // 기본값 설정
+        }
+      } catch (error) {
+        console.error("Error fetching past concerts:", error);
+      }
+    };
+  
+    if (artistData) {
+      loadPastConcerts();
+    }
+  }, [artistData]);
+
+  const renderPastConcertContent = () => {
+    return (
+      <View style={{ paddingHorizontal: 16 }}>
+        {pastConcerts.length > 0 ? (
+          pastConcerts.map((concert, index) => {
+            // date가 배열인지 확인하고 처리
+            let year = "N/A";
+            let month = "N/A";
+            let day = "N/A";
+  
+            if (Array.isArray(concert.date) && concert.date.length === 3) {
+              [year, month, day] = concert.date; // 배열에서 연, 월, 일을 추출
+            }
+  
+            return (
+              <ConcertRow
+                key={index}
+                dateYear={year}
+                dateDay={`${month}/${day}`}
+                description={
+                  concert.title
+                    ? concert.title
+                    : `${concert.venueName || ""}, ${concert.cityName || ""}` ||
+                      "공연 제목 없음"
+                }
+                onPress={() =>
+                  navigation.navigate("ConcertScreen", {
+                    concertDetails: {
+                      ...concert,
+                      dateYear: year,
+                      dateDay: `${month}/${day}`,
+                      artistName: artistData?.name,
+                    },
+                    concertId: concert.pastConcertId,
+                  })
+                }
+              />
+            );
+          })
+        ) : (
+          <Text style={{ textAlign: "center", color: "gray", marginTop: 16 }}>
+            지난 공연 데이터가 없습니다.
+          </Text>
+        )}
+      </View>
+    );
+  };
+  
+  
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
@@ -264,78 +292,25 @@ const ArtistScreen = ({ route, navigation }) => {
           <View style={styles.headerContainer}>
             <Header title="Artist" onBackPress={() => navigation.goBack()} />
             <View style={styles.artistInfoSection}>
-           <Image source={{ uri: artistData?.imgUrl }} style={styles.artistImage} />
-           <View style={styles.socialMediaRow}>
-            {/* Instagram */}
-            <TouchableOpacity
-              onPress={() => {
-                if (artistData?.snsUrl) {
-                  Linking.openURL(artistData.snsUrl);
-                } else {
-                  Linking.openURL(snsUrl); // 기본값으로 이동
-                }
-              }}
-            >
-              <InstagramLogo width={40} height={40} style={styles.socialIcon} />
-            </TouchableOpacity>
-
-            {/* Spotify */}
-            <TouchableOpacity
-              onPress={() => {
-                if (artistData?.mediaUrl) {
-                  Linking.openURL(artistData.mediaUrl);
-                } else {
-                  Linking.openURL(mediaUrl); // 기본값으로 이동
-                }
-              }}
-            >
-              <SpotifyLogo width={40} height={40} style={styles.socialIcon} />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-            <View style={styles.artistNameRow}>
-             <View style={styles.artistNameContainer}>
-              <Text style={styles.artistName}>{artistData?.name || "Default Artist Name"}</Text>
-              <Text style={styles.artistKrName}>{artistData?.krName || "Default Artist KR Name"}</Text>
-             </View>
-             <FavoriteButton />         
+              <Image source={{ uri: artistData?.imgUrl }} style={styles.artistImage} />
+              <View style={styles.socialMediaRow}>
+                <TouchableOpacity onPress={() => Linking.openURL(artistData?.snsUrl || snsUrl)}>
+                  <InstagramLogo width={40} height={40} style={styles.socialIcon} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => Linking.openURL(artistData?.mediaUrl || mediaUrl)}>
+                  <SpotifyLogo width={40} height={40} style={styles.socialIcon} />
+                </TouchableOpacity>
+              </View>
             </View>
+              <View style={styles.artistNameRow}>
+                <View style={styles.artistNameContainer}>
+                  <Text style={styles.artistName}>{artistData?.name || name}</Text>
+                  <Text style={styles.artistKrName}>{artistData?.krName || krName}</Text>
+                </View>
+                <FavoriteButton />
+              </View>
             <Text style={styles.upcomingTitle}>내한 예정</Text>
-            <View style={styles.divider1} />
-            {Array.isArray(upcomingConcerts) && upcomingConcerts.length > 0 ? (
-              upcomingConcerts.map((concert, index) => {
-                console.log("ConcertRow data:", concert); // concert 데이터 확인
-                const [year, month, day] = (concert.date || "").split("-");
-
-              // ArtistScreen에서 ConcertRow로 전달하는 데이터 형식 수정
-              return (
-                <ConcertRow
-                  key={concert.id || concert.newConcertId || `generated-id-${index}`}
-                  dateYear={year || "N/A"} // 년도 추출
-                  dateDay={`${month}/${day}` || "N/A"} // 월/일 추출
-                  description={concert.title || concert.description}
-                  onPress={() =>
-                    navigation.navigate("ConcertScreen", {
-                      concertDetails: {
-                        ...concert,
-                        dateYear: year || "N/A", // dateYear 전달
-                        dateDay: `${month}/${day}` || "N/A", // dateDay 전달
-                        id: concert.id || concert.newConcertId || `generated-id-${index}`,
-                        artistName: artistData?.name, // 추가 데이터 전달
-                      },
-                      concertId: concert.newConcertId || `generated-id-${index}`, // newConcertId 전달
-                    })
-                  }
-                />
-              );
-              })
-            ) : (
-              <Text style={{ textAlign: "center", color: "gray" }}>내한 예정 콘서트가 없습니다.</Text>
-            )}
-
-
-
+            {renderUpcomingConcerts()}
             <View style={styles.tabRow}>
               {["곡 랭킹", "지난 공연", "게시판"].map((tab) => (
                 <TouchableOpacity
@@ -346,12 +321,7 @@ const ArtistScreen = ({ route, navigation }) => {
                     activeTab === tab && styles.activeTabButton,
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.tabText,
-                      activeTab === tab && styles.activeTabText,
-                    ]}
-                  >
+                  <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
                     {tab}
                   </Text>
                 </TouchableOpacity>
@@ -359,13 +329,14 @@ const ArtistScreen = ({ route, navigation }) => {
             </View>
           </View>
         }
-        data={[]} // 데이터는 렌더링하지 않음
+        data={[]} // 콘텐츠는 렌더링하지 않음
         renderItem={null}
         ListFooterComponent={renderContent()}
       />
     </SafeAreaView>
   );
 };
+
 const styles = StyleSheet.create({
   headerContainer: {
     marginTop: -55,
@@ -534,6 +505,7 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     marginBottom: 12,
   },
+
 });
 
 export default ArtistScreen;
