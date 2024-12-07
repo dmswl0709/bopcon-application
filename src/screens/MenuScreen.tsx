@@ -37,13 +37,19 @@ const MenuScreen = () => {
       </Stack>
 
       {/* 로그인 상태 확인 */}
-      <Stack direction="horizontal" justifyContent="start" style={styles.loginContainer}>
+      <Stack
+        direction="horizontal"
+        justifyContent="start"
+        style={styles.loginContainer}
+      >
         {user ? (
-          // 로그인 상태일 때 사용자 이름 표시
-          <Stack direction="horizontal" spacing={10}>
-            <Person width={26} height={26} />
-            <Text style={styles.userText}>{user}</Text>
-          </Stack>
+          // 로그인 상태일 때 사용자 이름 표시 (클릭 시 MyPage로 이동)
+          <TouchableOpacity onPress={() => navigation.navigate('MyPageScreen')}>
+            <Stack direction="horizontal" spacing={10}>
+              <Person width={26} height={26} />
+              <Text style={styles.userText}>{user}</Text>
+            </Stack>
+          </TouchableOpacity>
         ) : (
           // 비로그인 상태일 때 로그인 버튼 표시
           <TouchableOpacity onPress={() => navigation.navigate('LoginScreen')}>
@@ -56,12 +62,23 @@ const MenuScreen = () => {
       </Stack>
 
       {/* 페이지 리스트 */}
-      <Stack direction="vertical" justifyContent="start" flexible fullHeight fullWidth>
+      <Stack
+        direction="vertical"
+        justifyContent="start"
+        flexible
+        fullHeight
+        fullWidth
+      >
         {pageList.map((item, idx) => (
           <TouchableOpacity
             key={idx}
             style={styles.menuItem}
-            onPress={() => navigation.navigate('ContentCategoryScreen', { name: item.name, type: item.type })}
+            onPress={() =>
+              navigation.navigate('ContentCategoryScreen', {
+                name: item.name,
+                type: item.type,
+              })
+            }
           >
             <Text style={styles.menuText}>{item.name}</Text>
           </TouchableOpacity>
