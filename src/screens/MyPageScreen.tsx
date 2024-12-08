@@ -265,4 +265,3 @@ const styles = StyleSheet.create({
 });
 
 export default MyPageScreen;
->>>>>>> ce6a63a (feat: 마이페이지에서 즐겨찾기한 아티스트, 콘서트 사진 불러오기, 게시글 기능 추가)

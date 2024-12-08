@@ -5,7 +5,6 @@ import { navigate } from '../navigation/RootNavigation'; // RootNavigation 유�
 
 const httpClient = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080', // 기본 URL
-  timeout: DEFAULT_TIMEOUT, // 요청 제한 시간 (ms)
   headers: {
     'Content-Type': 'application/json', // 기본 헤더
   },

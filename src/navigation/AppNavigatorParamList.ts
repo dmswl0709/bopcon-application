@@ -26,6 +26,9 @@ type AppNavigationParamList = {
     instagramUrl?: string; // Instagram profile URL
     spotifyUrl?: string; // Spotify profile URL
   };
+
+  MyPageScreen: undefined;
+
 }
 
 export default AppNavigationParamList;
