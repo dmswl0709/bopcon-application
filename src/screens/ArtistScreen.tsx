@@ -91,11 +91,10 @@ const ArtistScreen = ({ route, navigation }) => {
       }
     };
 
-  if (artistData) {
-    loadSongRanking(); // artistData가 있을 때만 실행
-  }
-}, [artistData]);
-
+    if (artistData) {
+      loadSongRanking(); // artistData가 있을 때만 실행
+    }
+  }, [artistData]);
 
   // 곡 랭킹 표시
   const renderRankingContent = () => {
@@ -103,43 +102,35 @@ const ArtistScreen = ({ route, navigation }) => {
       .sort((a, b) => b.count - a.count) // count 기준으로 내림차순 정렬
       .slice(0, 20); // 상위 20개 선택
 
-  return (
-    <View>
-      <Text style={styles.sectionTitle}>최근 20개 콘서트 기준</Text>
-      {sortedSongs.length === 0 ? (
-        <Text style={{ textAlign: "center", marginTop: 16 }}>곡 데이터가 없습니다.</Text>
-      ) : (
-        <FlatList
-          data={sortedSongs} // 정렬된 데이터 전달
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item, index }) => (
-            <View style={styles.rankRow}>
-              <Text
-                style={[
-                  styles.rankNumber,
-                  index === 0 && styles.firstRank,
-                  index === 1 && styles.secondRank,
-                  index === 2 && styles.thirdRank,
-                ]}
-              >
-                {index + 1 < 10 ? `0${index + 1}` : index + 1}
-              </Text>
-              <Text style={styles.rankSong}>{item.title}</Text>
-            </View>
-          )}
-        />
-      )}
-    </View>
-  );
-};
-
-  const upcomingConcert = {
-    dateYear: "2025",
-    dateDay: "01/12",
-    description: "벤슨 분 첫 단독 내한 공연",
+    return (
+      <View>
+        <Text style={styles.sectionTitle}>최근 20개 콘서트 기준</Text>
+        {sortedSongs.length === 0 ? (
+          <Text style={{ textAlign: "center", marginTop: 16 }}>곡 데이터가 없습니다.</Text>
+        ) : (
+          <FlatList
+            data={sortedSongs}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item, index }) => (
+              <View style={styles.rankRow}>
+                <Text
+                  style={[
+                    styles.rankNumber,
+                    index === 0 && styles.firstRank,
+                    index === 1 && styles.secondRank,
+                    index === 2 && styles.thirdRank,
+                  ]}
+                >
+                  {index + 1 < 10 ? `0${index + 1}` : index + 1}
+                </Text>
+                <Text style={styles.rankSong}>{item.title}</Text>
+              </View>
+            )}
+          />
+        )}
+      </View>
+    );
   };
-
-
 
   const renderUpcomingConcerts = () => (
     <View>
@@ -148,7 +139,7 @@ const ArtistScreen = ({ route, navigation }) => {
           let year = "N/A";
           let month = "N/A";
           let day = "N/A";
-  
+
           if (Array.isArray(concert.date) && concert.date.length === 3) {
             [year, month, day] = concert.date.map((item) => item.toString());
           }
@@ -158,7 +149,7 @@ const ArtistScreen = ({ route, navigation }) => {
             dateDay: `${month}/${day}`,
             description: concert.title,
           });
-  
+
           return (
             <ConcertRow
               key={index}
@@ -187,10 +178,8 @@ const ArtistScreen = ({ route, navigation }) => {
       )}
     </View>
   );
-  
-  
-  
 
+  // 렌더링할 콘텐츠
   const renderContent = () => {
     switch (activeTab) {
       case "곡 랭킹":
