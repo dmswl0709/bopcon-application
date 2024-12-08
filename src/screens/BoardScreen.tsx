@@ -1,48 +1,86 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { useSelector } from 'react-redux';
-import { useRoute } from '@react-navigation/native';
-import axios from 'axios';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { RootState } from '../store';
-import WriteItem from '../components/WriteItem';
-import ArticleModal from '../components/ArticleModal';
+import { createArticle, updateArticle, deleteArticle } from '../apis/articles';
 import ArticleForm from '../components/ArticleForm';
-import GlobalList from '../components/GlobalList';
+import ArticleModal from '../components/ArticleModal';
+import WriteItem from '../components/WriteItem';
 import BackNavigationBar from '../components/BackNavigationBar';
-import GlobalSingerHeader from '../components/GlobalSingerHeader';
-import SingerDetailImg from '../singer-detail-img';
+import GlobalList from '../components/GlobalList';
+import axios from 'axios';
+
+interface Article {
+  id: number;
+  title: string;
+  content: string;
+  categoryType: 'FREE_BOARD' | 'NEW_CONCERT';
+  newConcert?: { id: number };
+  userName: string;
+}
+
+interface ArtistData {
+  artistId: number;
+  name: string;
+  krName: string;
+  imgUrl: string;
+}
 
 const BoardScreen: React.FC = () => {
-  const [articles, setArticles] = useState([]);
-  const [artistData, setArtistData] = useState<any>(null);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [artistData, setArtistData] = useState<ArtistData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [selectedArticle, setSelectedArticle] = useState<any>(null);
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const token = useSelector((state: RootState) => state.auth.token);
+  const userId = useSelector((state: RootState) => state.auth.userId);
+  const navigation = useNavigation();
   const route = useRoute();
-  const { artistId } = route.params;
+  const { artistId } = route.params as { artistId: string };
 
   useEffect(() => {
     const fetchArtistData = async () => {
+      if (!artistId) return;
+
       try {
         const response = await axios.get(`/api/artists/${artistId}`);
         setArtistData(response.data);
       } catch (error) {
-        console.error('Failed to fetch artist data:', error);
-      }
-    };
-
-    const fetchArticles = async () => {
-      try {
-        const response = await axios.get(`/api/articles/artist/${artistId}`);
-        setArticles(response.data);
-      } catch (error) {
-        console.error('Failed to fetch articles:', error);
+        console.error('아티스트 데이터를 불러오는 중 오류 발생:', error);
+        Alert.alert('오류', '아티스트 데이터를 불러올 수 없습니다.');
       }
     };
 
     fetchArtistData();
+  }, [artistId]);
+
+  useEffect(() => {
+    const fetchArticles = async () => {
+      setIsLoading(true);
+      if (!artistId) return;
+
+      try {
+        const response = await axios.get(`/api/articles/artist/${artistId}`);
+        setArticles(response.data);
+      } catch (error) {
+        console.error('게시글 데이터를 불러오는 중 오류 발생:', error);
+        Alert.alert('오류', '게시글 데이터를 불러올 수 없습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     fetchArticles();
   }, [artistId, isCreating, isEditing]);
 
@@ -52,20 +90,18 @@ const BoardScreen: React.FC = () => {
       return;
     }
 
-    Alert.alert('삭제 확인', '정말로 삭제하시겠습니까?', [
+    Alert.alert('확인', '정말로 삭제하시겠습니까?', [
       { text: '취소', style: 'cancel' },
       {
         text: '삭제',
         onPress: async () => {
           try {
-            await axios.delete(`/api/articles/${id}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
+            await deleteArticle(id, token);
             setArticles((prev) => prev.filter((article) => article.id !== id));
             setSelectedArticle(null);
             Alert.alert('성공', '게시글이 삭제되었습니다.');
           } catch (error) {
-            console.error('Failed to delete article:', error);
+            console.error('게시글 삭제 중 오류 발생:', error);
             Alert.alert('오류', '게시글 삭제에 실패했습니다.');
           }
         },
@@ -86,15 +122,14 @@ const BoardScreen: React.FC = () => {
     }
 
     try {
-      await axios.post(
-        '/api/articles',
-        { title, content, categoryType, artistId: artistId ?? 0, newConcertId: newConcertId ?? 0 },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await createArticle(
+        { title, content, categoryType, artistId: artistId ?? 0, newConcertId: newConcertId ?? 0, userId },
+        token
       );
       setIsCreating(false);
       Alert.alert('성공', '게시글이 작성되었습니다.');
     } catch (error) {
-      console.error('Failed to create article:', error);
+      console.error('게시글 작성 중 오류 발생:', error);
       Alert.alert('오류', '게시글 작성에 실패했습니다.');
     }
   };
@@ -112,41 +147,58 @@ const BoardScreen: React.FC = () => {
     }
 
     try {
-      await axios.put(
-        `/api/articles/${id}`,
+      await updateArticle(
+        id,
         { title, content, categoryType, newConcertId: newConcertId ?? 0 },
-        { headers: { Authorization: `Bearer ${token}` } }
+        token
       );
       setIsEditing(false);
       setSelectedArticle(null);
       Alert.alert('성공', '게시글이 수정되었습니다.');
     } catch (error) {
-      console.error('Failed to edit article:', error);
+      console.error('게시글 수정 중 오류 발생:', error);
       Alert.alert('오류', '게시글 수정에 실패했습니다.');
     }
   };
 
+  const handleCreateButtonPress = () => {
+    if (!token) {
+      Alert.alert('로그인이 필요합니다.', '로그인 페이지로 이동합니다.', [
+        {
+          text: '확인',
+          onPress: () => navigation.navigate('LoginScreen'),
+        },
+        { text: '취소', style: 'cancel' },
+      ]);
+      return;
+    }
+    setIsCreating(true);
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text>로딩 중...</Text>
+      </View>
+    );
+  }
+
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <BackNavigationBar />
-
       {artistData && (
-        <>
-          <SingerDetailImg Img={artistData.imgUrl} />
-          <GlobalSingerHeader
-            krName={artistData.name}
-            engName={artistData.krName}
-            likeId={artistData.artistId}
-          />
-        </>
+        <View style={styles.header}>
+          <Text style={styles.artistName}>{artistData.krName}</Text>
+          <Text style={styles.artistSubName}>{artistData.name}</Text>
+        </View>
       )}
-
       <GlobalList title="게시판" />
 
       {isCreating ? (
         <ArticleForm
           mode="create"
-          fixedArtistId={parseInt(artistId, 10)}
+          fixedArtistId={parseInt(artistId || '0', 10)}
           onSubmit={handleCreateSubmit}
           onCancel={() => setIsCreating(false)}
         />
@@ -156,34 +208,35 @@ const BoardScreen: React.FC = () => {
           initialTitle={selectedArticle.title}
           initialContent={selectedArticle.content}
           initialCategoryType={selectedArticle.categoryType}
-          fixedArtistId={parseInt(artistId, 10)}
+          fixedArtistId={parseInt(artistId || '0', 10)}
           initialNewConcertId={selectedArticle.newConcert?.id || null}
-          onSubmit={(title, content, categoryType, artistId, newConcertId) =>
+          onSubmit={(title, content, categoryType, newConcertId) =>
             handleEditSubmit(selectedArticle.id, title, content, categoryType, newConcertId)
           }
           onCancel={() => setIsEditing(false)}
         />
       ) : (
-        <View style={styles.articleList}>
-          {articles.map((article) => (
-            <TouchableOpacity
-              key={article.id}
-              onPress={() => setSelectedArticle(article)}
-              style={styles.articleItem}
-            >
+        <FlatList
+          data={articles}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => setSelectedArticle(item)}>
               <WriteItem
-                title={article.title}
-                content={article.content}
-                date={article.created_at}
-                nickname={article.userName || '익명'}
+                title={item.title}
+                content={item.content}
+                date=""
+                nickname={item.userName || '익명'}
               />
             </TouchableOpacity>
-          ))}
-        </View>
+          )}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>게시글이 없습니다.</Text>
+          }
+        />
       )}
 
       {!isCreating && !isEditing && (
-        <TouchableOpacity style={styles.createButton} onPress={() => setIsCreating(true)}>
+        <TouchableOpacity style={styles.createButton} onPress={handleCreateButtonPress}>
           <Text style={styles.createButtonText}>글쓰기</Text>
         </TouchableOpacity>
       )}
@@ -196,33 +249,49 @@ const BoardScreen: React.FC = () => {
           onDelete={() => handleDeleteArticle(selectedArticle.id)}
         />
       )}
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
-  },
-  articleList: {
-    marginTop: 20,
+    backgroundColor: '#ffffff',
     paddingHorizontal: 16,
   },
-  articleItem: {
+  header: {
+    alignItems: 'center',
     marginBottom: 16,
   },
-  createButton: {
-    backgroundColor: 'black',
-    padding: 12,
-    borderRadius: 6,
+  artistName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  artistSubName: {
+    fontSize: 16,
+    color: 'gray',
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    margin: 16,
+  },
+  createButton: {
+    backgroundColor: '#000',
+    padding: 12,
+    alignItems: 'center',
+    marginVertical: 16,
+    borderRadius: 8,
   },
   createButtonText: {
-    color: 'white',
+    color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: 'gray',
+    fontSize: 16,
+    marginTop: 20,
   },
 });
 

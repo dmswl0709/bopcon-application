@@ -1,91 +1,63 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
   TextInput,
   StyleSheet,
-  Picker,
   TouchableOpacity,
   Alert,
-} from 'react-native';
-import axios from 'axios';
+  Modal,
+  FlatList,
+} from "react-native";
 
 interface ArticleFormProps {
-  mode: 'create' | 'edit';
+  mode: "create" | "edit";
   initialTitle?: string;
   initialContent?: string;
-  initialCategoryType?: 'FREE_BOARD' | 'NEW_CONCERT';
+  initialCategoryType?: "FREE_BOARD" | "NEW_CONCERT";
   fixedArtistId?: number | null;
-  initialNewConcertId?: number | null;
+  artistName?: string;
   onSubmit: (
     title: string,
     content: string,
-    categoryType: 'FREE_BOARD' | 'NEW_CONCERT',
-    artistId: number | null,
-    newConcertId: number | null
+    categoryType: "FREE_BOARD" | "NEW_CONCERT",
+    artistId: number | null
   ) => void;
   onCancel: () => void;
 }
 
 const ArticleForm: React.FC<ArticleFormProps> = ({
   mode,
-  initialTitle = '',
-  initialContent = '',
-  initialCategoryType = 'FREE_BOARD',
+  initialTitle = "",
+  initialContent = "",
+  initialCategoryType = "FREE_BOARD",
   fixedArtistId = null,
-  initialNewConcertId = null,
+  artistName,
   onSubmit,
   onCancel,
 }) => {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
   const [categoryType, setCategoryType] = useState(initialCategoryType);
-  const [newConcertId, setNewConcertId] = useState<number | null>(initialNewConcertId);
-  const [concerts, setConcerts] = useState<{ newConcertId: number; title: string }[]>([]);
-  const [artistName, setArtistName] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (categoryType === 'NEW_CONCERT') {
-      const fetchConcerts = async () => {
-        try {
-          const response = await axios.get('/api/new-concerts');
-          setConcerts(response.data);
-        } catch (error) {
-          console.error('Failed to fetch concerts:', error);
-        }
-      };
-
-      fetchConcerts();
-    }
-  }, [categoryType]);
-
-  useEffect(() => {
-    if (fixedArtistId) {
-      const fetchArtist = async () => {
-        try {
-          const response = await axios.get(`/api/artists/${fixedArtistId}`);
-          setArtistName(response.data.name);
-        } catch (error) {
-          console.error('Failed to fetch artist:', error);
-        }
-      };
-
-      fetchArtist();
-    }
-  }, [fixedArtistId]);
+  const [isModalVisible, setModalVisible] = useState(false);
 
   const handleSubmit = () => {
     if (!title.trim() || !content.trim()) {
-      Alert.alert('오류', '제목과 내용을 입력하세요.');
+      Alert.alert("오류", "제목과 내용을 입력하세요.");
       return;
     }
-    onSubmit(title.trim(), content.trim(), categoryType, fixedArtistId, newConcertId);
+    onSubmit(title.trim(), content.trim(), categoryType, fixedArtistId);
   };
+
+  const options = [
+    { label: "자유게시판", value: "FREE_BOARD" },
+    { label: "콘서트 게시판", value: "NEW_CONCERT" },
+  ];
 
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>
-        {mode === 'create' ? '글쓰기' : '글 수정'}
+        {mode === "create" ? "글쓰기" : "글 수정"}
       </Text>
 
       {fixedArtistId && artistName && (
@@ -100,6 +72,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
         onChangeText={setTitle}
         placeholder="제목"
         style={styles.input}
+        maxLength={50} // 제목 길이 제한
       />
       <TextInput
         value={content}
@@ -107,41 +80,50 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
         placeholder="내용"
         style={[styles.input, styles.textarea]}
         multiline
+        maxLength={500} // 내용 길이 제한
       />
-      <Picker
-        selectedValue={categoryType}
-        onValueChange={(value) =>
-          setCategoryType(value as 'FREE_BOARD' | 'NEW_CONCERT')
-        }
-        style={styles.picker}
-      >
-        <Picker.Item label="자유게시판" value="FREE_BOARD" />
-        <Picker.Item label="콘서트 게시판" value="NEW_CONCERT" />
-      </Picker>
 
-      {categoryType === 'NEW_CONCERT' && (
-        <Picker
-          selectedValue={newConcertId || ''}
-          onValueChange={(value) =>
-            setNewConcertId(value ? Number(value) : null)
-          }
-          style={styles.picker}
-        >
-          <Picker.Item label="콘서트 선택 (선택 사항)" value="" />
-          {concerts.map((concert) => (
-            <Picker.Item
-              key={concert.newConcertId}
-              label={concert.title}
-              value={concert.newConcertId}
+      <Text style={styles.label}>게시판 선택</Text>
+      <TouchableOpacity
+        style={styles.dropdownButton}
+        onPress={() => setModalVisible(true)}
+      >
+        <Text style={styles.dropdownButtonText}>
+          {options.find((opt) => opt.value === categoryType)?.label || "선택"}
+        </Text>
+      </TouchableOpacity>
+
+      <Modal
+        transparent={true}
+        visible={isModalVisible}
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <FlatList
+              data={options}
+              keyExtractor={(item) => item.value}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.modalItem}
+                  onPress={() => {
+                    setCategoryType(item.value as "FREE_BOARD" | "NEW_CONCERT");
+                    setModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.modalItemText}>{item.label}</Text>
+                </TouchableOpacity>
+              )}
             />
-          ))}
-        </Picker>
-      )}
+          </View>
+        </View>
+      </Modal>
 
       <View style={styles.buttonRow}>
-        <TouchableOpacity onPress={handleSubmit} style={styles.button}>
+        <TouchableOpacity onPress={handleSubmit} style={styles.submitButton}>
           <Text style={styles.buttonText}>
-            {mode === 'create' ? '작성' : '수정'}
+            {mode === "create" ? "작성" : "수정"}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={onCancel} style={styles.cancelButton}>
@@ -155,71 +137,103 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 8,
   },
   heading: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 16,
   },
   artistInfo: {
     marginBottom: 16,
     padding: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#f9f9f9',
+    borderColor: "#ddd",
+    backgroundColor: "#f9f9f9",
     borderRadius: 8,
   },
   artistLabel: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#555',
+    fontWeight: "bold",
+    color: "#555",
   },
   artistName: {
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
   },
   textarea: {
     height: 100,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
-  picker: {
+  label: {
+    fontSize: 14,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  dropdownButton: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 8,
+    padding: 12,
+    backgroundColor: "#f9f9f9",
     marginBottom: 16,
   },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  dropdownButtonText: {
+    fontSize: 16,
+    color: "#333",
   },
-  button: {
-    backgroundColor: '#000',
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContent: {
+    width: "80%",
+    backgroundColor: "white",
+    borderRadius: 8,
+    padding: 16,
+  },
+  modalItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+  },
+  modalItemText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  submitButton: {
+    backgroundColor: "#000",
     padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
     flex: 1,
     marginRight: 8,
+    alignItems: "center",
   },
   cancelButton: {
-    backgroundColor: '#555',
+    backgroundColor: "#555",
     padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
     flex: 1,
+    alignItems: "center",
   },
   buttonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 

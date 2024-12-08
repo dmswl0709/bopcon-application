@@ -1771,6 +1771,7 @@
   dependencies:
     merge-options "^3.0.4"
 
+<<<<<<< HEAD
 "@react-native-community/cli-debugger-ui@16.0.0":
   version "16.0.0"
   resolved "https://registry.npmjs.org/@react-native-community/cli-debugger-ui/-/cli-debugger-ui-16.0.0.tgz"
@@ -1809,6 +1810,12 @@
     semver "^7.5.2"
     shell-quote "^1.7.3"
     sudo-prompt "^9.0.0"
+=======
+"@react-native-picker/picker@^2.10.2":
+  version "2.10.2"
+  resolved "https://registry.npmjs.org/@react-native-picker/picker/-/picker-2.10.2.tgz"
+  integrity sha512-kr3OvCRwTYjR/OKlb52k4xmQVU7dPRIALqpyiihexdJxEgvc1smnepgqCeM9oXmNSG4YaV5/RSxFlLC5Z/T/Eg==
+>>>>>>> f6b60d2 (feat: 게시글~ing)
 
 "@react-native/assets-registry@0.76.3":
   version "0.76.3"

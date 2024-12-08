@@ -7,9 +7,19 @@ import { SafeAreaView } from "react-native";
 import InstagramLogo from "../assets/icons/InstagramLogo.svg";
 import SpotifyLogo from "../assets/icons/SpotifyLogo.svg";
 import { fetchUpcomingConcerts, fetchSongRanking } from "../apis/concerts";
+import ArticleForm from "../components/ArticleForm";
 import { format, parseISO } from "date-fns";
 import axios from "axios";
 import { Linking } from "react-native";
+
+interface WriteItemProps {
+  title: string;
+  content: string;
+  date?: string;
+  nickname?: string;
+  artistName?: string;
+}
+
 
 const ArtistScreen = ({ route, navigation }) => {
   const {
@@ -26,6 +36,40 @@ const ArtistScreen = ({ route, navigation }) => {
   const [visibleSongs, setVisibleSongs] = useState([]);
   const [upcomingConcerts, setUpcomingConcerts] = useState([]);
   const [pastConcerts, setPastConcerts] = useState([]); // 지난 공연 데이터 상태
+  const [isCreating, setIsCreating] = useState(false); // isCreating 상태 추가
+  const [boardArticles, setBoardArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]); // 초기화
+
+
+
+
+  const WriteItem: React.FC<WriteItemProps> = ({ title, content, date, nickname, artistName }) => {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.content}>{content}</Text>
+        <Text style={styles.meta}>
+          {date} · {nickname} · {artistName}
+        </Text>
+      </View>
+    );
+  };
+  
+
+  const fetchBoardArticles = async () => {
+    try {
+      const response = await axios.get(`/api/articles/artist/${artistId}`);
+      setBoardArticles(response.data);
+    } catch (error) {
+      console.error('게시글 데이터를 불러오는 중 오류 발생:', error);
+      Alert.alert('오류', '게시글 데이터를 불러올 수 없습니다.');
+    }
+  };
+  
+
+  useEffect(() => {
+    fetchBoardArticles();
+  }, []);
 
   // Fetch artist data
   useEffect(() => {
@@ -180,18 +224,106 @@ const ArtistScreen = ({ route, navigation }) => {
   );
 
   // 렌더링할 콘텐츠
+  const renderBoardContent = () => {
+    if (isCreating) {
+      // 글쓰기 모드
+      return (
+        <ArticleForm
+          mode="create"
+          fixedArtistId={artistId}
+          onSubmit={handleCreateArticle} // 글쓰기 완료 시 호출
+          onCancel={() => setIsCreating(false)} // 취소 시 글쓰기 모드 종료
+        />
+      );
+    }
+  
+    return (
+      <View style={styles.container}>
+        <FlatList
+  data={articles}
+  keyExtractor={(item) => item.id.toString()}
+  renderItem={({ item }) => (
+    <TouchableOpacity onPress={() => setSelectedArticle(item)}>
+      <WriteItem
+        title={item.title}
+        content={item.content}
+        date={item.date || "날짜 없음"}
+        nickname={item.userName || "익명"}
+        artistName={item.artistName || ""}
+      />
+    </TouchableOpacity>
+  )}
+  ListEmptyComponent={
+    <Text style={styles.emptyText}>게시글이 없습니다.</Text>
+  }
+/>
+
+        <TouchableOpacity
+          style={styles.writeButton}
+          onPress={() => setIsCreating(true)}
+        >
+          <Text style={styles.writeButtonText}>글쓰기</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "곡 랭킹":
         return renderRankingContent();
       case "지난 공연":
-        return renderPastConcertContent(); 
+        return renderPastConcertContent();
       case "게시판":
-        return <Text style={{ textAlign: "center" }}>게시판 콘텐츠가 여기에 표시됩니다.</Text>;
+        return renderBoardContent(); // 게시판 렌더링 함수 추가
       default:
         return null;
     }
   };
+
+  
+  const handleCreateArticle = async (
+    title: string,
+    content: string,
+    categoryType: "FREE_BOARD" | "NEW_CONCERT",
+    artistId: number | null,
+    newConcertId: number | null
+  ) => {
+    if (!token) {
+      Alert.alert("로그인이 필요합니다.", "로그인 페이지로 이동합니다.", [
+        {
+          text: "확인",
+          onPress: () => navigation.navigate("LoginScreen"), // 로그인 화면으로 이동
+        },
+        { text: "취소", style: "cancel" },
+      ]);
+      return;
+    }
+  
+    try {
+      const requestData = {
+        title,
+        content,
+        categoryType,
+        artistId,
+        userId, // Redux에서 가져온 사용자 ID
+        newConcertId: categoryType === "NEW_CONCERT" ? newConcertId : null,
+      };
+  
+      const response = await axios.post("/api/articles", requestData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      Alert.alert("성공", "게시글이 작성되었습니다.");
+      setIsCreating(false);
+      fetchBoardArticles(); // 게시글 목록 새로고침
+    } catch (error) {
+      console.error("게시글 작성 중 오류 발생:", error);
+      Alert.alert("오류", "게시글 작성에 실패했습니다.");
+    }
+  };
+  
+  
 
   // 지난 공연 데이터를 로드
   useEffect(() => {
@@ -480,6 +612,31 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     marginBottom: 12,
   },
+ 
+  
+
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  writeButton: {
+    backgroundColor: "#000",
+    padding: 12,
+    alignItems: "center",
+    marginVertical: 16,
+    borderRadius: 8,
+  },
+  writeButtonText: {
+    color: "#fff",
+    fontSize: 16,
+  },
+  emptyText: {
+    textAlign: "center",
+    color: "gray",
+    fontSize: 16,
+    marginTop: 20,
+  },
+  
 });
 
 export default ArtistScreen;
