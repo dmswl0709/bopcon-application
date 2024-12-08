@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet, ScrollView, Alert } from "react-native";
 import { StackScreenProps } from "@react-navigation/stack";
 import Header from "../components/Header";
 import ButtonGroup from "../components/ButtonGroup";
-import FavoriteButton from "../components/FavoriteButton";
+import FavoriteButton from "../components/FavoriteButton"; // 즐겨찾기 버튼 추가
 import SetlistItem from "../components/SetlistItem";
 import AppNavigationParamList from "../navigation/AppNavigatorParamList";
 import { fetchConcertData, fetchPredictedSetlist } from "../apis/concerts"; // concerts.ts에서 가져옴
@@ -103,7 +103,8 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
             <Text style={styles.title}>{concertData.title}</Text>
             <Text style={styles.subTitle}>{concertData.subTitle}</Text>
           </View>
-          <FavoriteButton />
+          {/* 즐겨찾기 버튼 추가 */}
+          <FavoriteButton id={concertId} type="concert" />
         </View>
 
         {/* 공연 정보 */}
