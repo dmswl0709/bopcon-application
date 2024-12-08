@@ -1,32 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { TouchableOpacity, StyleSheet, Image } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../store";
-import { toggleFavorite } from "../store/slices/favoritesSlice"; // Redux 액션 가져오기
 
-interface FavoriteButtonProps {
-  id: number; // artistId 또는 concertId 전달
-  type: "artist" | "concert"; // 타입 구분 (아티스트/콘서트)
-}
+const FavoriteButton = () => {
+  const [isFavorite, setIsFavorite] = useState(false);
 
-const FavoriteButton: React.FC<FavoriteButtonProps> = ({ id, type }) => {
-  const dispatch = useDispatch();
-
-  // Redux 상태에서 즐겨찾기 여부 확인
-  const favorites = useSelector((state: RootState) => state.favorites);
-
-  // 각 아티스트와 콘서트의 favoriteId를 기준으로 하트를 채우거나 비우기
-  const isFavorite = type === "artist"
-    ? (favorites.artists?.some((artist) => artist.favoriteId === id) || false)
-    : (favorites.concerts?.some((concert) => concert.favoriteId === id) || false);
-
-  const handleToggleFavorite = () => {
-    // Redux 액션 호출하여 즐겨찾기 상태 변경
-    dispatch(toggleFavorite({ id, type }));
+  const toggleFavorite = () => {
+    setIsFavorite((prev) => !prev);
   };
 
   return (
-    <TouchableOpacity onPress={handleToggleFavorite} style={styles.button}>
+    <TouchableOpacity onPress={toggleFavorite} style={styles.button}>
       <Image
         source={
           isFavorite
@@ -41,12 +24,12 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({ id, type }) => {
 
 const styles = StyleSheet.create({
   button: {
-    padding: 8, // 터치 영역 확장
+    padding: 8, // 터치 영역 확대
   },
   icon: {
     width: 24,
-    height: 24,
-    resizeMode: "contain", // 이미지 크기 유지
+    height: 24, // 하트 아이콘 크기
+    resizeMode: "contain",
   },
 });
 

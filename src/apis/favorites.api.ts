@@ -1,4 +1,4 @@
-import  httpClient  from './http';
+import { httpClient } from './http';
 
 // Favorite 데이터 타입 정의
 interface FavoriteResponse {

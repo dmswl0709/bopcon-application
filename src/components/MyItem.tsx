@@ -1,28 +1,22 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 
 interface MyItemProps {
   name: string;
-  imgurl: string; // 이미지 URL 데이터
+  number: number; // number 데이터를 추가로 받음
 }
 
-const MyItem: React.FC<MyItemProps> = ({ name, imgurl }) => {
+const MyItem: React.FC<MyItemProps> = ({ name, number }) => {
   return (
     <View style={styles.container}>
-      {/* 이미지 표시 */}
-      <View style={styles.imageContainer}>
-        <Image
-          source={{
-            uri: imgurl || 'https://via.placeholder.com/150', // imgurl이 없으면 플레이스홀더 이미지 사용
-          }}
-          style={styles.image}
-          resizeMode="cover"
-        />
+      {/* 번호 표시 */}
+      <View style={styles.numberContainer}>
+        <Text style={styles.numberText}>{number}</Text> {/* number 표시 */}
       </View>
 
-      {/* 이름 표시 */}
-      <View style={styles.textContainer}>
-        <Text style={styles.name}>{name}</Text>
+      {/* 아티스트 이름 표시 */}
+      <View style={styles.nameContainer}>
+        <Text style={styles.nameText}>{name}</Text>
       </View>
     </View>
   );
@@ -32,28 +26,28 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    justifyContent: 'space-between',
+    padding: 10,
   },
-  imageContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32, // 둥근 이미지
-    overflow: 'hidden',
+  numberContainer: {
+    width: 56,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 16,
   },
-  image: {
-    width: '100%',
-    height: '100%',
+  numberText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4A4A4A', // 텍스트 색상
   },
-  textContainer: {
+  nameContainer: {
     flex: 1,
   },
-  name: {
+  nameText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '500',
+    color: '#1A1A1A', // 텍스트 색상
   },
 });
 

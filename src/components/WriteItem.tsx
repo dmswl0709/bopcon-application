@@ -4,20 +4,27 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 interface WriteItemProps {
   title: string; // 제목
   content: string; // 내용
-  // date: string; // 작성 날짜 및 시간
+  date: string; // 작성 날짜 및 시간
   nickname: string; // 작성자 닉네임
-  onPress?: () => void; // 클릭 핸들러
+  onClick?: () => void; // onClick 핸들러 추가
 }
 
-const WriteItem: React.FC<WriteItemProps> = ({ title, content, nickname, onPress }) => {
+const WriteItem: React.FC<WriteItemProps> = ({ title, content, date, nickname, onClick }) => {
   return (
-    <TouchableOpacity onPress={onPress} style={styles.container}>
-      <View style={styles.contentContainer}>
+    <TouchableOpacity onPress={onClick} style={styles.container}>
+      <View style={styles.content}>
+        {/* 제목 */}
         <Text style={styles.title}>{title}</Text>
-        <Text style={styles.content}>{content}</Text>
-      </View>
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>{`작성자 | ${nickname}`}</Text>
+        
+        {/* 내용 */}
+        <Text style={styles.body}>{content}</Text>
+
+        {/* 하단 작성 정보 */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>{`${date} | ${nickname}`}</Text>
+        </View>
+
+        <View style={styles.divider} />
       </View>
     </TouchableOpacity>
   );
@@ -25,38 +32,35 @@ const WriteItem: React.FC<WriteItemProps> = ({ title, content, nickname, onPress
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  contentContainer: {
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+    cursor: 'pointer', // React Native는 pointer 스타일이 없으므로 무시하거나 웹 전용 환경에서만 사용
   },
   content: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'white',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  body: {
     fontSize: 14,
-    color: '#666',
+    color: '#4A4A4A',
+    marginTop: 8,
   },
   footer: {
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingTop: 8,
+    marginTop: 12,
+    alignItems: 'flex-end',
   },
   footerText: {
     fontSize: 12,
-    color: '#999',
-    textAlign: 'right',
+    color: '#6B7280',
+  },
+  divider: {
+    borderTopWidth: 1,
+    borderColor: '#000',
+    marginTop: 8,
   },
 });
 
