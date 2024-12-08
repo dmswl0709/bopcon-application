@@ -91,60 +91,17 @@ const ArtistScreen = ({ route, navigation }) => {
       }
     };
 
-    if (artistData) {
-      loadSongRanking(); // artistData가 있을 때만 실행
-    }
-  }, [artistData]);
-
-  // 곡 랭킹 표시
-  const renderRankingContent = () => {
-    const sortedSongs = visibleSongs
-      .sort((a, b) => b.count - a.count) // count 기준으로 내림차순 정렬
-      .slice(0, 20); // 상위 20개 선택
-
-    return (
-      <View>
-        <Text style={styles.sectionTitle}>최근 20개 콘서트 기준</Text>
-        {sortedSongs.length === 0 ? (
-          <Text style={{ textAlign: "center", marginTop: 16 }}>곡 데이터가 없습니다.</Text>
-        ) : (
-          <FlatList
-            data={sortedSongs}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item, index }) => (
-              <View style={styles.rankRow}>
-                <Text
-                  style={[
-                    styles.rankNumber,
-                    index === 0 && styles.firstRank,
-                    index === 1 && styles.secondRank,
-                    index === 2 && styles.thirdRank,
-                  ]}
-                >
-                  {index + 1 < 10 ? `0${index + 1}` : index + 1}
-                </Text>
-                <Text style={styles.rankSong}>{item.title}</Text>
-              </View>
-            )}
-          />
-        )}
-      </View>
-    );
-  };
-
-<<<<<<< HEAD
   if (artistData) {
     loadSongRanking(); // artistData가 있을 때만 실행
   }
 }, [artistData]);
 
 
-// 곡 랭킹 표시
-const renderRankingContent = () => {
-  // 곡 데이터를 정렬한 후 상위 10개만 선택
-  const sortedSongs = visibleSongs
-    .sort((a, b) => b.count - a.count) // count 기준으로 내림차순 정렬
-    .slice(0, 20); // 상위 10개 선택
+  // 곡 랭킹 표시
+  const renderRankingContent = () => {
+    const sortedSongs = visibleSongs
+      .sort((a, b) => b.count - a.count) // count 기준으로 내림차순 정렬
+      .slice(0, 20); // 상위 20개 선택
 
   return (
     <View>
@@ -183,8 +140,7 @@ const renderRankingContent = () => {
   };
 
 
-=======
->>>>>>> ce6a63a (feat: 마이페이지에서 즐겨찾기한 아티스트, 콘서트 사진 불러오기, 게시글 기능 추가)
+
   const renderUpcomingConcerts = () => (
     <View>
       {upcomingConcerts.length > 0 ? (
@@ -192,31 +148,7 @@ const renderRankingContent = () => {
           let year = "N/A";
           let month = "N/A";
           let day = "N/A";
-<<<<<<< HEAD
   
-          try {
-            if (typeof concert.date === "string") {
-              // 문자열로 제공되는 날짜 처리
-              const parsedDate = parseISO(concert.date.trim()); // ISO 형식으로 변환
-              if (!isNaN(parsedDate)) {
-                year = format(parsedDate, "yyyy"); // 연도 추출
-                month = format(parsedDate, "MM"); // 월 추출
-                day = format(parsedDate, "dd"); // 일 추출
-              } else {
-                console.warn("Invalid date format received:", concert.date);
-              }
-            } else if (Array.isArray(concert.date) && concert.date.length === 3) {
-              // 배열 형태의 날짜 처리
-              [year, month, day] = concert.date.map((item) => item.toString());
-            } else {
-              console.warn("Unsupported date format:", concert.date);
-            }
-          } catch (error) {
-            console.error("Error parsing date:", concert.date, error);
-          }
-  
-=======
-
           if (Array.isArray(concert.date) && concert.date.length === 3) {
             [year, month, day] = concert.date.map((item) => item.toString());
           }
@@ -226,8 +158,7 @@ const renderRankingContent = () => {
             dateDay: `${month}/${day}`,
             description: concert.title,
           });
-
->>>>>>> ce6a63a (feat: 마이페이지에서 즐겨찾기한 아티스트, 콘서트 사진 불러오기, 게시글 기능 추가)
+  
           return (
             <ConcertRow
               key={index}
@@ -256,13 +187,10 @@ const renderRankingContent = () => {
       )}
     </View>
   );
-<<<<<<< HEAD
   
   
-=======
->>>>>>> ce6a63a (feat: 마이페이지에서 즐겨찾기한 아티스트, 콘서트 사진 불러오기, 게시글 기능 추가)
+  
 
-  // 렌더링할 콘텐츠
   const renderContent = () => {
     switch (activeTab) {
       case "곡 랭킹":
