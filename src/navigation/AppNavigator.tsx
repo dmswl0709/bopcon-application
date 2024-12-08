@@ -16,6 +16,7 @@ import SetListScreen from '../screens/SetListScreen';
 import ArtistScreen from '../screens/ArtistScreen';
 import PastSetListScreen from '../screens/PastsetlistScreen';
 import MyPageScreen from '../screens/MyPageScreen';
+import SearchScreen from '../screens/SearchScreen';
 
 
 const Stack = createStackNavigator<AppNavigationParamList>();
@@ -36,6 +37,7 @@ const AppNavigator = () => {
           <Stack.Screen name="SetListScreen" component={SetListScreen} />
           <Stack.Screen name="ArtistScreen" component={ArtistScreen} />
           <Stack.Screen name="MyPageScreen" component={MyPageScreen} />
+          <Stack.Screen name="SearchScreen" component={SearchScreen} />
 
         </Stack.Navigator>
         <StatusBar style="auto" />

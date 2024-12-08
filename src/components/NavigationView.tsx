@@ -32,7 +32,8 @@ const NavigationView = ({
         </TouchableOpacity>
         <Spacer />
         <Stack direction="horizontal" spacing={14}>
-          <TouchableOpacity>
+          {/* Search 버튼에 onPress로 SearchScreen 이동 추가 */}
+          <TouchableOpacity onPress={() => navigation.navigate('SearchScreen')}>
             <Search width={26} height={26} style={{ margin: 10 }} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('MenuScreen')}>
