@@ -1,46 +1,74 @@
-// src/components/ConcertInfo.tsx
-
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { concertInfoData } from '../constants/concertInfoData';
+import { View, Text, Linking, StyleSheet, TouchableOpacity } from 'react-native';
 
-const ConcertInfo: React.FC = () => {
-  const { schedule, location, ticket } = concertInfoData;
+interface ConcertInfoProps {
+  date: [number, number, number]; // year, month, day 배열 형식
+  venueName: string;
+  cityName: string;
+  countryName: string;
+  ticketUrl: string;
+}
+
+const ConcertInfo: React.FC<ConcertInfoProps> = ({ date, venueName, cityName, countryName, ticketUrl }) => {
+  // 배열을 YYYY-MM-DD 포맷으로 변환
+  const formattedDate = `${date[0]}-${String(date[1]).padStart(2, '0')}-${String(date[2]).padStart(2, '0')}`;
+
+  // 티켓 URL 클릭 핸들러
+  const handleTicketPress = () => {
+    Linking.openURL(ticketUrl).catch((err) => console.error('Failed to open URL:', err));
+  };
 
   return (
     <View style={styles.container}>
-      <InfoRow label="공연 일정" value={schedule} />
-      <InfoRow label="공연 장소" value={location} />
-      <InfoRow label="티켓 예매" value={ticket} />
+      <View style={styles.row}>
+        <Text style={styles.label}>공연 일정</Text>
+        <Text style={styles.value}>{formattedDate}</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.label}>공연 장소</Text>
+        <Text style={styles.value}>
+          {venueName}, {cityName}, {countryName}
+        </Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.label}>티켓 예매</Text>
+        <TouchableOpacity onPress={handleTicketPress}>
+          <Text style={styles.link}>예매하기</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
-
-const InfoRow = ({ label, value }: { label: string; value: string }) => (
-  <View style={styles.row}>
-    <Text style={styles.label}>{label}</Text>
-    <Text style={styles.value}>{value}</Text>
-  </View>
-);
 
 const styles = StyleSheet.create({
   container: {
     padding: 16,
     backgroundColor: 'white',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   label: {
-    fontSize: 16,
     color: 'black',
-    fontWeight: '300',
+    fontWeight: '400',
+    fontSize: 14,
   },
   value: {
+    color: 'gray',
     fontSize: 14,
-    color: '#666',
+  },
+  link: {
+    color: 'blue',
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
 });
 

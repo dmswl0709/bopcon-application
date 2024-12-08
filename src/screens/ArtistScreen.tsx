@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet } from "react-native";
 import Header from "../components/Header";
-import FavoriteButton from "../components/FavoriteButton";
+import FavoriteButton from "../components/FavoriteButton"; // 즐겨찾기 버튼 임포트
 import ConcertRow from "../components/ConcertRow";
 import { SafeAreaView } from "react-native";
 import InstagramLogo from "../assets/icons/InstagramLogo.svg";
@@ -69,104 +69,91 @@ const ArtistScreen = ({ route, navigation }) => {
     getUpcomingConcerts();
   }, [artistId]);
 
-// 곡 랭킹 불러오기 useEffect
-useEffect(() => {
-  const loadSongRanking = async () => {
-    try {
-      // artistData에서 mbid 가져오기
-      const artistId = artistData?.artistId;
+  // 곡 랭킹 불러오기 useEffect
+  useEffect(() => {
+    const loadSongRanking = async () => {
+      try {
+        const artistId = artistData?.artistId;
 
-      if (!artistId) {
-        console.error("artistId가 없습니다. 곡 랭킹을 불러올 수 없습니다.");
-        return;
+        if (!artistId) {
+          console.error("artistId가 없습니다. 곡 랭킹을 불러올 수 없습니다.");
+          return;
+        }
+
+        console.log(`Fetching song rankings for artistId: ${artistId}`);
+        const response = await axios.get(`http://localhost:8080/api/artists/${artistId}/song-ranking`);
+        console.log("Fetched song rankings:", response.data);
+
+        setVisibleSongs(response.data || []); // 데이터가 없으면 빈 배열로 설정
+      } catch (error) {
+        console.error("Error fetching song rankings:", error);
       }
+    };
 
-      console.log(`Fetching song rankings for artistId: ${artistId}`);
-      const response = await axios.get(`http://localhost:8080/api/artists/${artistId}/song-ranking`);
-      console.log("Fetched song rankings:", response.data);
-
-      // API 응답 데이터를 그대로 사용
-      setVisibleSongs(response.data || []); // 데이터가 없으면 빈 배열로 설정
-    } catch (error) {
-      console.error("Error fetching song rankings:", error);
+    if (artistData) {
+      loadSongRanking(); // artistData가 있을 때만 실행
     }
+  }, [artistData]);
+
+  // 곡 랭킹 표시
+  const renderRankingContent = () => {
+    const sortedSongs = visibleSongs
+      .sort((a, b) => b.count - a.count) // count 기준으로 내림차순 정렬
+      .slice(0, 20); // 상위 20개 선택
+
+    return (
+      <View>
+        <Text style={styles.sectionTitle}>최근 20개 콘서트 기준</Text>
+        {sortedSongs.length === 0 ? (
+          <Text style={{ textAlign: "center", marginTop: 16 }}>곡 데이터가 없습니다.</Text>
+        ) : (
+          <FlatList
+            data={sortedSongs}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item, index }) => (
+              <View style={styles.rankRow}>
+                <Text
+                  style={[
+                    styles.rankNumber,
+                    index === 0 && styles.firstRank,
+                    index === 1 && styles.secondRank,
+                    index === 2 && styles.thirdRank,
+                  ]}
+                >
+                  {index + 1 < 10 ? `0${index + 1}` : index + 1}
+                </Text>
+                <Text style={styles.rankSong}>{item.title}</Text>
+              </View>
+            )}
+          />
+        )}
+      </View>
+    );
   };
-
-  if (artistData) {
-    loadSongRanking(); // artistData가 있을 때만 실행
-  }
-}, [artistData]);
-
-
-// 곡 랭킹 표시
-const renderRankingContent = () => {
-  // 곡 데이터를 정렬한 후 상위 10개만 선택
-  const sortedSongs = visibleSongs
-    .sort((a, b) => b.count - a.count) // count 기준으로 내림차순 정렬
-    .slice(0, 20); // 상위 10개 선택
-
-  return (
-    <View>
-      <Text style={styles.sectionTitle}>최근 20개 콘서트 기준</Text>
-      {sortedSongs.length === 0 ? (
-        <Text style={{ textAlign: "center", marginTop: 16 }}>곡 데이터가 없습니다.</Text>
-      ) : (
-        <FlatList
-          data={sortedSongs} // 정렬된 데이터 전달
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item, index }) => (
-            <View style={styles.rankRow}>
-              <Text
-                style={[
-                  styles.rankNumber,
-                  index === 0 && styles.firstRank,
-                  index === 1 && styles.secondRank,
-                  index === 2 && styles.thirdRank,
-                ]}
-              >
-                {index + 1 < 10 ? `0${index + 1}` : index + 1}
-              </Text>
-              <Text style={styles.rankSong}>{item.title}</Text>
-            </View>
-          )}
-        />
-      )}
-    </View>
-  );
-};
-
-  const upcomingConcert = {
-    dateYear: "2025",
-    dateDay: "01/12",
-    description: "벤슨 분 첫 단독 내한 공연",
-  };
-
-
 
   const renderUpcomingConcerts = () => (
     <View>
       {upcomingConcerts.length > 0 ? (
         upcomingConcerts.map((concert, index) => {
-          // date가 배열인지 확인하고 처리
           let year = "N/A";
           let month = "N/A";
           let day = "N/A";
-  
+
           if (Array.isArray(concert.date) && concert.date.length === 3) {
-            [year, month, day] = concert.date.map((item) => item.toString()); // 숫자를 문자열로 변환
+            [year, month, day] = concert.date.map((item) => item.toString());
           }
-  
+
           console.log("Props to ConcertRow:", {
             dateYear: year,
             dateDay: `${month}/${day}`,
             description: concert.title,
           });
-  
+
           return (
             <ConcertRow
               key={index}
-              dateYear={year} // 문자열 타입으로 전달
-              dateDay={`${month}/${day}`} // 문자열 타입으로 전달
+              dateYear={year}
+              dateDay={`${month}/${day}`}
               description={concert.title || "No title"}
               onPress={() =>
                 navigation.navigate("ConcertScreen", {
@@ -175,7 +162,7 @@ const renderRankingContent = () => {
                     dateYear: year,
                     dateDay: `${month}/${day}`,
                     id: concert.id || concert.newConcertId || `generated-id-${index}`,
-                    artistName: artistData?.name, // 추가 데이터 전달
+                    artistName: artistData?.name, 
                   },
                   concertId: concert.newConcertId || `generated-id-${index}`,
                 })
@@ -190,16 +177,14 @@ const renderRankingContent = () => {
       )}
     </View>
   );
-  
-  
-  
 
+  // 렌더링할 콘텐츠
   const renderContent = () => {
     switch (activeTab) {
       case "곡 랭킹":
         return renderRankingContent();
       case "지난 공연":
-        return renderPastConcertContent(); // 
+        return renderPastConcertContent(); 
       case "게시판":
         return <Text style={{ textAlign: "center" }}>게시판 콘텐츠가 여기에 표시됩니다.</Text>;
       default:
@@ -207,6 +192,7 @@ const renderRankingContent = () => {
     }
   };
 
+  // 지난 공연 데이터를 로드
   useEffect(() => {
     const loadPastConcerts = async () => {
       try {
@@ -215,75 +201,62 @@ const renderRankingContent = () => {
           console.error("아티스트 이름이 없습니다.");
           return;
         }
-        console.log(`Fetching past concerts for artist: ${artistId}`);
         const response = await axios.get(`http://localhost:8080/api/artists/${artistId}/past-concerts`);
-        console.log("Fetched past concerts:", response.data);
-  
         if (Array.isArray(response.data)) {
-          setPastConcerts(response.data); // 올바른 데이터 배열 설정
+          setPastConcerts(response.data);
         } else {
           console.error("API 응답이 배열 형태가 아닙니다.");
-          setPastConcerts([]); // 기본값 설정
+          setPastConcerts([]); 
         }
       } catch (error) {
         console.error("Error fetching past concerts:", error);
       }
     };
-  
+
     if (artistData) {
       loadPastConcerts();
     }
   }, [artistData]);
 
-  const renderPastConcertContent = () => {
-    return (
-      <View style={{ paddingHorizontal: 16 }}>
-        {pastConcerts.length > 0 ? (
-          pastConcerts.map((concert, index) => {
-            // date가 배열인지 확인하고 처리
-            let year = "N/A";
-            let month = "N/A";
-            let day = "N/A";
-  
-            if (Array.isArray(concert.date) && concert.date.length === 3) {
-              [year, month, day] = concert.date; // 배열에서 연, 월, 일을 추출
-            }
-  
-            return (
-              <ConcertRow
-                key={index}
-                dateYear={year}
-                dateDay={`${month}/${day}`}
-                description={
-                  concert.title
-                    ? concert.title
-                    : `${concert.venueName || ""}, ${concert.cityName || ""}` ||
-                      "공연 제목 없음"
-                }
-                onPress={() =>
-                  navigation.navigate("ConcertScreen", {
-                    concertDetails: {
-                      ...concert,
-                      dateYear: year,
-                      dateDay: `${month}/${day}`,
-                      artistName: artistData?.name,
-                    },
-                    concertId: concert.pastConcertId,
-                  })
-                }
-              />
-            );
-          })
-        ) : (
-          <Text style={{ textAlign: "center", color: "gray", marginTop: 16 }}>
-            지난 공연 데이터가 없습니다.
-          </Text>
-        )}
-      </View>
-    );
-  };
-  
-  
+  const renderPastConcertContent = () => (
+    <View style={{ paddingHorizontal: 16 }}>
+      {pastConcerts.length > 0 ? (
+        pastConcerts.map((concert, index) => {
+          let year = "N/A";
+          let month = "N/A";
+          let day = "N/A";
+
+          if (Array.isArray(concert.date) && concert.date.length === 3) {
+            [year, month, day] = concert.date;
+          }
+
+          return (
+            <ConcertRow
+              key={index}
+              dateYear={year}
+              dateDay={`${month}/${day}`}
+              description={concert.title || `${concert.venueName || ""}, ${concert.cityName || ""}` || "공연 제목 없음"}
+              onPress={() =>
+                navigation.navigate("ConcertScreen", {
+                  concertDetails: {
+                    ...concert,
+                    dateYear: year,
+                    dateDay: `${month}/${day}`,
+                    artistName: artistData?.name,
+                  },
+                  concertId: concert.pastConcertId,
+                })
+              }
+            />
+          );
+        })
+      ) : (
+        <Text style={{ textAlign: "center", color: "gray", marginTop: 16 }}>
+          지난 공연 데이터가 없습니다.
+        </Text>
+      )}
+    </View>
+  );
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
@@ -302,13 +275,14 @@ const renderRankingContent = () => {
                 </TouchableOpacity>
               </View>
             </View>
-              <View style={styles.artistNameRow}>
-                <View style={styles.artistNameContainer}>
-                  <Text style={styles.artistName}>{artistData?.name || name}</Text>
-                  <Text style={styles.artistKrName}>{artistData?.krName || krName}</Text>
-                </View>
-                <FavoriteButton />
+            <View style={styles.artistNameRow}>
+              <View style={styles.artistNameContainer}>
+                <Text style={styles.artistName}>{artistData?.name || name}</Text>
+                <Text style={styles.artistKrName}>{artistData?.krName || krName}</Text>
               </View>
+              {/* 즐겨찾기 버튼 추가 */}
+              <FavoriteButton id={artistId} type="artist" />
+            </View>
             <Text style={styles.upcomingTitle}>내한 예정</Text>
             {renderUpcomingConcerts()}
             <View style={styles.tabRow}>
@@ -376,7 +350,7 @@ const styles = StyleSheet.create({
     fontSize: 16, // 크기를 살짝 줄임
     fontWeight: "normal", // bold 제거, regular로 설정
     color: "gray", // 약간의 시각적 구분을 위해 색상 변경 (옵션)
-  },  
+  },
   artistDetail: {
     fontSize: 14,
     color: "gray",
@@ -505,7 +479,6 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     marginBottom: 12,
   },
-
 });
 
 export default ArtistScreen;

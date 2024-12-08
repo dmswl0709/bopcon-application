@@ -1,20 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, FlatList } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  FlatList,
+  TouchableOpacity,
+} from 'react-native';
 import MyItem from './MyItem';
-import { getUserFavorites } from '../apis/favorites.api';
+import { getUserFavorites } from '../apis/favorites.api'; // 즐겨찾기 API 가져오기
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
+import { useNavigation } from '@react-navigation/native';
 
 interface MyConcertProps {
   isExpanded: boolean; // 더보기 상태를 받아옴
 }
 
 const MyConcert: React.FC<MyConcertProps> = ({ isExpanded }) => {
-  const [favoriteArtists, setFavoriteArtists] = useState<any[]>([]); // 즐겨찾기 데이터를 저장
+  const [favoriteConcerts, setFavoriteConcerts] = useState<any[]>([]); // 즐겨찾기 데이터를 저장
   const [loading, setLoading] = useState(false); // 로딩 상태
   const [error, setError] = useState<string | null>(null); // 에러 상태
   const token = useSelector((state: RootState) => state.auth.token); // Redux에서 토큰 가져오기
+  const navigation = useNavigation(); // 내비게이션 사용
 
+  // 즐겨찾기 데이터를 가져오는 함수
   useEffect(() => {
     const fetchFavorites = async () => {
       if (!token) {
@@ -25,7 +35,8 @@ const MyConcert: React.FC<MyConcertProps> = ({ isExpanded }) => {
       setLoading(true);
       try {
         const favorites = await getUserFavorites({ token });
-        setFavoriteArtists(favorites);
+        console.log('Fetched favorites:', favorites); // API 응답 디버깅
+        setFavoriteConcerts(favorites);
         setError(null);
       } catch (err) {
         setError('즐겨찾기 데이터를 불러오지 못했습니다.');
@@ -38,14 +49,17 @@ const MyConcert: React.FC<MyConcertProps> = ({ isExpanded }) => {
     fetchFavorites();
   }, [token]);
 
+  // 로딩 중일 때 표시
   if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#0000ff" />
+        <Text>로딩 중...</Text>
       </View>
     );
   }
 
+  // 에러 발생 시 표시
   if (error) {
     return (
       <View style={styles.center}>
@@ -54,21 +68,34 @@ const MyConcert: React.FC<MyConcertProps> = ({ isExpanded }) => {
     );
   }
 
-  // newConcertTitle이 null이 아닌 항목만 필터링
-  const filteredData = favoriteArtists.filter((concert) => concert.newConcertTitle !== null);
+  // 유효한 데이터만 필터링
+  const filteredConcerts = favoriteConcerts.filter(
+    (concert) => concert.newConcertTitle && concert.newConcertId
+  );
 
-  // isExpanded가 true면 모든 데이터, false면 2개만 표시
-  const visibleData = isExpanded ? filteredData : filteredData.slice(0, 2);
+  // 더보기 상태에 따라 데이터 조정
+  const visibleData = isExpanded ? filteredConcerts : filteredConcerts.slice(0, 2);
+
+  // 콘서트를 클릭했을 때 처리
+  const handlePress = (concertId: number) => {
+    navigation.navigate('ConcertScreen', { concertId }); // 'ConcertScreen'으로 이동하며 concertId 전달
+  };
 
   return (
     <View style={styles.container}>
       <FlatList
         data={visibleData}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.newConcertId.toString()} // newConcertId를 키로 사용
         renderItem={({ item }) => (
-          <View style={styles.itemContainer}>
-            <MyItem name={item.newConcertTitle} number={item.favoriteId} />
-          </View>
+          <TouchableOpacity
+            onPress={() => handlePress(item.newConcertId)} // 클릭 이벤트 처리
+            style={styles.itemContainer}
+          >
+            <MyItem
+              name={item.newConcertTitle}
+              imgurl={item.posterUrl || 'https://via.placeholder.com/150'} // 이미지 URL 전달 (없으면 플레이스홀더)
+            />
+          </TouchableOpacity>
         )}
       />
     </View>

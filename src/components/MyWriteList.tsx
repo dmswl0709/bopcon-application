@@ -1,83 +1,175 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  ActivityIndicator, 
+  TouchableOpacity, 
+  FlatList, 
+  Alert 
 } from 'react-native';
-import { useRoute } from '@react-navigation/native';
 import axios from 'axios';
 import WriteItem from './WriteItem';
+import ArticleModal from './ArticleModal';
+import ArticleForm from './ArticleForm';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 
 interface ArticleData {
-  post_id: number; // Post ID
-  artist_id: number; // Artist ID
-  title: string; // 글 제목
-  content: string; // 글 내용
-  created_at: string; // 생성일
-  updated_at?: string; // 수정일 (Optional)
-  userName: string; // 사용자 이름
+  post_id: number;
+  artist_id: number;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at?: string;
+  userName: string;
 }
 
 interface MyWriteListProps {
-  isExpanded: boolean; // 더보기 상태
+  isExpanded: boolean;
 }
 
 const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
-  const route = useRoute(); // React Navigation의 route 사용
-  const { id } = (route.params || {}) as { id?: string }; // URL에서 id 추출 (기본값 설정)
   const [articles, setArticles] = useState<ArticleData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<ArticleData | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
 
-  // 날짜 포맷 함수 (예: "2024-11-01T12:30:00Z" -> "2024-11-01 12:30")
-  const formatDate = (dateTime: string) => {
-    if (!dateTime) return ''; // 유효하지 않으면 빈 문자열 반환
-    const [date, time] = dateTime.split('T');
-    if (!time) return date; // 시간이 없으면 날짜만 반환
-    const [hour, minute] = time.split(':');
-    return `${date} ${hour}:${minute}`;
-  };
+  const token = useSelector((state: RootState) => state.auth.token);
 
+  // Fetch articles on component mount
   useEffect(() => {
-    if (!id) {
-      console.error('ID is missing.');
-      setError('ID is missing.');
+    if (!token) {
+      setError('로그인이 필요합니다.');
       setLoading(false);
       return;
     }
 
-    setLoading(true);
+    const fetchArticles = async () => {
+      setLoading(true);
+      setError(null);
 
-    console.log(`Fetching articles for ID: ${id}`); // 디버깅용 로그
+      try {
+        const response = await axios.get(`http://localhost:8080/api/articles/user`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-    axios
-      .get(`/api/articles/${id}`) // API 호출
-      .then((response) => {
-        console.log('Fetched articles:', response.data); // 응답 데이터 확인
-        setArticles(response.data); // 상태 업데이트
-        setError(null);
-      })
-      .catch((err) => {
-        console.error('Failed to fetch articles:', err); // 에러 로그
-        setError('Failed to load articles. Please try again later.');
-      })
-      .finally(() => setLoading(false));
-  }, [id]);
+        if (response.status === 200) {
+          setArticles(response.data);
+        } else {
+          console.error('Unexpected response status:', response.status);
+          setError('게시글을 불러오지 못했습니다.');
+        }
+      } catch (err) {
+        console.error('Failed to fetch articles:', err.message);
+        setError('네트워크 에러가 발생했습니다. 다시 시도해주세요.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchArticles();
+  }, [token]);
+
+  // Delete article
+  const handleDelete = async (id: number) => {
+    if (!token) {
+      Alert.alert('오류', '로그인이 필요합니다.');
+      return;
+    }
+
+    Alert.alert('확인', '정말로 삭제하시겠습니까?', [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '확인',
+        onPress: async () => {
+          try {
+            const response = await axios.delete(`/api/articles/${id}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            if (response.status === 200) {
+              setArticles((prevArticles) =>
+                prevArticles.filter((article) => article.post_id !== id)
+              );
+              setIsModalOpen(false);
+              Alert.alert('성공', '게시글이 삭제되었습니다.');
+            } else {
+              Alert.alert('오류', '게시글 삭제에 실패했습니다.');
+            }
+          } catch (err) {
+            console.error('게시글 삭제 실패:', err.message);
+            Alert.alert('오류', '게시글 삭제에 실패했습니다.');
+          }
+        },
+      },
+    ]);
+  };
+
+  // Edit article
+  const handleEdit = async (id: number, title: string, content: string) => {
+    if (!token) {
+      Alert.alert('오류', '로그인이 필요합니다.');
+      return;
+    }
+
+    try {
+      const updatedArticle = { title, content };
+
+      const response = await axios.put(`/api/articles/${id}`, updatedArticle, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 200) {
+        setArticles((prevArticles) =>
+          prevArticles.map((article) =>
+            article.post_id === id ? { ...article, ...response.data } : article
+          )
+        );
+        setIsEditing(false);
+        setSelectedArticle(null);
+        Alert.alert('성공', '게시글이 수정되었습니다.');
+      } else {
+        Alert.alert('오류', '게시글 수정에 실패했습니다.');
+      }
+    } catch (err) {
+      console.error('게시글 수정 실패:', err.message);
+      Alert.alert('오류', '게시글 수정에 실패했습니다.');
+    }
+  };
+
+  // Modal open/close handlers
+  const openModal = (article: ArticleData) => {
+    setSelectedArticle(article);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedArticle(null);
+  };
+
+  // Render states
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={styles.loadingText}>Loading articles...</Text>
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#888" />
+        <Text style={styles.loadingText}>로딩 중...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.center}>
+      <View style={styles.centered}>
         <Text style={styles.errorText}>{error}</Text>
       </View>
     );
@@ -85,56 +177,84 @@ const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
 
   if (articles.length === 0) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.noDataText}>No articles available.</Text>
+      <View style={styles.centered}>
+        <Text style={styles.noArticlesText}>게시글이 없습니다.</Text>
       </View>
     );
   }
 
-  // isExpanded에 따라 표시할 데이터 결정
+  // Visible articles based on isExpanded
   const visibleArticles = isExpanded ? articles : articles.slice(0, 2);
 
   return (
-    <FlatList
-      data={visibleArticles}
-      keyExtractor={(item) => item.post_id.toString()}
-      renderItem={({ item }) => (
-        <WriteItem
-          title={item.title} // 글 제목
-          content={item.content} // 글 내용
-          date={formatDate(item.updated_at || item.created_at)} // 날짜 포맷팅
-          nickname={item.userName} // 실제 userName을 사용
+    <>
+      <FlatList
+        data={visibleArticles}
+        keyExtractor={(item) => item?.post_id?.toString() || `unknown-${Math.random()}`}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            onPress={() => openModal(item)}
+            style={styles.itemContainer}
+          >
+            <WriteItem
+              title={item.title}
+              content={item.content}
+              // date={item.created_at || '날짜 없음'}
+              nickname={item.userName || '익명'}
+            />
+          </TouchableOpacity>
+        )}
+        contentContainerStyle={styles.listContainer}
+      />
+      {isModalOpen && selectedArticle && !isEditing && (
+        <ArticleModal
+          article={selectedArticle}
+          onClose={closeModal}
+          onEdit={() => setIsEditing(true)}
+          onDelete={() => handleDelete(selectedArticle.post_id)}
         />
       )}
-      contentContainerStyle={styles.container}
-    />
+      {isEditing && selectedArticle && (
+        <ArticleForm
+          mode="edit"
+          initialTitle={selectedArticle.title}
+          initialContent={selectedArticle.content}
+          onSubmit={(title, content) =>
+            handleEdit(selectedArticle.post_id, title, content)
+          }
+          onCancel={() => setIsEditing(false)}
+        />
+      )}
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: 'white',
-    paddingVertical: 16,
-  },
-  center: {
+  centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
     marginTop: 8,
-    color: '#666',
     fontSize: 16,
+    color: '#888',
   },
   errorText: {
+    fontSize: 16,
     color: 'red',
-    fontSize: 16,
-    textAlign: 'center',
   },
-  noDataText: {
-    color: '#666',
+  noArticlesText: {
     fontSize: 16,
-    textAlign: 'center',
+    color: '#888',
+  },
+  itemContainer: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  listContainer: {
+    paddingBottom: 16,
   },
 });
 

@@ -1,22 +1,28 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 
 interface MyItemProps {
   name: string;
-  number: number; // number 데이터를 추가로 받음
+  imgurl: string; // 이미지 URL 데이터
 }
 
-const MyItem: React.FC<MyItemProps> = ({ name, number }) => {
+const MyItem: React.FC<MyItemProps> = ({ name, imgurl }) => {
   return (
     <View style={styles.container}>
-      {/* 번호 표시 */}
-      <View style={styles.numberContainer}>
-        <Text style={styles.numberText}>{number}</Text> {/* number 표시 */}
+      {/* 이미지 표시 */}
+      <View style={styles.imageContainer}>
+        <Image
+          source={{
+            uri: imgurl || 'https://via.placeholder.com/150', // imgurl이 없으면 플레이스홀더 이미지 사용
+          }}
+          style={styles.image}
+          resizeMode="cover"
+        />
       </View>
 
-      {/* 아티스트 이름 표시 */}
-      <View style={styles.nameContainer}>
-        <Text style={styles.nameText}>{name}</Text>
+      {/* 이름 표시 */}
+      <View style={styles.textContainer}>
+        <Text style={styles.name}>{name}</Text>
       </View>
     </View>
   );
@@ -26,28 +32,28 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 10,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
   },
-  numberContainer: {
-    width: 56,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
+  imageContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32, // 둥근 이미지
+    overflow: 'hidden',
     marginRight: 16,
   },
-  numberText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#4A4A4A', // 텍스트 색상
+  image: {
+    width: '100%',
+    height: '100%',
   },
-  nameContainer: {
+  textContainer: {
     flex: 1,
   },
-  nameText: {
+  name: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#1A1A1A', // 텍스트 색상
+    fontWeight: 'bold',
+    color: '#333',
   },
 });
 
