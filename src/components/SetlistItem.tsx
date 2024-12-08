@@ -2,21 +2,18 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 
 interface SetlistItemProps {
-  index: number; // Order of the song
-  songName: string; // Song title
-  ytLink?: string | null; // Optional YouTube link
+  index: number;
+  songTitle: string; 
+  ytLink?: string | null;
 }
 
-const SetlistItem: React.FC<SetlistItemProps> = ({ index, songName, ytLink }) => {
+const SetlistItem: React.FC<SetlistItemProps> = ({ index, songTitle, ytLink }) => {
   return (
     <View style={styles.container}>
-      {/* Display the order of the song */}
       <Text style={styles.index}>
         {index < 10 ? `0${index}` : index} {/* Zero-padded index */}
       </Text>
-      {/* Display the song title */}
-      <Text style={styles.songName}>{songName}</Text>
-      {/* Display YouTube link indicator if available */}
+      <Text style={styles.songName}>{songTitle}</Text>
       {ytLink && <Text style={styles.linkText}>YouTube Link Available</Text>}
     </View>
   );
@@ -28,9 +25,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
     paddingHorizontal: 16,
-    // Removed the divider styles
-    // borderBottomWidth: 1,
-    // borderBottomColor: "#E0E0E0",
   },
   index: {
     fontSize: 16,
@@ -41,13 +35,11 @@ const styles = StyleSheet.create({
   },
   songName: {
     fontSize: 16,
-    fontFamily: "Pretendard-Regular",
     color: "black",
     flex: 1,
   },
   linkText: {
     fontSize: 14,
-    fontFamily: "Pretendard-Regular",
     color: "blue",
   },
 });

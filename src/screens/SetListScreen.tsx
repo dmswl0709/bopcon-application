@@ -5,53 +5,89 @@ import Header from "../components/Header";
 import FavoriteButton from "../components/FavoriteButton";
 import SetlistItem from "../components/SetlistItem";
 
+interface SongType {
+  order: number;
+  title: string;
+  ytLink: string | null;
+}
+
+interface ConcertData {
+  venueName: string;
+  cityName: string;
+  date: string;
+  setlists: SongType[];
+}
+
+interface RouteParams {
+  artistId: string;
+  pastConcertId: string;
+  title?: string;
+  cityName?: string;
+  venueName?: string;
+}
+
+interface SetListScreenProps {
+  route: {
+    params: RouteParams;
+  };
+  navigation: any;
+}
+
 const API_BASE_URL = "http://localhost:8080";
 
-const SetListScreen = ({ route, navigation }) => {
-  const { artistId, pastconcertId, title, cityName, venueName } = route.params;
+const SetListScreen: React.FC<SetListScreenProps> = ({ route, navigation }) => {
+  const { artistId, pastConcertId, title, cityName, venueName } = route.params;
 
-  const [concertImage, setConcertImage] = useState("");
-  const [setlist, setSetlist] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [concertImage, setConcertImage] = useState<string>("");
+  const [setlist, setSetlist] = useState<SongType[]>([]);
+  const [concertInfo, setConcertInfo] = useState<ConcertData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // Fetch concert image
   const fetchConcertImage = async () => {
     try {
-      console.log(`Fetching artist image for artistId: ${artistId}`);
       const response = await axios.get(`${API_BASE_URL}/api/artists/${artistId}`);
-      console.log("Artist Image API Response:", response.data);
-
       const imgUrl = response.data.imgUrl.startsWith("http")
         ? response.data.imgUrl
         : `${API_BASE_URL}/${response.data.imgUrl}`;
       setConcertImage(imgUrl);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching concert image:", error.message);
-      Alert.alert("오류", "콘서트 이미지를 불러오는 데 실패했습니다.");
+      Alert.alert("Error", "Failed to load concert image.");
     }
   };
 
-  // Fetch setlist for the specific past concert
   const fetchSetlist = async () => {
     try {
-      console.log(`Fetching setlist for pastConcertId: ${pastconcertId}`);
-      const response = await axios.get(`${API_BASE_URL}/api/setlists/past-concert/${pastconcertId}`);
-      console.log("Setlist API Response:", response.data);
+      const response = await axios.get(`${API_BASE_URL}/api/artists/${artistId}/past-concerts`);
+      const concerts = response.data;
 
-      const { setlist } = response.data;
-
-      if (setlist) {
-        setSetlist(setlist); // Correctly update the setlist state
-      } else {
+      const concert = concerts.find((c) => c.pastConcertId === Number(pastConcertId));
+      if (!concert) {
+        console.warn("No concert found for the given ID.");
         setSetlist([]);
+        return;
       }
-    } catch (error) {
+
+      const formattedSetlist = concert.setlists.map((item: any) => ({
+        order: item.order,
+        title: item.song?.title || "Unknown Song",
+        ytLink: item.song?.ytLink || null,
+      }));
+
+      setSetlist(formattedSetlist);
+
+      setConcertInfo({
+        venueName: concert.venueName,
+        cityName: concert.cityName,
+        date: concert.date.join("-"),
+        setlists: formattedSetlist,
+      });
+    } catch (error: any) {
       console.error("Error fetching setlist:", error.message);
-      Alert.alert("오류", "셋리스트를 불러오는 데 실패했습니다.");
+      Alert.alert("Error", "Failed to load setlist data.");
     }
   };
 
-  // Fetch all data
   const fetchData = async () => {
     setLoading(true);
     await fetchConcertImage();
@@ -60,9 +96,8 @@ const SetListScreen = ({ route, navigation }) => {
   };
 
   useEffect(() => {
-    console.log("Route Params:", route.params);
     fetchData();
-  }, [pastconcertId, artistId]);
+  }, [artistId, pastConcertId]);
 
   if (loading) {
     return (
@@ -74,47 +109,42 @@ const SetListScreen = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <Header title="Setlist" onBackPress={() => navigation.goBack()} />
 
-      {/* Concert Image */}
       <View style={styles.imageContainer}>
         {concertImage ? (
           <Image source={{ uri: concertImage }} style={styles.concertImage} />
         ) : (
-          <Text style={styles.noImageText}>이미지를 불러올 수 없습니다.</Text>
+          <Text style={styles.noImageText}>Image not available</Text>
         )}
       </View>
 
-      {/* Concert Info */}
       <View style={styles.infoContainer}>
         <View style={styles.concertInfoRow}>
           <Text style={styles.concertName}>{title || "Concert Name"}</Text>
           <FavoriteButton />
         </View>
-        <Text style={styles.venueName}>{venueName || "Venue Name"}</Text>
-        <Text style={styles.location}>{cityName || "City Name"}</Text>
+        <Text style={styles.venueName}>{concertInfo?.venueName || venueName || "Venue Name"}</Text>
+        <Text style={styles.location}>{concertInfo?.cityName || cityName || "City Name"}</Text>
+        <Text style={styles.date}>{concertInfo?.date}</Text>
       </View>
 
-      {/* Setlist Section */}
       <Text style={styles.setlistTitle}>셋리스트</Text>
       <View style={styles.divider} />
 
-      {/* Display Setlist */}
       {setlist.length > 0 ? (
         <FlatList
-          data={setlist}
-          keyExtractor={(item) => item.songId.toString()} // Use songId for unique key
+          data={setlist.filter(
+            (item, index, self) =>
+              index === self.findIndex((t) => t.order === item.order && t.title === item.title)
+          )}
+          keyExtractor={(item) => `${item.order}-${item.title}`}
           renderItem={({ item }) => (
-            <SetlistItem
-              key={item.order}
-              index={item.order}
-              songName={item.songName} // Correct the field name
-            />
+            <SetlistItem index={item.order} songTitle={item.title} ytLink={item.ytLink} />
           )}
         />
       ) : (
-        <Text style={styles.noSetlist}>셋리스트 정보 없음</Text>
+        <Text style={styles.noSetlist}>No setlist available for this concert.</Text>
       )}
     </View>
   );
@@ -156,25 +186,23 @@ const styles = StyleSheet.create({
   concertName: {
     fontSize: 16,
     fontWeight: "bold",
-    fontFamily: "Pretendard-Bold",
-    flex: 1,
   },
   venueName: {
     fontSize: 15,
-    fontFamily: "Pretendard-Regular",
     marginTop: 4,
-    textAlign: "left",
   },
   location: {
     fontSize: 13,
-    fontFamily: "Pretendard-Regular",
     marginTop: 4,
-    textAlign: "left",
+  },
+  date: {
+    fontSize: 12,
+    marginTop: 4,
+    color: "gray",
   },
   setlistTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    fontFamily: "Pretendard-Bold",
     marginHorizontal: 16,
     marginTop: 24,
   },
@@ -190,7 +218,6 @@ const styles = StyleSheet.create({
     color: "gray",
     textAlign: "center",
     marginTop: 16,
-    fontFamily: "Pretendard-Regular",
   },
 });
 

@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native";
 import InstagramLogo from "../assets/icons/InstagramLogo.svg";
 import SpotifyLogo from "../assets/icons/SpotifyLogo.svg";
 import { fetchUpcomingConcerts, fetchSongRanking } from "../apis/concerts";
+import { format, parseISO } from "date-fns";
 import axios from "axios";
 import { Linking } from "react-native";
 
@@ -142,31 +143,40 @@ const renderRankingContent = () => {
   };
 
 
-
   const renderUpcomingConcerts = () => (
     <View>
       {upcomingConcerts.length > 0 ? (
         upcomingConcerts.map((concert, index) => {
-          // date가 배열인지 확인하고 처리
           let year = "N/A";
           let month = "N/A";
           let day = "N/A";
   
-          if (Array.isArray(concert.date) && concert.date.length === 3) {
-            [year, month, day] = concert.date.map((item) => item.toString()); // 숫자를 문자열로 변환
+          try {
+            if (typeof concert.date === "string") {
+              // 문자열로 제공되는 날짜 처리
+              const parsedDate = parseISO(concert.date.trim()); // ISO 형식으로 변환
+              if (!isNaN(parsedDate)) {
+                year = format(parsedDate, "yyyy"); // 연도 추출
+                month = format(parsedDate, "MM"); // 월 추출
+                day = format(parsedDate, "dd"); // 일 추출
+              } else {
+                console.warn("Invalid date format received:", concert.date);
+              }
+            } else if (Array.isArray(concert.date) && concert.date.length === 3) {
+              // 배열 형태의 날짜 처리
+              [year, month, day] = concert.date.map((item) => item.toString());
+            } else {
+              console.warn("Unsupported date format:", concert.date);
+            }
+          } catch (error) {
+            console.error("Error parsing date:", concert.date, error);
           }
-  
-          console.log("Props to ConcertRow:", {
-            dateYear: year,
-            dateDay: `${month}/${day}`,
-            description: concert.title,
-          });
   
           return (
             <ConcertRow
               key={index}
-              dateYear={year} // 문자열 타입으로 전달
-              dateDay={`${month}/${day}`} // 문자열 타입으로 전달
+              dateYear={year}
+              dateDay={`${month}/${day}`}
               description={concert.title || "No title"}
               onPress={() =>
                 navigation.navigate("ConcertScreen", {
@@ -190,7 +200,6 @@ const renderRankingContent = () => {
       )}
     </View>
   );
-  
   
   
 

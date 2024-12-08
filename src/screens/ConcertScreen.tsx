@@ -135,7 +135,8 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
             <SetlistItem
               key={`predicted-setlist-item-${index}`}
               index={song.order}
-              songName={song.songTitle}
+              songTitle={song.songTitle}
+              ytLink={song.ytLink || null} // ytLink 추가 전달
             />
           ))
         ) : (

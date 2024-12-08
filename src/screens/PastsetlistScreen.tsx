@@ -35,7 +35,6 @@ const PastSetlistScreen: React.FC = () => {
   const [pastConcerts, setPastConcerts] = useState<PastConcert[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 아티스트 정보 가져오기
   const fetchArtistInfo = async () => {
     try {
       const response = await axios.get<Artist>(`${API_BASE_URL}/api/artists/${artistId}`);
@@ -45,20 +44,16 @@ const PastSetlistScreen: React.FC = () => {
         ? response.data.imgUrl
         : `${API_BASE_URL}/${response.data.imgUrl}`;
       setArtist({ ...response.data, imgUrl });
-      return response.data.name;
     } catch (error) {
       console.error("아티스트 정보를 불러오는 데 실패:", error.message);
       Alert.alert("오류", "아티스트 정보를 불러오는 데 실패했습니다.");
-      return null;
     }
   };
 
-  const fetchPastConcerts = async (artistName: string | null) => {
-    if (!artistName) return;
-
+  const fetchPastConcerts = async () => {
     try {
       const response = await axios.get<PastConcert[]>(
-        `${API_BASE_URL}/api/past-concerts/artist/${encodeURIComponent(artistName)}`
+        `${API_BASE_URL}/api/artists/${artistId}/past-concerts`
       );
       console.log("Past Concerts API 응답:", response.data);
       setPastConcerts(response.data);
@@ -70,10 +65,8 @@ const PastSetlistScreen: React.FC = () => {
 
   const fetchData = async () => {
     setLoading(true);
-    const artistName = await fetchArtistInfo();
-    if (artistName) {
-      await fetchPastConcerts(artistName);
-    }
+    await fetchArtistInfo();
+    await fetchPastConcerts();
     setLoading(false);
   };
 
@@ -104,7 +97,7 @@ const PastSetlistScreen: React.FC = () => {
         <Image 
           source={{ uri: artist.imgUrl }} 
           style={styles.artistImage} 
-          resizeMode="contain" // 수정된 부분
+          resizeMode="contain"
         />
         <View style={styles.artistInfoRow}>
           <View style={styles.artistTextContainer}>
@@ -118,23 +111,45 @@ const PastSetlistScreen: React.FC = () => {
       <Text style={styles.sectionTitle}>지난 공연</Text>
       <View style={styles.divider} />
       <ScrollView contentContainerStyle={styles.concertList}>
-        {pastConcerts.map((concert) => (
-          <ConcertRow
-            key={concert.pastConcertId}
-            dateYear={new Date(concert.date).getFullYear().toString()}
-            dateDay={`${new Date(concert.date).getMonth() + 1}/${new Date(concert.date).getDate()}`}
-            description={`${concert.cityName}, ${concert.countryName || concert.venueName}`}
-            onPress={() =>
-              navigation.navigate("SetListScreen", {
-                artistId,
-                pastconcertId: concert.pastConcertId,
-                title: concert.venueName,
-                cityName: concert.cityName,
-                venueName: concert.venueName,
-              })
+        {pastConcerts.map((concert) => {
+          let dateYear = "N/A";
+          let dateDay = "N/A";
+
+          if (Array.isArray(concert.date) && concert.date.length === 3) {
+            // 배열로 전달된 경우 처리
+            const [year, month, day] = concert.date;
+            const concertDate = new Date(year, month - 1, day);
+
+            // 날짜가 유효한지 확인
+            if (!isNaN(concertDate.getTime())) {
+              dateYear = concertDate.getFullYear().toString();
+              dateDay = `${concertDate.getMonth() + 1}/${concertDate.getDate()}`;
+            } else {
+              console.warn("Invalid date format:", concert.date);
             }
-          />
-        ))}
+          } else {
+            console.warn("Empty or unexpected date format:", concert.date);
+          }
+
+          return (
+            <ConcertRow
+              key={concert.pastConcertId}
+              dateYear={dateYear}
+              dateDay={dateDay}
+              description={`${concert.cityName}, ${concert.countryName || concert.venueName}`}
+              onPress={() =>
+                navigation.navigate("SetListScreen", {
+                  artistId,
+                  date: concert.date, // 날짜 전달
+                  pastConcertId: concert.pastConcertId, // ID 전달
+                  title: concert.venueName,
+                  cityName: concert.cityName,
+                  venueName: concert.venueName,
+                })
+              }
+            />
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -147,9 +162,9 @@ const styles = StyleSheet.create({
   errorText: { fontSize: 16, color: "red" },
   artistContainer: { alignItems: "center", padding: 16 },
   artistImage: {
-    width: "82%", // 줄어든 크기
+    width: "82%",
     height: undefined, 
-    aspectRatio: 1, // 원본 비율 유지
+    aspectRatio: 1,
     marginBottom: 5,
   },
   artistInfoRow: {
