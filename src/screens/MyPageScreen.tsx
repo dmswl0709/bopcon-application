@@ -28,7 +28,7 @@ const MyPageScreen = () => {
   const [isExpanded, setIsExpanded] = useState([false, false, false, false]);
   const [loading, setLoading] = useState(true);
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch(); 
   const navigation = useNavigation();
   const { user, token } = useSelector((state: RootState) => state.auth);
 

@@ -20,6 +20,8 @@ const SignUpForm = () => {
     repeatCheck: false,
   });
 
+  
+
   // 체크박스 토글 함수
   const toggleCheck = (checkName: keyof typeof checks) => {
     setChecks((prevChecks) => ({

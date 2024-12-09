@@ -57,7 +57,7 @@ export const loginUser = createAsyncThunk(
 
       return { token: storedToken, user: storedNickname };
     } catch (error: any) {
-      console.error('[로그인 실패]:', error.message || error);
+      // console.error('[로그인 실패]:', error.message || error);
       return rejectWithValue(error?.response?.data?.error || '로그인 중 오류가 발생했습니다.');
     }
   }
@@ -119,7 +119,7 @@ const authSlice = createSlice({
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || '로그인 중 오류가 발생했습니다.';
-        console.error('[로그인 실패 Redux 상태 업데이트]:', action.payload);
+        // console.error('[로그인 실패 Redux 상태 업데이트]:', action.payload);
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.error = action.payload || '회원가입 중 오류가 발생했습니다.';

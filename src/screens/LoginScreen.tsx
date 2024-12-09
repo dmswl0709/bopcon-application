@@ -31,15 +31,15 @@ const LoginScreen = () => {
         await AsyncStorage.setItem('authToken', token);
         await AsyncStorage.setItem('userNickname', user);
 
-        Alert.alert('로그인 성공', `환영합니다, ${user}님!`);
+        Alert.alert(`환영합니다, ${user}님!`);
         navigation.navigate('HomeScreen');
       } catch (storageError) {
         console.error('AsyncStorage 저장 오류:', storageError);
         Alert.alert('오류', '로그인 정보를 저장하는 중 오류가 발생했습니다.');
       }
     } catch (error: any) {
-      console.error('로그인 실패:', error.message || error);
-      Alert.alert('로그인 실패', error.message || '로그인 중 오류가 발생했습니다.');
+      // console.error('로그인 실패:', error.message || error);
+      Alert.alert('로그인 실패', error.message || '이메일 또는 비밀번호를 확인해주세요.');
     } finally {
       setLoading(false);
     }
