@@ -6,7 +6,7 @@ import ConcertRow from "../components/ConcertRow";
 import { SafeAreaView } from "react-native";
 import InstagramLogo from "../assets/icons/InstagramLogo.svg";
 import SpotifyLogo from "../assets/icons/SpotifyLogo.svg";
-import { fetchUpcomingConcerts, fetchSongRanking } from "../apis/concerts";
+import { fetchUpcomingConcerts, fetchSongRanking, fetchPastConcerts} from "../apis/concerts";
 import ArticleForm from "../components/ArticleForm";
 import { format, parseISO } from "date-fns";
 import axios from "axios";
@@ -325,20 +325,22 @@ const ArtistScreen = ({ route, navigation }) => {
   useEffect(() => {
     const loadPastConcerts = async () => {
       try {
-        const artistName = artistData?.artistId;
         if (!artistId) {
-          console.error("아티스트 이름이 없습니다.");
+          console.error("artistId가 없습니다. API 요청을 중단합니다.");
           return;
         }
+    
         const response = await axios.get(`http://localhost:8080/api/artists/${artistId}/past-concerts`);
+        console.log("Past concerts response:", response.data); // 응답 데이터 확인
+    
         if (Array.isArray(response.data)) {
           setPastConcerts(response.data);
         } else {
-          console.error("API 응답이 배열 형태가 아닙니다.");
-          setPastConcerts([]); 
+          console.error("API 응답이 배열 형태가 아닙니다. 빈 배열로 설정합니다.");
+          setPastConcerts([]);
         }
       } catch (error) {
-        console.error("Error fetching past concerts:", error);
+        console.error("과거 콘서트를 불러오는 중 오류 발생:", error);
       }
     };
 
@@ -360,21 +362,30 @@ const ArtistScreen = ({ route, navigation }) => {
         const startDay = formatWithDot(concert.startDate || concert.date);
         const endDay = formatWithDot(concert.endDate || concert.date);
 
+        // `concert.date`에서 `year`, `month`, `day`를 안전하게 추출
+        const year = concert.date?.[0];
+        const month = concert.date?.[1];
+        const day = concert.date?.[2];
+        
+        // 날짜가 없을 경우 로그를 남기고 해당 항목을 렌더링하지 않음
+        if (!year || !month || !day) {
+          console.warn("Invalid date format for concert:", concert);
+          return null;
+         }
+
           return (
             <ConcertRow
-              key={index}
+              key={concert.pastConcertId}
               startDay={startDay}
               endDay={endDay}
               description={concert.title || `${concert.venueName || ""}, ${concert.cityName || ""}` || "공연 제목 없음"}
               onPress={() =>
-                navigation.navigate("ConcertScreen", {
-                  concertDetails: {
-                    ...concert,
-                    dateYear: year,
-                    dateDay: `${month}/${day}`,
-                    artistName: artistData?.name,
-                  },
-                  concertId: concert.pastConcertId,
+                navigation.navigate("SetListScreen", {
+                  artistId, // 현재 아티스트 ID 전달
+                  pastConcertId: concert.pastConcertId, // 선택한 공연 ID 전달
+                  title: concert.title || "Unknown Concert", // 제목 전달
+                  venueName: concert.venueName || "Unknown Venue", // 공연장 정보 전달
+                  cityName: concert.cityName || "Unknown City", // 도시 정보 전달
                 })
               }
             />

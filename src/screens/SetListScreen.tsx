@@ -121,10 +121,9 @@ const SetListScreen: React.FC<SetListScreenProps> = ({ route, navigation }) => {
 
       <View style={styles.infoContainer}>
         <View style={styles.concertInfoRow}>
-          <Text style={styles.concertName}>{title || "Concert Name"}</Text>
+        <Text style={styles.venueName}>{concertInfo?.venueName || venueName || "Venue Name"}</Text>
           <FavoriteButton />
         </View>
-        <Text style={styles.venueName}>{concertInfo?.venueName || venueName || "Venue Name"}</Text>
         <Text style={styles.location}>{concertInfo?.cityName || cityName || "City Name"}</Text>
         <Text style={styles.date}>{concertInfo?.date}</Text>
       </View>
@@ -183,16 +182,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  concertName: {
-    fontSize: 16,
+  venueName: {
+    fontSize: 17,
+    marginTop: 4,
     fontWeight: "bold",
   },
-  venueName: {
-    fontSize: 15,
-    marginTop: 4,
-  },
   location: {
-    fontSize: 13,
+    fontSize: 15,
     marginTop: 4,
   },
   date: {

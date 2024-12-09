@@ -13,7 +13,7 @@ import TicketButton from "../components/TicketButton";
 type ConcertScreenProps = StackScreenProps<AppNavigationParamList, "ConcertScreen">;
 
 const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
-  const { concertId } = route.params || {};
+  const { concertId, concertDetails }= route.params || {};
   const [concertData, setConcertData] = useState<any>(null);
   const [predictedSetlist, setPredictedSetlist] = useState<{ order: number; songTitle: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +36,10 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
     return `${formattedStartDate} ~ ${formattedEndDate}`; // 다른 날짜일 경우
   };
 
+  useEffect(() => {
+    console.log("Received concertId:", concertId); // 전달된 ID 확인
+    console.log("Received concertDetails:", concertDetails);
+  }, [concertId, concertDetails]);
 
 
   useEffect(() => {
