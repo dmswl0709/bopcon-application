@@ -21,7 +21,7 @@ interface PastConcert {
   venueName: string;
   cityName: string;
   countryName: string;
-  date: string;
+  date: number[]; // Updated to reflect array format, e.g., [2024, 12, 5]
 }
 
 const API_BASE_URL = "http://localhost:8080"; // 개발 환경 URL
@@ -34,6 +34,13 @@ const PastSetlistScreen: React.FC = () => {
   const [artist, setArtist] = useState<Artist | null>(null);
   const [pastConcerts, setPastConcerts] = useState<PastConcert[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Helper function to format date array into a string
+  const formatWithDot = (dateArray: number[]) => {
+    if (!Array.isArray(dateArray) || dateArray.length !== 3) return "";
+    const [year, month, day] = dateArray;
+    return `${year}.${String(month).padStart(2, "0")}.${String(day).padStart(2, "0")}`;
+  };
 
   const fetchArtistInfo = async () => {
     try {
@@ -112,35 +119,18 @@ const PastSetlistScreen: React.FC = () => {
       <View style={styles.divider} />
       <ScrollView contentContainerStyle={styles.concertList}>
         {pastConcerts.map((concert) => {
-          let dateYear = "N/A";
-          let dateDay = "N/A";
-
-          if (Array.isArray(concert.date) && concert.date.length === 3) {
-            // 배열로 전달된 경우 처리
-            const [year, month, day] = concert.date;
-            const concertDate = new Date(year, month - 1, day);
-
-            // 날짜가 유효한지 확인
-            if (!isNaN(concertDate.getTime())) {
-              dateYear = concertDate.getFullYear().toString();
-              dateDay = `${concertDate.getMonth() + 1}/${concertDate.getDate()}`;
-            } else {
-              console.warn("Invalid date format:", concert.date);
-            }
-          } else {
-            console.warn("Empty or unexpected date format:", concert.date);
-          }
-
+          const formattedDate = formatWithDot(concert.date); // Format the date array
+          
           return (
             <ConcertRow
               key={concert.pastConcertId}
-              dateYear={dateYear}
-              dateDay={dateDay}
+              startDay={formattedDate} // Pass formatted date as startDay
+              endDay={formattedDate} // Use the same for endDay if only one date is provided
               description={`${concert.cityName}, ${concert.countryName || concert.venueName}`}
               onPress={() =>
                 navigation.navigate("SetListScreen", {
                   artistId,
-                  date: concert.date, // 날짜 전달
+                  date: concert.date, // Pass raw date array
                   pastConcertId: concert.pastConcertId, // ID 전달
                   title: concert.venueName,
                   cityName: concert.cityName,

@@ -180,35 +180,31 @@ const ArtistScreen = ({ route, navigation }) => {
     <View>
       {upcomingConcerts.length > 0 ? (
         upcomingConcerts.map((concert, index) => {
-          let year = "N/A";
-          let month = "N/A";
-          let day = "N/A";
+          const formatWithDot = (dateArray) => {
+            if (!Array.isArray(dateArray) || dateArray.length !== 3) return "";
+            const [year, month, day] = dateArray;
+            return `${year}.${String(month).padStart(2, "0")}.${String(day).padStart(2, "0")}`;
+          };
 
-          if (Array.isArray(concert.date) && concert.date.length === 3) {
-            [year, month, day] = concert.date.map((item) => item.toString());
-          }
+          const startDay = formatWithDot(concert.startDate);
+          const endDay = formatWithDot(concert.endDate);
+          const displayDate = startDay === endDay ? startDay : `${startDay} ~ ${endDay}`;
 
-          console.log("Props to ConcertRow:", {
-            dateYear: year,
-            dateDay: `${month}/${day}`,
+          console.log("ConcertRow Props:", {
+            startDay,
+            endDay,
             description: concert.title,
           });
 
           return (
             <ConcertRow
               key={index}
-              dateYear={year}
-              dateDay={`${month}/${day}`}
+              startDay={startDay}
+              endDay={endDay}
               description={concert.title || "No title"}
               onPress={() =>
                 navigation.navigate("ConcertScreen", {
-                  concertDetails: {
-                    ...concert,
-                    dateYear: year,
-                    dateDay: `${month}/${day}`,
-                    id: concert.id || concert.newConcertId || `generated-id-${index}`,
-                    artistName: artistData?.name, 
-                  },
+                  concertDetails: { ...concert, startDay, endDay },
                   concertId: concert.newConcertId || `generated-id-${index}`,
                 })
               }
@@ -353,21 +349,22 @@ const ArtistScreen = ({ route, navigation }) => {
 
   const renderPastConcertContent = () => (
     <View style={{ paddingHorizontal: 16 }}>
-      {pastConcerts.length > 0 ? (
-        pastConcerts.map((concert, index) => {
-          let year = "N/A";
-          let month = "N/A";
-          let day = "N/A";
+    {pastConcerts.length > 0 ? (
+      pastConcerts.map((concert, index) => {
+        const formatWithDot = (dateArray) => {
+          if (!Array.isArray(dateArray) || dateArray.length !== 3) return "";
+          const [year, month, day] = dateArray;
+          return `${year}.${String(month).padStart(2, "0")}.${String(day).padStart(2, "0")}`;
+        };
 
-          if (Array.isArray(concert.date) && concert.date.length === 3) {
-            [year, month, day] = concert.date;
-          }
+        const startDay = formatWithDot(concert.startDate || concert.date);
+        const endDay = formatWithDot(concert.endDate || concert.date);
 
           return (
             <ConcertRow
               key={index}
-              dateYear={year}
-              dateDay={`${month}/${day}`}
+              startDay={startDay}
+              endDay={endDay}
               description={concert.title || `${concert.venueName || ""}, ${concert.cityName || ""}` || "공연 제목 없음"}
               onPress={() =>
                 navigation.navigate("ConcertScreen", {

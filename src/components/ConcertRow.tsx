@@ -1,21 +1,52 @@
 import React from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 
 interface ConcertRowProps {
-  dateYear: string;
-  dateDay: string;
+  startDay?: string;
+  endDay?: string;
+  date?: string; // date 추가
   description: string;
   onPress: () => void;
 }
 
-const ConcertRow: React.FC<ConcertRowProps> = ({ dateYear, dateDay, description, onPress }) => {
-  console.log("Props in ConcertRow:", { dateYear, dateDay, description });
+const ConcertRow: React.FC<ConcertRowProps> = ({ date, startDay, endDay, description, onPress }) => {
+  // 기본값 설정
+  const safeStartDay = startDay || (date ? date.split(" ~ ")[0] : ""); // date에서 시작일 추출
+  const safeEndDay = endDay || (date ? date.split(" ~ ")[1] : ""); // date에서 종료일 추출
+
+  // 날짜 분리
+  const [startYear, startMonth, startDayOnly] = safeStartDay.split(".");
+  const [endYear, endMonth, endDayOnly] = safeEndDay.split(".");
+  
+  // 연도 단축형
+  const shortStartYear = startYear?.slice(2) || "";
+  const shortEndYear = endYear?.slice(2) || "";
+
+  console.log("Rendering ConcertRow:", { startDay, endDay, date, description });
+
   return (
     <View style={styles.concertRow}>
       <View style={styles.dateBox}>
-        <Text style={styles.dateYear}>{dateYear}</Text>
-        <Text style={styles.dateDay}>{dateDay}</Text>
+        {safeStartDay === safeEndDay ? (
+          // startDay와 endDay가 같을 경우 전체 연도 사용
+          <>
+            <Text style={styles.dateYear}>{startYear}</Text>
+            <Text style={styles.dateDay}>
+              {startMonth}.{startDayOnly}
+            </Text>
+          </>
+        ) : (
+          // startDay와 endDay가 다를 경우
+          <>
+            <Text style={styles.dateYear}>
+              {shortStartYear} {startMonth}.{startDayOnly}
+            </Text>
+            <Text style={styles.dateSeparator}>~</Text>
+            <Text style={styles.dateYear}>
+              {shortEndYear} {endMonth}.{endDayOnly}
+            </Text>
+          </>
+        )}
       </View>
       <Text style={styles.concertDescription}>{description}</Text>
       <TouchableOpacity onPress={onPress}>
@@ -25,7 +56,6 @@ const ConcertRow: React.FC<ConcertRowProps> = ({ dateYear, dateDay, description,
   );
 };
 
-
 const styles = StyleSheet.create({
   concertRow: {
     flexDirection: "row",
@@ -34,24 +64,30 @@ const styles = StyleSheet.create({
   },
   dateBox: {
     backgroundColor: "black",
-    padding: 8,
+    width: 52,
+    height: 52,
     alignItems: "center",
     justifyContent: "center",
-    width: 50,
-    height: 50,
     borderRadius: 2,
   },
   dateYear: {
     color: "white",
     fontSize: 10,
     fontWeight: "bold",
-    fontFamily: "Pretendard-Regular",
+    textAlign: "center",
   },
   dateDay: {
     color: "white",
     fontSize: 10,
     fontWeight: "bold",
-    fontFamily: "Pretendard-Bold",
+    textAlign: "center",
+  },
+  dateSeparator: {
+    color: "white",
+    fontSize: 9,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginVertical: 2,
   },
   concertDescription: {
     flex: 1,
