@@ -3,9 +3,11 @@ import { FlatList, View, Text, TouchableOpacity, Image, StyleSheet, Dimensions }
 
 interface Concert {
   id: string;
-  posterUrl?: string | number; // URL 또는 로컬 리소스
+  posterUrl?: string | number;
   title: string;
-  date: string;
+  artistName: string;
+  startDate: string;
+  endDate: string;
   venueName: string;
   cityName: string;
   countryName?: string;
@@ -14,14 +16,10 @@ interface Concert {
 interface ConcertListComponentProps {
   concerts: Concert[];
   onConcertPress: (concert: Concert) => void;
-  horizontal?: boolean; // 수평 또는 수직 설정
+  horizontal?: boolean;
 }
 
-const ConcertListComponent: React.FC<ConcertListComponentProps> = ({
-  concerts,
-  onConcertPress,
-  horizontal = false,
-}) => {
+const ConcertListComponent = ({ concerts, onConcertPress, horizontal = false }) => {
   if (!concerts || concerts.length === 0) {
     return (
       <View style={styles.emptyContainer}>
@@ -30,33 +28,50 @@ const ConcertListComponent: React.FC<ConcertListComponentProps> = ({
     );
   }
 
+  const formatDateRange = (startDate, endDate) => {
+    const formatArrayToDate = (dateArray) => {
+      if (!Array.isArray(dateArray)) return "";
+      const [year, month, day] = dateArray;
+      return `${year}.${String(month).padStart(2, "0")}.${String(day).padStart(2, "0")}`;
+    };
+
+    const formattedStartDate = formatArrayToDate(startDate);
+    const formattedEndDate = formatArrayToDate(endDate);
+
+    if (formattedStartDate === formattedEndDate) {
+      return formattedStartDate; // 동일한 날짜일 경우
+    }
+
+    return `${formattedStartDate} ~ ${formattedEndDate}`; // 다른 날짜일 경우
+  };
+
   return (
     <FlatList
       data={concerts}
-      keyExtractor={(item, index) => `concert-${item.id}-${index}`} // 고유한 key 설정
-      key={`${horizontal}-${horizontal ? 1 : 2}`} // key 변경으로 재렌더링 강제
-      horizontal={horizontal} // 수평 스크롤 활성화 여부
-      numColumns={horizontal ? 1 : 2} // 수평이면 1, 수직이면 2개씩
-      columnWrapperStyle={!horizontal && styles.row} // 열 스타일
-      showsHorizontalScrollIndicator={horizontal}
-      showsVerticalScrollIndicator={!horizontal}
+      keyExtractor={(item, index) => `concert-${item.id}-${index}`}
+      horizontal={horizontal}
+      numColumns={horizontal ? 1 : 2}
+      columnWrapperStyle={!horizontal && styles.row}
       renderItem={({ item }) => (
-        <TouchableOpacity style={[styles.concertItem, horizontal && styles.horizontalItem]} onPress={() => onConcertPress(item)}>
+        <TouchableOpacity
+          style={[styles.concertItem, horizontal && styles.horizontalItem]}
+          onPress={() => onConcertPress(item)}
+        >
           <Image
             source={
               item.posterUrl
                 ? typeof item.posterUrl === "string"
-                  ? { uri: item.posterUrl } // 외부 URL
-                  : item.posterUrl // 로컬 리소스
-                : require("../assets/images/sampleimg1.jpg") // 기본 이미지
+                  ? { uri: item.posterUrl }
+                  : item.posterUrl
+                : require("../assets/images/sampleimg1.jpg")
             }
             style={[styles.posterImage, horizontal && styles.horizontalImage]}
             resizeMode="cover"
           />
           <View style={styles.concertInfo}>
             <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.date}>{item.date}</Text>
-            <Text style={styles.venue}>{`${item.venueName}, ${item.cityName}`}</Text>
+            <Text style={styles.artistName}>{item.artistName}</Text>
+            <Text style={styles.date}>{formatDateRange(item.startDate, item.endDate)}</Text>
           </View>
         </TouchableOpacity>
       )}
@@ -65,8 +80,8 @@ const ConcertListComponent: React.FC<ConcertListComponentProps> = ({
 };
 
 const screenWidth = Dimensions.get("window").width;
-const itemMargin = 36; // 아이템 간 여백
-const itemWidth = (screenWidth - itemMargin * 3) / 2; // 두 열 기준 너비 계산
+const itemMargin = 36;
+const itemWidth = (screenWidth - itemMargin * 3) / 2;
 
 const styles = StyleSheet.create({
   emptyContainer: {
@@ -79,25 +94,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   row: {
-    justifyContent: "space-between", // 각 아이템 간격 조정
-    marginBottom: 16, // 열 간 여백
+    justifyContent: "space-between",
+    marginBottom: 16,
   },
   concertItem: {
-    marginHorizontal: itemMargin / 2, // 기본 아이템 여백
-    width: itemWidth, // 수직 배치에서 너비
+    marginHorizontal: itemMargin / 2,
+    width: itemWidth,
     alignItems: "center",
   },
   horizontalItem: {
-    width: 120, // 수평 배치에서 너비
+    width: 120,
   },
   posterImage: {
-    width: "100%", // 부모 요소에 맞게 너비
-    height: itemWidth * 1.5, // 비율에 맞는 높이 설정 (2:3 비율)
+    width: "100%",
+    height: itemWidth * 1.5,
     backgroundColor: "#f0f0f0",
     marginBottom: 8,
   },
   horizontalImage: {
-    height: 180, // 수평 배치에서 고정 높이
+    height: 180,
   },
   concertInfo: {
     alignItems: "center",
@@ -106,18 +121,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: "#333",
-    textAlign: "center",
+    textAlign: "left", // 텍스트 왼쪽 정렬
+    alignSelf: "flex-start", // 부모 View 기준으로 왼쪽 정렬
+  },
+  artistName: {
+    fontSize: 13,
+    color: "#555",
+    marginTop: 4,
+    textAlign: "left", // 텍스트 왼쪽 정렬
+    alignSelf: "flex-start", // 부모 View 기준으로 왼쪽 정렬
   },
   date: {
     fontSize: 12,
     color: "#666",
     marginTop: 4,
-  },
-  venue: {
-    fontSize: 12,
-    color: "#888",
-    marginTop: 4,
-    textAlign: "center",
+    textAlign: "left", // 텍스트 왼쪽 정렬
+    alignSelf: "flex-start", // 부모 View 기준으로 왼쪽 정렬
   },
 });
 

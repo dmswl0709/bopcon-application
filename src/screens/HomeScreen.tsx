@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Dimensions, Image, Text, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import NavigationView from "../components/NavigationView";
 import Stack from "../components/Stack";
 import MenuTitle from "../components/MenuTitle";
@@ -15,90 +14,35 @@ function HomeScreen() {
   const [concerts, setConcerts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const temporaryConcerts = [
-    {
-      id: "1",
-      posterUrl: "",
-      title: "임시 콘서트 1",
-      date: "2024-12-01",
-      venueName: "서울 월드컵 경기장",
-      cityName: "서울",
-      countryName: "대한민국",
-    },
-    {
-      id: "2",
-      posterUrl: "",
-      title: "임시 콘서트 2",
-      date: "2024-12-10",
-      venueName: "부산 아시아드 주경기장",
-      cityName: "부산",
-      countryName: "대한민국",
-    },
-    {
-      id: "3",
-      posterUrl: "",
-      title: "임시 콘서트 3",
-      date: "2024-12-20",
-      venueName: "인천 문학 경기장",
-      cityName: "인천",
-      countryName: "대한민국",
-    },
-  ];
-
   const loadConcerts = async () => {
     try {
       setIsLoading(true);
-      console.log("Fetching concerts...");
       const data = await fetchConcerts();
-      console.log("Concerts fetched successfully:", data);
-
-      setConcerts(
-        data.map((concert) => ({
-          ...concert,
-          posterUrl: concert.posterUrl || "https://via.placeholder.com/150",
-        }))
-      );
+      setConcerts(data);
     } catch (error) {
       console.error("Error loading concerts:", error);
       Alert.alert("오류", "콘서트 데이터를 불러오는 중 문제가 발생했습니다.");
-
-      // Set temporary concerts for fallback
-      setConcerts(
-        temporaryConcerts.map((concert) => ({
-          ...concert,
-          posterUrl: "https://via.placeholder.com/150",
-        }))
-      );
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    console.log("HomeScreen mounted.");
     loadConcerts();
   }, []);
 
   const handleConcertPress = (concert) => {
-    console.log("Concert pressed:", concert);
-    if (concert && concert.id) {
-      navigation.navigate("ConcertScreen", {
-        concertId: concert.id,
-      });
-    } else {
-      console.error("Invalid concert data:", concert);
-      Alert.alert("오류", "콘서트 ID가 올바르지 않습니다.");
-    }
+    navigation.navigate("ConcertScreen", {
+      concertId: concert.id,
+    });
   };
 
   const handleSearchPress = () => {
-    try {
-      console.log("Search icon pressed. Navigating to SearchScreen...");
-      navigation.navigate("SearchScreen"); // SearchScreen으로 이동
-    } catch (error) {
-      console.error("Error navigating to SearchScreen:", error);
-      Alert.alert("오류", "검색 화면으로 이동할 수 없습니다.");
-    }
+    navigation.navigate("SearchScreen");
+  };
+
+  const handleMorePress = (genre) => {
+    navigation.navigate("ContentCategoryScreen", { name: genre });
   };
 
   return (
@@ -154,30 +98,25 @@ function HomeScreen() {
         title={"NEW"}
         navigateName="ContentCategoryScreen"
         navigateParams={{ name: "NEW" }}
+        onPress={() => handleMorePress("NEW")}
       />
       <ConcertListComponent
         horizontal
-        concerts={concerts.map((concert) => ({
-          ...concert,
-          posterUrl: concert.posterUrl || "https://via.placeholder.com/150",
-        }))}
+        concerts={concerts}
         onConcertPress={handleConcertPress}
       />
 
-      {/* JPOP Section */}
-      <MenuTitle
-        title={"JPOP"}
+
+       {/* ROCK Section */}
+       <MenuTitle
+        title={"ROCK"}
         navigateName="ContentCategoryScreen"
-        navigateParams={{ name: "JPOP" }}
+        navigateParams={{ name: "ROCK" }}
+        onPress={() => handleMorePress("ROCK")}
       />
       <ConcertListComponent
         horizontal
-        concerts={concerts
-          .filter((concert) => concert.genre === "JPOP")
-          .map((concert) => ({
-            ...concert,
-            posterUrl: concert.posterUrl || "https://via.placeholder.com/150",
-          }))}
+        concerts={concerts.filter((concert) => concert.genre === "ROCK")}
         onConcertPress={handleConcertPress}
       />
 
@@ -186,15 +125,50 @@ function HomeScreen() {
         title={"POP"}
         navigateName="ContentCategoryScreen"
         navigateParams={{ name: "POP" }}
+        onPress={() => handleMorePress("POP")}
       />
       <ConcertListComponent
         horizontal
-        concerts={concerts
-          .filter((concert) => concert.genre === "POP")
-          .map((concert) => ({
-            ...concert,
-            posterUrl: concert.posterUrl || "https://via.placeholder.com/150",
-          }))}
+        concerts={concerts.filter((concert) => concert.genre === "POP")}
+        onConcertPress={handleConcertPress}
+      />
+
+    {/* J-POP Section */}
+      <MenuTitle
+        title={"JPOP"}
+        navigateName="ContentCategoryScreen"
+        navigateParams={{ name: "JPOP" }}
+        onPress={() => handleMorePress("JPOP")}
+      />
+      <ConcertListComponent
+        horizontal
+        concerts={concerts.filter((concert) => concert.genre === "JPOP")}
+        onConcertPress={handleConcertPress}
+      />
+
+        {/* HIPHOPSection */}
+        <MenuTitle
+        title={"HIPHOP"}
+        navigateName="ContentCategoryScreen"
+        navigateParams={{ name: "HIPHOP" }}
+        onPress={() => handleMorePress("HIPHOP")}
+      />
+      <ConcertListComponent
+        horizontal
+        concerts={concerts.filter((concert) => concert.genre === "HIPHOP")}
+        onConcertPress={handleConcertPress}
+      />
+
+        {/* R&B Section */}
+        <MenuTitle
+        title={"R&B"}
+        navigateName="ContentCategoryScreen"
+        navigateParams={{ name: "R&B" }}
+        onPress={() => handleMorePress("R&B")}
+      />
+      <ConcertListComponent
+        horizontal
+        concerts={concerts.filter((concert) => concert.genre === "R&B")}
         onConcertPress={handleConcertPress}
       />
     </NavigationView>

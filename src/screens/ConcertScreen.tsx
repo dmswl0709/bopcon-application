@@ -3,37 +3,53 @@ import { View, Text, Image, StyleSheet, ScrollView, Alert } from "react-native";
 import { StackScreenProps } from "@react-navigation/stack";
 import Header from "../components/Header";
 import ButtonGroup from "../components/ButtonGroup";
-import FavoriteButton from "../components/FavoriteButton"; // 즐겨찾기 버튼 추가
+import FavoriteButton from "../components/FavoriteButton";
 import SetlistItem from "../components/SetlistItem";
 import AppNavigationParamList from "../navigation/AppNavigatorParamList";
-import { fetchConcertData, fetchPredictedSetlist } from "../apis/concerts"; // concerts.ts에서 가져옴
-import SampleImage from "../assets/images/sampleimg2.png"; // 기본 이미지 추가
+import { fetchConcertData, fetchPredictedSetlist } from "../apis/concerts";
+import SampleImage from "../assets/images/sampleimg2.png";
 import TicketButton from "../components/TicketButton";
 
 type ConcertScreenProps = StackScreenProps<AppNavigationParamList, "ConcertScreen">;
 
 const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
-  const { concertId } = route.params || {}; // concertId를 받아옵니다.
+  const { concertId } = route.params || {};
   const [concertData, setConcertData] = useState<any>(null);
   const [predictedSetlist, setPredictedSetlist] = useState<{ order: number; songTitle: string }[]>([]);
   const [loading, setLoading] = useState(true);
+
+
+  const formatDateRange = (startDate, endDate) => {
+    const formatArrayToDate = (dateArray) => {
+      if (!Array.isArray(dateArray)) return "";
+      const [year, month, day] = dateArray;
+      return `${year}.${String(month).padStart(2, "0")}.${String(day).padStart(2, "0")}`;
+    };
+
+    const formattedStartDate = formatArrayToDate(startDate);
+    const formattedEndDate = formatArrayToDate(endDate);
+
+    if (formattedStartDate === formattedEndDate) {
+      return formattedStartDate; // 동일한 날짜일 경우
+    }
+
+    return `${formattedStartDate} ~ ${formattedEndDate}`; // 다른 날짜일 경우
+  };
+
+
 
   useEffect(() => {
     const loadConcertData = async () => {
       try {
         if (!concertId) {
           console.error("Concert ID is missing in route params:", route.params);
-          console.log("concertId in ConcertScreen:", concertId);
           throw new Error("Concert ID가 전달되지 않았습니다.");
         }
-
-        console.log("Fetching concert data for concertId:", concertId);
 
         const concert = await fetchConcertData(concertId);
         setConcertData(concert);
 
         if (concert.artistId) {
-          console.log("Fetching predicted setlist for artistId:", concert.newConcertId);
           const setlist = await fetchPredictedSetlist(concert.newConcertId);
           setPredictedSetlist(setlist);
         }
@@ -60,8 +76,8 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
 
   const handlePastSetlistPress = () => {
     navigation.navigate("PastSetListScreen", {
-      artistId: concertData?.artistId || "unknown", // artistId 전달
-      artistName: concertData?.title || "Unknown Artist", // artistName 전달
+      artistId: concertData?.artistId || "unknown",
+      artistName: concertData?.title || "Unknown Artist",
     });
   };
 
@@ -85,33 +101,31 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
     <View style={styles.container}>
       <Header title="Concert" onBackPress={handleBackPress} />
       <ScrollView contentContainerStyle={{ paddingBottom: 16 }}>
-        {/* 이미지 */}
         <View style={styles.imageContainer}>
           <Image
             source={
               concertData.posterUrl
-                ? { uri: concertData.posterUrl } // API에서 받은 URL 이미지
-                : SampleImage // 기본 이미지
+                ? { uri: concertData.posterUrl }
+                : SampleImage
             }
             style={styles.image}
           />
         </View>
 
-        {/* 제목과 즐겨찾기 */}
         <View style={styles.titleRow}>
           <View style={styles.textContainer}>
             <Text style={styles.title}>{concertData.title}</Text>
             <Text style={styles.subTitle}>{concertData.subTitle}</Text>
           </View>
-          {/* 즐겨찾기 버튼 추가 */}
           <FavoriteButton id={concertId} type="concert" />
         </View>
 
-        {/* 공연 정보 */}
         <View style={styles.infoContainer}>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>공연 일정</Text>
-            <Text style={styles.infoValue}>{concertData.date}</Text>
+            <Text style={styles.infoValue}>
+              {formatDateRange(concertData.startDate, concertData.endDate)}
+            </Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>공연 장소</Text>
@@ -128,7 +142,6 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
           onPastSetlistPress={handlePastSetlistPress}
         />
 
-        {/* 예상 셋리스트 */}
         <Text style={styles.setlistTitle}>예상 셋리스트</Text>
         <View style={styles.divider} />
         {predictedSetlist.length > 0 ? (
@@ -137,7 +150,7 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
               key={`predicted-setlist-item-${index}`}
               index={song.order}
               songTitle={song.songTitle}
-              ytLink={song.ytLink || null} // ytLink 추가 전달
+              ytLink={song.ytLink || null}
             />
           ))
         ) : (
