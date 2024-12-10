@@ -50,27 +50,32 @@ const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
     const fetchArticles = async () => {
       setLoading(true);
       setError(null);
-
+    
       try {
         const response = await axios.get(`http://localhost:8080/api/articles/user`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-
+    
         if (response.status === 200) {
           setArticles(response.data);
         } else {
-          console.error('Unexpected response status:', response.status);
-          setError('게시글을 불러오지 못했습니다.');
+          throw new Error(`Unexpected response status: ${response.status}`);
         }
-      } catch (err) {
-        console.error('Failed to fetch articles:', err.message);
-        setError('네트워크 에러가 발생했습니다. 다시 시도해주세요.');
+      } catch (err: any) {
+        if (err.response?.status === 401) {
+          setError('로그인이 만료되었습니다. 다시 로그인해주세요.');
+        } else if (err.response?.status === 404) {
+          setError('게시글을 찾을 수 없습니다.');
+        } else {
+          setError('네트워크 에러가 발생했습니다. 다시 시도해주세요.');
+        }
       } finally {
         setLoading(false);
       }
     };
+    
 
     fetchArticles();
   }, [token]);
@@ -188,24 +193,29 @@ const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
 
   return (
     <>
-      <FlatList
-        data={visibleArticles}
-        keyExtractor={(item) => item?.post_id?.toString() || `unknown-${Math.random()}`}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => openModal(item)}
-            style={styles.itemContainer}
-          >
-            <WriteItem
-              title={item.title}
-              content={item.content}
-              // date={item.created_at || '날짜 없음'}
-              nickname={item.userName || '익명'}
-            />
-          </TouchableOpacity>
-        )}
-        contentContainerStyle={styles.listContainer}
+     <FlatList
+  data={visibleArticles}
+  keyExtractor={(item) => item?.post_id?.toString() || `unknown-${Math.random()}`}
+  renderItem={({ item }) => (
+    <TouchableOpacity
+      onPress={() => openModal(item)}
+      style={styles.itemContainer}
+    >
+      <WriteItem
+        title={item.title}
+        content={item.content}
+        nickname={item.userName || '익명'}
       />
+    </TouchableOpacity>
+  )}
+  contentContainerStyle={styles.listContainer}
+  ListEmptyComponent={() => (
+    <View style={styles.centered}>
+      <Text style={styles.noArticlesText}>게시글이 없습니다.</Text>
+    </View>
+  )}
+/>
+
       {isModalOpen && selectedArticle && !isEditing && (
         <ArticleModal
           article={selectedArticle}

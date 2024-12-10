@@ -11,7 +11,6 @@ import {
 import { useSelector } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { RootState } from '../store';
-import { createArticle, updateArticle, deleteArticle } from '../apis/articles';
 import ArticleForm from '../components/ArticleForm';
 import ArticleModal from '../components/ArticleModal';
 import WriteItem from '../components/WriteItem';
@@ -35,6 +34,8 @@ interface ArtistData {
   imgUrl: string;
 }
 
+const BASE_URL = 'http://localhost:8080'; // 기본 URL
+
 const BoardScreen: React.FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [artistData, setArtistData] = useState<ArtistData | null>(null);
@@ -54,7 +55,7 @@ const BoardScreen: React.FC = () => {
       if (!artistId) return;
 
       try {
-        const response = await axios.get(`/api/artists/${artistId}`);
+        const response = await axios.get(`${BASE_URL}/api/artists/${artistId}`);
         setArtistData(response.data);
       } catch (error) {
         console.error('아티스트 데이터를 불러오는 중 오류 발생:', error);
@@ -71,7 +72,7 @@ const BoardScreen: React.FC = () => {
       if (!artistId) return;
 
       try {
-        const response = await axios.get(`/api/articles/artist/${artistId}`);
+        const response = await axios.get(`${BASE_URL}/api/articles/artist/${artistId}`);
         setArticles(response.data);
       } catch (error) {
         console.error('게시글 데이터를 불러오는 중 오류 발생:', error);
@@ -96,7 +97,9 @@ const BoardScreen: React.FC = () => {
         text: '삭제',
         onPress: async () => {
           try {
-            await deleteArticle(id, token);
+            await axios.delete(`${BASE_URL}/api/articles/${id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
             setArticles((prev) => prev.filter((article) => article.id !== id));
             setSelectedArticle(null);
             Alert.alert('성공', '게시글이 삭제되었습니다.');
@@ -122,9 +125,10 @@ const BoardScreen: React.FC = () => {
     }
 
     try {
-      await createArticle(
+      await axios.post(
+        `${BASE_URL}/api/articles`,
         { title, content, categoryType, artistId: artistId ?? 0, newConcertId: newConcertId ?? 0, userId },
-        token
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setIsCreating(false);
       Alert.alert('성공', '게시글이 작성되었습니다.');
@@ -147,10 +151,10 @@ const BoardScreen: React.FC = () => {
     }
 
     try {
-      await updateArticle(
-        id,
+      await axios.put(
+        `${BASE_URL}/api/articles/${id}`,
         { title, content, categoryType, newConcertId: newConcertId ?? 0 },
-        token
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setIsEditing(false);
       setSelectedArticle(null);

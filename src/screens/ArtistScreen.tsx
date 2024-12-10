@@ -58,7 +58,7 @@ const ArtistScreen = ({ route, navigation }) => {
 
   const fetchBoardArticles = async () => {
     try {
-      const response = await axios.get(`/api/articles/artist/${artistId}`);
+      const response = await axios.get(`http://localhost:8080/api/articles/artist/${artistId}`);
       setBoardArticles(response.data);
     } catch (error) {
       console.error('게시글 데이터를 불러오는 중 오류 발생:', error);
