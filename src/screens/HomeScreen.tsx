@@ -9,41 +9,56 @@ import AppNavigatorParamList from "../navigation/AppNavigatorParamList";
 import { fetchConcerts } from "../apis/concerts";
 import Svg, { Path } from "react-native-svg";
 
-function HomeScreen() {
+const HomeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<AppNavigatorParamList>>();
   const [concerts, setConcerts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadConcerts = async () => {
     try {
+      console.log("Fetching concerts from API..."); // 디버깅: API 호출 전 로그
       setIsLoading(true);
       const data = await fetchConcerts();
-      setConcerts(data);
+
+      console.log("Fetched concerts before sorting:", data); // 디버깅: API에서 받아온 데이터 출력
+
+      // `newConcertId` 기준으로 내림차순 정렬
+      const sortedData = data.sort((a, b) => b.id - a.id);
+      console.log("Sorted concerts by newConcertId:", sortedData); // 디버깅: 정렬된 데이터 출력
+
+      setConcerts(sortedData);
     } catch (error) {
       console.error("Error loading concerts:", error);
       Alert.alert("오류", "콘서트 데이터를 불러오는 중 문제가 발생했습니다.");
     } finally {
       setIsLoading(false);
+      console.log("Finished fetching and sorting concerts."); // 디버깅: API 호출 종료 시 로그
     }
   };
 
   useEffect(() => {
+    console.log("HomeScreen mounted. Loading concerts..."); // 디버깅: 컴포넌트가 처음 마운트될 때
     loadConcerts();
   }, []);
 
   const handleConcertPress = (concert) => {
+    console.log("Concert pressed:", concert); // 디버깅: 클릭된 콘서트 데이터 출력
     navigation.navigate("ConcertScreen", {
       concertId: concert.id,
     });
   };
 
   const handleSearchPress = () => {
+    console.log("Navigating to SearchScreen"); // 디버깅: 검색 버튼 클릭
     navigation.navigate("SearchScreen");
   };
 
   const handleMorePress = (genre) => {
+    console.log(`Navigating to ContentCategoryScreen for genre: ${genre}`); // 디버깅: 카테고리 이동
     navigation.navigate("ContentCategoryScreen", { name: genre });
   };
+
+  console.log("Concerts state before rendering:", concerts); // 디버깅: 렌더링 직전 state 확인
 
   return (
     <NavigationView
@@ -102,13 +117,12 @@ function HomeScreen() {
       />
       <ConcertListComponent
         horizontal
-        concerts={concerts}
+        concerts={concerts} // 정렬된 데이터 그대로 전달
         onConcertPress={handleConcertPress}
       />
 
-
-       {/* ROCK Section */}
-       <MenuTitle
+      {/* ROCK Section */}
+      <MenuTitle
         title={"ROCK"}
         navigateName="ContentCategoryScreen"
         navigateParams={{ name: "ROCK" }}
@@ -133,7 +147,7 @@ function HomeScreen() {
         onConcertPress={handleConcertPress}
       />
 
-    {/* J-POP Section */}
+      {/* J-POP Section */}
       <MenuTitle
         title={"JPOP"}
         navigateName="ContentCategoryScreen"
@@ -146,8 +160,8 @@ function HomeScreen() {
         onConcertPress={handleConcertPress}
       />
 
-        {/* HIPHOPSection */}
-        <MenuTitle
+      {/* HIPHOP Section */}
+      <MenuTitle
         title={"HIPHOP"}
         navigateName="ContentCategoryScreen"
         navigateParams={{ name: "HIPHOP" }}
@@ -159,8 +173,8 @@ function HomeScreen() {
         onConcertPress={handleConcertPress}
       />
 
-        {/* R&B Section */}
-        <MenuTitle
+      {/* R&B Section */}
+      <MenuTitle
         title={"R&B"}
         navigateName="ContentCategoryScreen"
         navigateParams={{ name: "R&B" }}
@@ -173,7 +187,7 @@ function HomeScreen() {
       />
     </NavigationView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   searchIcon: {

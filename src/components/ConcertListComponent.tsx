@@ -2,6 +2,7 @@ import React, { memo } from "react";
 import { FlatList, View, Text, TouchableOpacity, Image, StyleSheet, Dimensions } from "react-native";
 
 interface Concert {
+  newConcertId: number;
   id: string;
   posterUrl?: string | number;
   title: string;
@@ -19,7 +20,7 @@ interface ConcertListComponentProps {
   horizontal?: boolean;
 }
 
-const ConcertListComponent = ({ concerts, onConcertPress, horizontal = false }) => {
+const ConcertListComponent = ({ concerts, onConcertPress, horizontal = false }: ConcertListComponentProps) => {
   if (!concerts || concerts.length === 0) {
     return (
       <View style={styles.emptyContainer}>
@@ -27,6 +28,9 @@ const ConcertListComponent = ({ concerts, onConcertPress, horizontal = false }) 
       </View>
     );
   }
+
+  // `newConcertId` 기준으로 내림차순 정렬
+  const sortedConcerts = [...concerts].sort((a, b) => b.newConcertId - a.newConcertId);
 
   const formatDateRange = (startDate, endDate) => {
     const formatArrayToDate = (dateArray) => {
@@ -47,7 +51,7 @@ const ConcertListComponent = ({ concerts, onConcertPress, horizontal = false }) 
 
   return (
     <FlatList
-      data={concerts}
+      data={sortedConcerts} // 정렬된 데이터를 전달
       keyExtractor={(item, index) => `concert-${item.id}-${index}`}
       horizontal={horizontal}
       numColumns={horizontal ? 1 : 2}
