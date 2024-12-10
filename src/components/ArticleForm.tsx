@@ -9,6 +9,7 @@ import {
   Modal,
   FlatList,
 } from "react-native";
+import { useSelector } from "react-redux";
 
 interface ArticleFormProps {
   mode: "create" | "edit";
@@ -17,11 +18,17 @@ interface ArticleFormProps {
   initialCategoryType?: "FREE_BOARD" | "NEW_CONCERT";
   fixedArtistId?: number | null;
   artistName?: string;
+  initialNewConcertId?: number | null;
+  token: string;
+  userId: number; // userId 추가
   onSubmit: (
     title: string,
     content: string,
     categoryType: "FREE_BOARD" | "NEW_CONCERT",
-    artistId: number | null
+    artistId: number | null,
+    newConcertId: number | null,
+    token: string,
+    userId: number
   ) => void;
   onCancel: () => void;
 }
@@ -33,21 +40,61 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
   initialCategoryType = "FREE_BOARD",
   fixedArtistId = null,
   artistName,
+  initialNewConcertId = null,
+  token,
   onSubmit,
   onCancel,
 }) => {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
   const [categoryType, setCategoryType] = useState(initialCategoryType);
+  const [newConcertId, setNewConcertId] = useState<number | null>(
+    initialNewConcertId
+  );
   const [isModalVisible, setModalVisible] = useState(false);
+  const userId = useSelector((state: any) => state.auth.userId);
 
-  const handleSubmit = () => {
-    if (!title.trim() || !content.trim()) {
-      Alert.alert("오류", "제목과 내용을 입력하세요.");
+
+  const handleSubmit = async () => {
+    if (!userId) {
+      Alert.alert("오류", "userId가 누락되었습니다. 다시 로그인해주세요.");
       return;
     }
-    onSubmit(title.trim(), content.trim(), categoryType, fixedArtistId);
+  
+    const validNewConcertId =
+      categoryType === "NEW_CONCERT" && newConcertId
+        ? newConcertId
+        : null;
+  
+    const requestData = {
+      title: title.trim(),
+      content: content.trim(),
+      categoryType,
+      artistId: fixedArtistId,
+      newConcertId: validNewConcertId,
+      token,
+      userId, // userId 포함
+    };
+  
+    console.log("요청 데이터:", requestData);
+  
+    try {
+      await onSubmit(
+        title.trim(),
+        content.trim(),
+        categoryType,
+        fixedArtistId,
+        validNewConcertId,
+        token,
+        userId // 전달
+      );
+      Alert.alert("성공", "게시글이 작성되었습니다.");
+    } catch (error) {
+      console.error("Error during submission:", error);
+      Alert.alert("오류", "게시글 처리 중 문제가 발생했습니다.");
+    }
   };
+  
 
   const options = [
     { label: "자유게시판", value: "FREE_BOARD" },
@@ -72,7 +119,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
         onChangeText={setTitle}
         placeholder="제목"
         style={styles.input}
-        maxLength={50} // 제목 길이 제한
+        maxLength={50}
       />
       <TextInput
         value={content}
@@ -80,7 +127,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
         placeholder="내용"
         style={[styles.input, styles.textarea]}
         multiline
-        maxLength={500} // 내용 길이 제한
+        maxLength={500}
       />
 
       <Text style={styles.label}>게시판 선택</Text>
@@ -92,6 +139,16 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
           {options.find((opt) => opt.value === categoryType)?.label || "선택"}
         </Text>
       </TouchableOpacity>
+
+      {categoryType === "NEW_CONCERT" && (
+        <TextInput
+          style={styles.input}
+          placeholder="콘서트 ID 입력"
+          keyboardType="number-pad"
+          value={newConcertId ? newConcertId.toString() : ""}
+          onChangeText={(text) => setNewConcertId(Number(text) || null)}
+        />
+      )}
 
       <Modal
         transparent={true}

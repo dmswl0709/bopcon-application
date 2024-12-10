@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,24 +7,23 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-} from 'react-native';
-import { useSelector } from 'react-redux';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { RootState } from '../store';
-import ArticleForm from '../components/ArticleForm';
-import ArticleModal from '../components/ArticleModal';
-import WriteItem from '../components/WriteItem';
-import BackNavigationBar from '../components/BackNavigationBar';
-import GlobalList from '../components/GlobalList';
-import axios from 'axios';
+} from "react-native";
+import { useSelector } from "react-redux";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import ArticleForm from "../components/ArticleForm";
+import ArticleModal from "../components/ArticleModal";
+import WriteItem from "../components/WriteItem";
+import BackNavigationBar from "../components/BackNavigationBar";
+import GlobalList from "../components/GlobalList";
+import axios from "axios";
 
 interface Article {
   id: number;
   title: string;
   content: string;
-  categoryType: 'FREE_BOARD' | 'NEW_CONCERT';
+  categoryType: "FREE_BOARD" | "NEW_CONCERT";
   newConcert?: { id: number };
-  userName: string;
+  userId: number; // userId 수정
 }
 
 interface ArtistData {
@@ -34,7 +33,7 @@ interface ArtistData {
   imgUrl: string;
 }
 
-const BASE_URL = 'http://localhost:8080'; // 기본 URL
+const BASE_URL = "http://localhost:8080";
 
 const BoardScreen: React.FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -44,8 +43,9 @@ const BoardScreen: React.FC = () => {
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const token = useSelector((state: RootState) => state.auth.token);
-  const userId = useSelector((state: RootState) => state.auth.userId);
+  const token = useSelector((state: any) => state.auth.token);
+  const userId: number | null = useSelector((state: any) => state.auth.userId);
+
   const navigation = useNavigation();
   const route = useRoute();
   const { artistId } = route.params as { artistId: string };
@@ -58,8 +58,8 @@ const BoardScreen: React.FC = () => {
         const response = await axios.get(`${BASE_URL}/api/artists/${artistId}`);
         setArtistData(response.data);
       } catch (error) {
-        console.error('아티스트 데이터를 불러오는 중 오류 발생:', error);
-        Alert.alert('오류', '아티스트 데이터를 불러올 수 없습니다.');
+        console.error("아티스트 데이터를 불러오는 중 오류 발생:", error);
+        Alert.alert("오류", "아티스트 데이터를 불러올 수 없습니다.");
       }
     };
 
@@ -72,11 +72,13 @@ const BoardScreen: React.FC = () => {
       if (!artistId) return;
 
       try {
-        const response = await axios.get(`${BASE_URL}/api/articles/artist/${artistId}`);
+        const response = await axios.get(
+          `${BASE_URL}/api/articles/artist/${artistId}`
+        );
         setArticles(response.data);
       } catch (error) {
-        console.error('게시글 데이터를 불러오는 중 오류 발생:', error);
-        Alert.alert('오류', '게시글 데이터를 불러올 수 없습니다.');
+        console.error("게시글 데이터를 불러오는 중 오류 발생:", error);
+        Alert.alert("오류", "게시글 데이터를 불러올 수 없습니다.");
       } finally {
         setIsLoading(false);
       }
@@ -87,14 +89,14 @@ const BoardScreen: React.FC = () => {
 
   const handleDeleteArticle = async (id: number) => {
     if (!token) {
-      Alert.alert('오류', '로그인이 필요합니다.');
+      Alert.alert("오류", "로그인이 필요합니다.");
       return;
     }
 
-    Alert.alert('확인', '정말로 삭제하시겠습니까?', [
-      { text: '취소', style: 'cancel' },
+    Alert.alert("확인", "정말로 삭제하시겠습니까?", [
+      { text: "취소", style: "cancel" },
       {
-        text: '삭제',
+        text: "삭제",
         onPress: async () => {
           try {
             await axios.delete(`${BASE_URL}/api/articles/${id}`, {
@@ -102,10 +104,10 @@ const BoardScreen: React.FC = () => {
             });
             setArticles((prev) => prev.filter((article) => article.id !== id));
             setSelectedArticle(null);
-            Alert.alert('성공', '게시글이 삭제되었습니다.');
+            Alert.alert("성공", "게시글이 삭제되었습니다.");
           } catch (error) {
-            console.error('게시글 삭제 중 오류 발생:', error);
-            Alert.alert('오류', '게시글 삭제에 실패했습니다.');
+            console.error("게시글 삭제 중 오류 발생:", error);
+            Alert.alert("오류", "게시글 삭제에 실패했습니다.");
           }
         },
       },
@@ -115,26 +117,36 @@ const BoardScreen: React.FC = () => {
   const handleCreateSubmit = async (
     title: string,
     content: string,
-    categoryType: 'FREE_BOARD' | 'NEW_CONCERT',
+    categoryType: "FREE_BOARD" | "NEW_CONCERT",
     artistId: number | null,
-    newConcertId: number | null
+    newConcertId: number | null,
+    userId: number | null
   ) => {
-    if (!token) {
-      Alert.alert('오류', '로그인이 필요합니다.');
+    if (!token || userId === null) {
+      Alert.alert("오류", "로그인이 필요합니다.");
       return;
     }
 
+    const requestData = {
+      title,
+      content,
+      categoryType,
+      artistId: artistId ?? 0,
+      newConcertId: categoryType === "NEW_CONCERT" ? newConcertId : null,
+      userId,
+    };
+
+    console.log("요청 데이터:", requestData);
+
     try {
-      await axios.post(
-        `${BASE_URL}/api/articles`,
-        { title, content, categoryType, artistId: artistId ?? 0, newConcertId: newConcertId ?? 0, userId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.post(`${BASE_URL}/api/articles`, requestData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setIsCreating(false);
-      Alert.alert('성공', '게시글이 작성되었습니다.');
+      Alert.alert("성공", "게시글이 작성되었습니다.");
     } catch (error) {
-      console.error('게시글 작성 중 오류 발생:', error);
-      Alert.alert('오류', '게시글 작성에 실패했습니다.');
+      console.error("게시글 작성 중 오류 발생:", error);
+      Alert.alert("오류", "게시글 작성에 실패했습니다.");
     }
   };
 
@@ -142,37 +154,44 @@ const BoardScreen: React.FC = () => {
     id: number,
     title: string,
     content: string,
-    categoryType: 'FREE_BOARD' | 'NEW_CONCERT',
+    categoryType: "FREE_BOARD" | "NEW_CONCERT",
     newConcertId: number | null
   ) => {
     if (!token) {
-      Alert.alert('오류', '로그인이 필요합니다.');
+      Alert.alert("오류", "로그인이 필요합니다.");
       return;
     }
 
+    const requestData = {
+      title,
+      content,
+      categoryType,
+      newConcertId,
+    };
+
+    console.log("요청 데이터:", requestData);
+
     try {
-      await axios.put(
-        `${BASE_URL}/api/articles/${id}`,
-        { title, content, categoryType, newConcertId: newConcertId ?? 0 },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.put(`${BASE_URL}/api/articles/${id}`, requestData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setIsEditing(false);
       setSelectedArticle(null);
-      Alert.alert('성공', '게시글이 수정되었습니다.');
+      Alert.alert("성공", "게시글이 수정되었습니다.");
     } catch (error) {
-      console.error('게시글 수정 중 오류 발생:', error);
-      Alert.alert('오류', '게시글 수정에 실패했습니다.');
+      console.error("게시글 수정 중 오류 발생:", error);
+      Alert.alert("오류", "게시글 수정에 실패했습니다.");
     }
   };
 
   const handleCreateButtonPress = () => {
     if (!token) {
-      Alert.alert('로그인이 필요합니다.', '로그인 페이지로 이동합니다.', [
+      Alert.alert("로그인이 필요합니다.", "로그인 페이지로 이동합니다.", [
         {
-          text: '확인',
-          onPress: () => navigation.navigate('LoginScreen'),
+          text: "확인",
+          onPress: () => navigation.navigate("LoginScreen"),
         },
-        { text: '취소', style: 'cancel' },
+        { text: "취소", style: "cancel" },
       ]);
       return;
     }
@@ -202,7 +221,9 @@ const BoardScreen: React.FC = () => {
       {isCreating ? (
         <ArticleForm
           mode="create"
-          fixedArtistId={parseInt(artistId || '0', 10)}
+          fixedArtistId={parseInt(artistId || "0", 10)}
+          userId={userId} // userId 전달
+          token={token} // token 전달
           onSubmit={handleCreateSubmit}
           onCancel={() => setIsCreating(false)}
         />
@@ -212,10 +233,15 @@ const BoardScreen: React.FC = () => {
           initialTitle={selectedArticle.title}
           initialContent={selectedArticle.content}
           initialCategoryType={selectedArticle.categoryType}
-          fixedArtistId={parseInt(artistId || '0', 10)}
-          initialNewConcertId={selectedArticle.newConcert?.id || null}
+          fixedArtistId={parseInt(artistId || "0", 10)}
           onSubmit={(title, content, categoryType, newConcertId) =>
-            handleEditSubmit(selectedArticle.id, title, content, categoryType, newConcertId)
+            handleEditSubmit(
+              selectedArticle.id,
+              title,
+              content,
+              categoryType,
+              newConcertId
+            )
           }
           onCancel={() => setIsEditing(false)}
         />
@@ -228,8 +254,7 @@ const BoardScreen: React.FC = () => {
               <WriteItem
                 title={item.title}
                 content={item.content}
-                date=""
-                nickname={item.userName || '익명'}
+                nickname={item.userId} // userId를 표시
               />
             </TouchableOpacity>
           )}
@@ -240,7 +265,10 @@ const BoardScreen: React.FC = () => {
       )}
 
       {!isCreating && !isEditing && (
-        <TouchableOpacity style={styles.createButton} onPress={handleCreateButtonPress}>
+        <TouchableOpacity
+          style={styles.createButton}
+          onPress={handleCreateButtonPress}
+        >
           <Text style={styles.createButtonText}>글쓰기</Text>
         </TouchableOpacity>
       )}
@@ -260,40 +288,40 @@ const BoardScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     paddingHorizontal: 16,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 16,
   },
   artistName: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   artistSubName: {
     fontSize: 16,
-    color: 'gray',
+    color: "gray",
   },
   loaderContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   createButton: {
-    backgroundColor: '#000',
+    backgroundColor: "#000",
     padding: 12,
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: 16,
     borderRadius: 8,
   },
   createButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
   },
   emptyText: {
-    textAlign: 'center',
-    color: 'gray',
+    textAlign: "center",
+    color: "gray",
     fontSize: 16,
     marginTop: 20,
   },

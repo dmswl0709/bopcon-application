@@ -26,4 +26,6 @@ export interface Article {
   artist?: { id: number; name: string };
   newConcert?: { id: number; name: string };
   userName: string;
+  userId: number;   // 사용자 ID
+
 }

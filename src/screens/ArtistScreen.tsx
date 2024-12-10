@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet } from "react-native";
+import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, Alert } from "react-native";
 import Header from "../components/Header";
 import FavoriteButton from "../components/FavoriteButton"; // 즐겨찾기 버튼 임포트
 import ConcertRow from "../components/ConcertRow";
@@ -11,6 +11,10 @@ import ArticleForm from "../components/ArticleForm";
 import { format, parseISO } from "date-fns";
 import axios from "axios";
 import { Linking } from "react-native";
+import { useSelector } from "react-redux";
+import { RootState } from '../store';
+
+
 
 interface WriteItemProps {
   title: string;
@@ -18,6 +22,7 @@ interface WriteItemProps {
   date?: string;
   nickname?: string;
   artistName?: string;
+  // userId: number;
 }
 
 
@@ -39,6 +44,9 @@ const ArtistScreen = ({ route, navigation }) => {
   const [isCreating, setIsCreating] = useState(false); // isCreating 상태 추가
   const [boardArticles, setBoardArticles] = useState<Article[]>([]);
   const [articles, setArticles] = useState<Article[]>([]); // 초기화
+  const token = useSelector((state: RootState) => state.auth.token);
+  const userId = useSelector((state: RootState) => state.auth.user); // userId 가져오기
+
 
 
 
@@ -58,13 +66,19 @@ const ArtistScreen = ({ route, navigation }) => {
 
   const fetchBoardArticles = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/articles/artist/${artistId}`);
+      const response = await axios.get(`http://localhost:8080/api/articles/artist/${artistId}`, {
+        params: {
+          categoryType: "FREE_BOARD", // or "NEW_CONCERT"
+        },
+      });
       setBoardArticles(response.data);
     } catch (error) {
-      console.error('게시글 데이터를 불러오는 중 오류 발생:', error);
-      Alert.alert('오류', '게시글 데이터를 불러올 수 없습니다.');
+      console.error("게시글 데이터를 불러오는 중 오류 발생:", error);
+      Alert.alert("오류", "게시글 데이터를 불러올 수 없습니다.");
     }
   };
+  
+  
   
 
   useEffect(() => {
@@ -227,6 +241,7 @@ const ArtistScreen = ({ route, navigation }) => {
         <ArticleForm
           mode="create"
           fixedArtistId={artistId}
+          token={token} // 유효한 token을 전달
           onSubmit={handleCreateArticle} // 글쓰기 완료 시 호출
           onCancel={() => setIsCreating(false)} // 취소 시 글쓰기 모드 종료
         />
@@ -235,24 +250,28 @@ const ArtistScreen = ({ route, navigation }) => {
   
     return (
       <View style={styles.container}>
-        <FlatList
-  data={articles}
+       <FlatList
+  data={boardArticles}
   keyExtractor={(item) => item.id.toString()}
   renderItem={({ item }) => (
-    <TouchableOpacity onPress={() => setSelectedArticle(item)}>
-      <WriteItem
-        title={item.title}
-        content={item.content}
-        date={item.date || "날짜 없음"}
-        nickname={item.userName || "익명"}
-        artistName={item.artistName || ""}
-      />
-    </TouchableOpacity>
+    <WriteItem
+      title={item.title}
+      content={item.content}
+      nickname={item.userName}
+      onPress={() => console.log(item)}
+    />
   )}
   ListEmptyComponent={
-    <Text style={styles.emptyText}>게시글이 없습니다.</Text>
+    <Text style={{ textAlign: "center", color: "#999", fontSize: 16, marginTop: 20 }}>
+      게시글이 없습니다.
+    </Text>
   }
 />
+
+
+
+  
+
 
         <TouchableOpacity
           style={styles.writeButton}
@@ -279,45 +298,73 @@ const ArtistScreen = ({ route, navigation }) => {
 
   
   const handleCreateArticle = async (
-    title: string,
-    content: string,
-    categoryType: "FREE_BOARD" | "NEW_CONCERT",
-    artistId: number | null,
-    newConcertId: number | null
+    title,
+    content,
+    categoryType,
+    artistId,
+    newConcertId
   ) => {
-    if (!token) {
+    if (!token || !userId) {
       Alert.alert("로그인이 필요합니다.", "로그인 페이지로 이동합니다.", [
         {
           text: "확인",
-          onPress: () => navigation.navigate("LoginScreen"), // 로그인 화면으로 이동
+          onPress: () => navigation.navigate("LoginScreen"),
         },
         { text: "취소", style: "cancel" },
       ]);
       return;
     }
   
+    // `newConcertId` 검증 및 처리
+    const validNewConcertId =
+      categoryType === "NEW_CONCERT" && typeof newConcertId === "number"
+        ? newConcertId
+        : null;
+  
+    const requestData = {
+      title,
+      content,
+      categoryType,
+      artistId,
+      userId,
+      newConcertId: validNewConcertId, // 유효한 값만 포함
+    };
+  
+    console.log("요청 데이터:", requestData);
+  
     try {
-      const requestData = {
-        title,
-        content,
-        categoryType,
-        artistId,
-        userId, // Redux에서 가져온 사용자 ID
-        newConcertId: categoryType === "NEW_CONCERT" ? newConcertId : null,
-      };
+      const response = await axios.post(
+        "http://localhost:8080/api/articles",
+        requestData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
   
-      const response = await axios.post("/api/articles", requestData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-  
+      console.log("응답 데이터:", response.data);
       Alert.alert("성공", "게시글이 작성되었습니다.");
       setIsCreating(false);
       fetchBoardArticles(); // 게시글 목록 새로고침
     } catch (error) {
-      console.error("게시글 작성 중 오류 발생:", error);
-      Alert.alert("오류", "게시글 작성에 실패했습니다.");
+      if (error.response) {
+        console.error("서버 응답 오류:", error.response.data);
+        Alert.alert(
+          "오류",
+          `게시글 작성 실패: ${
+            error.response.data.message || "알 수 없는 오류"
+          }`
+        );
+      } else {
+        console.error("요청 오류:", error.message);
+        Alert.alert("오류", "게시글 작성 중 문제가 발생했습니다.");
+      }
     }
   };
+  
+  
+  
+  
+  
   
   
 

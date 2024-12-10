@@ -32,7 +32,7 @@ export const loginUser = createAsyncThunk(
       const response = await axios.post(`${API_BASE_URL}/login`, credentials);
       console.log('[로그인 응답 데이터]:', response.data);
 
-      const { accessToken, nickname } = response.data;
+      const { accessToken, nickname} = response.data;
 
       // 데이터 검증
       if (!accessToken || typeof accessToken !== 'string') {
@@ -44,16 +44,19 @@ export const loginUser = createAsyncThunk(
         throw new Error(`유효하지 않은 nickname: ${nickname}`);
       }
 
-      console.log('[AsyncStorage에 저장 시작]:', { accessToken, nickname });
+      console.log('[AsyncStorage에 저장 시작]:', { accessToken, nickname});
 
       // AsyncStorage 저장
       await AsyncStorage.setItem('authToken', accessToken);
       await AsyncStorage.setItem('userNickname', nickname);
 
+
       // AsyncStorage에 저장된 데이터 확인
       const storedToken = await AsyncStorage.getItem('authToken');
       const storedNickname = await AsyncStorage.getItem('userNickname');
-      console.log('[저장된 AsyncStorage 데이터]:', { storedToken, storedNickname });
+      const storedUserId = await AsyncStorage.getItem('userId');
+
+      console.log('[저장된 AsyncStorage 데이터]:', { storedToken, storedNickname, storedUserId });
 
       // 검증 실패 시 예외 처리
       if (!storedToken || !storedNickname) {
@@ -89,6 +92,7 @@ const authSlice = createSlice({
   initialState: {
     user: null,
     token: null,
+    userId: null,
     loading: false,
     error: null,
   },
@@ -97,11 +101,13 @@ const authSlice = createSlice({
       console.log('[Redux 상태 업데이트 중 (setAuthState)]:', action.payload);
       state.user = action.payload?.user || null;
       state.token = action.payload?.token || null;
+      state.userId = action.payload.userId || null; // 추가
       state.error = null;
     },
     logout(state) {
       state.user = null;
       state.token = null;
+      state.userId = null;
       state.error = null;
     },
   },

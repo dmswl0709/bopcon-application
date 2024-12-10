@@ -37,11 +37,11 @@ const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
-  const token = useSelector((state: RootState) => state.auth.token);
+  const userToken = useSelector((state) => state.auth.token);
 
   // Fetch articles on component mount
   useEffect(() => {
-    if (!token) {
+    if (!userToken) {
       setError('로그인이 필요합니다.');
       setLoading(false);
       return;
@@ -54,7 +54,7 @@ const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
       try {
         const response = await axios.get(`http://localhost:8080/api/articles/user`, {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${userToken}`,
           },
         });
     
@@ -78,11 +78,11 @@ const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
     
 
     fetchArticles();
-  }, [token]);
+  }, [userToken]);
 
   // Delete article
   const handleDelete = async (id: number) => {
-    if (!token) {
+    if (!userToken) {
       Alert.alert('오류', '로그인이 필요합니다.');
       return;
     }
@@ -95,7 +95,7 @@ const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
           try {
             const response = await axios.delete(`/api/articles/${id}`, {
               headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${userToken}`,
               },
             });
 
@@ -129,7 +129,7 @@ const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
 
       const response = await axios.put(`/api/articles/${id}`, updatedArticle, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${userToken}`,
         },
       });
 
@@ -227,6 +227,8 @@ const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
       {isEditing && selectedArticle && (
         <ArticleForm
           mode="edit"
+          token={userToken} // 유효한 token을 전달
+
           initialTitle={selectedArticle.title}
           initialContent={selectedArticle.content}
           onSubmit={(title, content) =>
