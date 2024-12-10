@@ -19,6 +19,7 @@ const SignUpScreen = () => {
 
   const password = watch('password', '');
   const confirmPassword = watch('confirmPassword', '');
+  const [passwordMatch, setPasswordMatch] = useState<boolean | null>(null); // 비밀번호 일치 여부 상태 추가
 
   const passwordRules = [
     { text: '8자 이상, 15자 이하로 설정해 주세요.', check: password.length >= 8 && password.length <= 15 },
@@ -48,6 +49,11 @@ const SignUpScreen = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // 비밀번호 확인 시, 일치 여부 확인
+  const handlePasswordCheck = (value: string) => {
+    setPasswordMatch(value === password); // 비밀번호와 일치하는지 확인
   };
 
   return (
@@ -137,13 +143,23 @@ const SignUpScreen = () => {
               style={styles.input}
               placeholder="비밀번호 확인"
               secureTextEntry
-              onChangeText={onChange}
+              onChangeText={(value) => {
+                onChange(value);
+                handlePasswordCheck(value); // 비밀번호 확인일치 여부 체크
+              }}
               value={value}
             />
           )}
         />
         {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>}
       </View>
+
+      {/* 비밀번호 일치 여부 표시 */}
+      {passwordMatch !== null && (
+        <Text style={[styles.matchText, { color: passwordMatch ? 'green' : 'red' }]}>
+          {passwordMatch ? '비밀번호가 일치합니다.' : '비밀번호가 일치하지 않습니다.'}
+        </Text>
+      )}
 
       <View style={styles.rulesContainer}>
         {passwordRules.map((rule, index) => (
@@ -194,6 +210,10 @@ const styles = StyleSheet.create({
   errorText: {
     color: 'red',
     fontSize: 12,
+  },
+  matchText: {
+    fontSize: 14,
+    marginTop: 5,
   },
   successText: {
     color: 'green',
