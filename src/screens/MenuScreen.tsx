@@ -1,7 +1,7 @@
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useSelector } from 'react-redux'; // Redux 상태 가져오기
+import { useDispatch, useSelector } from 'react-redux'; // Redux 상태 가져오기 및 액션 디스패치
 import Layout from '../components/Layout';
 import Stack from '../components/Stack';
 import Spacer from '../components/Spacer';
@@ -9,9 +9,11 @@ import Dismiss from '../assets/icons/Dismiss.svg';
 import Person from '../assets/icons/Person.svg';
 import AppNavigationParamList from '../navigation/AppNavigatorParamList';
 import { RootState } from '../store'; // Redux RootState 타입
+import { logout } from '../store/slices/authSlice'; // Redux 액션
 
 const MenuScreen = () => {
   const navigation = useNavigation<NavigationProp<AppNavigationParamList>>();
+  const dispatch = useDispatch();
 
   // Redux 상태에서 로그인 여부 확인
   const user = useSelector((state: RootState) => state.auth.user);
@@ -25,6 +27,11 @@ const MenuScreen = () => {
     { name: 'R&B', type: 'R&B' },
     { name: 'JPOP', type: 'JPOP' },
   ];
+
+  const handleLogout = () => {
+    dispatch(logout()); // Redux 상태 초기화
+    navigation.navigate('LoginScreen'); // 로그인 화면으로 이동
+  };
 
   return (
     <Layout>
@@ -81,6 +88,13 @@ const MenuScreen = () => {
         <TouchableOpacity onPress={() => {}} style={styles.menuItem}>
           <Text style={styles.menuText}>서비스 소개</Text>
         </TouchableOpacity>
+
+        {/* 로그아웃 (로그인 상태에서만 표시) */}
+        {user && (
+          <TouchableOpacity onPress={handleLogout} style={styles.menuItem}>
+            <Text style={styles.menuText}>로그아웃</Text>
+          </TouchableOpacity>
+        )}
       </Stack>
     </Layout>
   );
