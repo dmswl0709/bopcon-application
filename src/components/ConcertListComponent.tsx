@@ -56,6 +56,7 @@ const ConcertListComponent = ({ concerts, onConcertPress, horizontal = false }: 
       horizontal={horizontal}
       numColumns={horizontal ? 1 : 2}
       columnWrapperStyle={!horizontal && styles.row}
+      showsHorizontalScrollIndicator={false} // 스크롤 바 숨김
       renderItem={({ item }) => (
         <TouchableOpacity
           style={[styles.concertItem, horizontal && styles.horizontalItem]}
@@ -73,7 +74,9 @@ const ConcertListComponent = ({ concerts, onConcertPress, horizontal = false }: 
             resizeMode="cover"
           />
           <View style={styles.concertInfo}>
-            <Text style={styles.title}>{item.title}</Text>
+            <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+              {item.title}
+            </Text>
             <Text style={styles.artistName}>{item.artistName}</Text>
             <Text style={styles.date}>{formatDateRange(item.startDate, item.endDate)}</Text>
           </View>
@@ -84,8 +87,10 @@ const ConcertListComponent = ({ concerts, onConcertPress, horizontal = false }: 
 };
 
 const screenWidth = Dimensions.get("window").width;
-const itemMargin = 36;
-const itemWidth = (screenWidth - itemMargin * 3) / 2;
+const desiredVisibleItems = 2.4; // 화면에 보이는 아이템 개수
+const itemMargin = 10; // 아이템 간의 여백
+const itemWidth = (screenWidth - itemMargin * (desiredVisibleItems + 1)) / desiredVisibleItems;
+
 
 const styles = StyleSheet.create({
   emptyContainer: {
@@ -102,45 +107,43 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   concertItem: {
-    marginHorizontal: itemMargin / 2,
-    width: itemWidth,
-    alignItems: "center",
-  },
-  horizontalItem: {
-    width: 120,
+    marginHorizontal: itemMargin / 1, // 아이템 간의 간격 조정
+    width: Math.max(itemWidth, 120), // 최소 너비 보장
+    alignItems: "flex-start", // 텍스트 정렬
   },
   posterImage: {
     width: "100%",
-    height: itemWidth * 1.5,
+    height: Math.max(itemWidth * 1.5, 180), // 최소 높이 보장
     backgroundColor: "#f0f0f0",
     marginBottom: 8,
+    marginLeft: itemMargin / 2, // "NEW" 선에 맞추기 위해 조정
   },
   horizontalImage: {
-    height: 180,
+    height: Math.max(itemWidth * 1.5, 180), // 높이를 비율에 맞게 조정
   },
   concertInfo: {
-    alignItems: "center",
+    alignItems: "flex-start", // 텍스트 왼쪽 정렬
+    width: "100%", // 텍스트 너비를 이미지와 맞춤
+    marginLeft: itemMargin / 2, // "NEW" 선과 텍스트 정렬
   },
   title: {
     fontSize: 14,
     fontWeight: "bold",
     color: "#333",
-    textAlign: "left", // 텍스트 왼쪽 정렬
-    alignSelf: "flex-start", // 부모 View 기준으로 왼쪽 정렬
+    textAlign: "left",
+    maxWidth: "100%", // 텍스트 너비를 제한
   },
   artistName: {
     fontSize: 13,
     color: "#555",
     marginTop: 4,
-    textAlign: "left", // 텍스트 왼쪽 정렬
-    alignSelf: "flex-start", // 부모 View 기준으로 왼쪽 정렬
+    textAlign: "left",
   },
   date: {
     fontSize: 12,
     color: "#666",
     marginTop: 4,
-    textAlign: "left", // 텍스트 왼쪽 정렬
-    alignSelf: "flex-start", // 부모 View 기준으로 왼쪽 정렬
+    textAlign: "left",
   },
 });
 

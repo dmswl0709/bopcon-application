@@ -67,7 +67,9 @@ const ContentCategoryScreen = ({ route, navigation }: ContentCategoryScreenProps
   // 로딩 상태 처리
   if (loading) {
     return (
-      <NavigationView>
+      <NavigationView
+        contentStyle={styles.navigationContent} // NavigationView 스타일 수정
+      >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0000ff" />
           <Text style={styles.loadingText}>로딩 중...</Text>
@@ -79,7 +81,9 @@ const ContentCategoryScreen = ({ route, navigation }: ContentCategoryScreenProps
   // 에러 상태 처리
   if (error) {
     return (
-      <NavigationView>
+      <NavigationView
+        contentStyle={styles.navigationContent} // NavigationView 스타일 수정
+      >
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
           <Text style={styles.retryText} onPress={fetchConcerts}>
@@ -91,7 +95,9 @@ const ContentCategoryScreen = ({ route, navigation }: ContentCategoryScreenProps
   }
 
   return (
-    <NavigationView>
+    <NavigationView
+      contentStyle={styles.navigationContent} // NavigationView 스타일 수정
+    >
       <View style={styles.container}>
         <Text style={styles.header}>{name}</Text>
         {/* ConcertListComponent에 onConcertPress 전달 */}
@@ -102,16 +108,22 @@ const ContentCategoryScreen = ({ route, navigation }: ContentCategoryScreenProps
 };
 
 const styles = StyleSheet.create({
+  navigationContent: {
+    marginHorizontal: 8, // NavigationView 양옆 여백 줄임
+    marginTop: 8, // NavigationView 상단 여백 줄임
+    marginBottom: 8, // 하단 여백 줄임
+  },
   container: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingHorizontal: 8, // 내부 패딩 줄임
+    paddingTop: 5, // 상단 패딩 줄임
   },
   header: {
-    fontSize: 24,
+    fontSize: 25, 
     fontWeight: "bold",
-    marginBottom: 16,
-    marginLeft: 20,
+    marginBottom: 12, // 헤더 하단 여백 줄임
+    marginLeft: 12, // 헤더 왼쪽 여백 줄임
+    marginTop: 1,
   },
   loadingContainer: {
     flex: 1,
