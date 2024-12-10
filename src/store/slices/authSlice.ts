@@ -9,7 +9,13 @@ export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async (formData: { email: string; nickname: string; password: string }, { rejectWithValue }) => {
     try {
+      // 요청 데이터 확인
+      console.log('회원가입 요청 데이터:', formData);
+
       const response = await axios.post(`${API_BASE_URL}/signup`, formData);
+
+      // 응답 데이터 확인
+      console.log('회원가입 응답 데이터:', response.data);
       return response.data;
     } catch (error: any) {
       console.error('[회원가입 오류]:', error?.response?.data?.error || error.message);

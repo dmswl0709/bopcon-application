@@ -3,6 +3,7 @@ import { Alert, Text, TextInput, TouchableOpacity, View, StyleSheet, ActivityInd
 import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import BOPCONLogo from '../assets/icons/BOPCONLogo.svg';
+import { signup } from '../apis/auth'; // Named export 사용
 
 export interface JoinProps {
   email: string;
@@ -16,11 +17,9 @@ const SignUpScreen = () => {
   const { control, handleSubmit, formState: { errors }, watch } = useForm<JoinProps>();
   const [loading, setLoading] = useState(false);
 
-  // 비밀번호 값 및 확인 값
   const password = watch('password', '');
   const confirmPassword = watch('confirmPassword', '');
 
-  // 비밀번호 규칙
   const passwordRules = [
     { text: '8자 이상, 15자 이하로 설정해 주세요.', check: password.length >= 8 && password.length <= 15 },
     { text: '특수 문자를 사용해 주세요.', check: /[!@#$%^&*(),.?":{}|<>]/.test(password) },
@@ -30,13 +29,22 @@ const SignUpScreen = () => {
   const onSubmit = async (data: JoinProps) => {
     setLoading(true);
     try {
-      // 회원가입 API 호출 (예시)
       console.log('회원가입 데이터:', data);
+
+      const response = await signup({
+        email: data.email.trim(),
+        nickname: data.nickname.trim(),
+        password: data.password,
+        confirmPassword: data.confirmPassword, // 추가
+      });
+      console.log('회원가입 성공:', response);
+
       Alert.alert('회원가입 성공', '회원가입이 완료되었습니다!');
-      navigation.navigate('LoginScreen'); // 홈 화면으로 이동
-    } catch (error) {
-      console.error('회원가입 실패:', error);
-      Alert.alert('회원가입 실패', '회원가입 중 오류가 발생했습니다.');
+      navigation.navigate('LoginScreen'); // 로그인 화면으로 이동
+    } catch (error: any) {
+      console.error('회원가입 실패:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.message || '회원가입 중 오류가 발생했습니다.';
+      Alert.alert('회원가입 실패', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -44,12 +52,10 @@ const SignUpScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* 로고 */}
       <TouchableOpacity onPress={() => navigation.navigate('HomeScreen')} style={styles.logoContainer}>
         <BOPCONLogo width={150} height={80} />
       </TouchableOpacity>
 
-      {/* 이메일 입력 */}
       <View style={styles.inputContainer}>
         <Text style={styles.label}>이메일</Text>
         <Controller
@@ -74,7 +80,6 @@ const SignUpScreen = () => {
         {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
       </View>
 
-      {/* 닉네임 입력 */}
       <View style={styles.inputContainer}>
         <Text style={styles.label}>닉네임</Text>
         <Controller
@@ -99,7 +104,6 @@ const SignUpScreen = () => {
         {errors.nickname && <Text style={styles.errorText}>{errors.nickname.message}</Text>}
       </View>
 
-      {/* 비밀번호 입력 */}
       <View style={styles.inputContainer}>
         <Text style={styles.label}>비밀번호</Text>
         <Controller
@@ -119,7 +123,6 @@ const SignUpScreen = () => {
         {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
       </View>
 
-      {/* 비밀번호 확인 입력 */}
       <View style={styles.inputContainer}>
         <Text style={styles.label}>비밀번호 확인</Text>
         <Controller
@@ -140,12 +143,8 @@ const SignUpScreen = () => {
           )}
         />
         {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>}
-        {!errors.confirmPassword && confirmPassword && confirmPassword === password && (
-          <Text style={styles.successText}>비밀번호가 동일합니다.</Text>
-        )}
       </View>
 
-      {/* 비밀번호 규칙 */}
       <View style={styles.rulesContainer}>
         {passwordRules.map((rule, index) => (
           <View key={index} style={styles.rule}>
@@ -155,7 +154,6 @@ const SignUpScreen = () => {
         ))}
       </View>
 
-      {/* 회원가입 버튼 */}
       <TouchableOpacity
         style={[styles.button, loading && styles.buttonDisabled]}
         onPress={handleSubmit(onSubmit)}
