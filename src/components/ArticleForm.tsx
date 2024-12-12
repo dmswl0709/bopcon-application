@@ -61,7 +61,12 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
     }
 
     if (!userId) {
-      Alert.alert("오류", "로그인이 필요합니다. 다시 로그인해주세요.");
+      Alert.alert("오류", "로그인이 필요합니다. 다시 로그인해주세요.", [
+        {
+          text: "확인",
+          onPress: () => navigation.navigate("LoginScreen"), // 로그인 스크린으로 이동
+        },
+      ]);
       return;
     }
 

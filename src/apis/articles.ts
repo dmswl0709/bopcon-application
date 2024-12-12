@@ -60,6 +60,7 @@ export const updateArticle = async (
     categoryType?: 'FREE_BOARD' | 'NEW_CONCERT';
     artistId?: number | null;
     newConcertId?: number | null;
+    userName?: string | null;
   },
   token: string
 ): Promise<Article> => {

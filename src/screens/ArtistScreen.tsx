@@ -13,6 +13,7 @@ import axios from "axios";
 import { Linking } from "react-native";
 import { useSelector } from "react-redux";
 import { RootState } from '../store';
+import { Article } from "../types/type";
 
 
 
@@ -46,8 +47,11 @@ const ArtistScreen = ({ route, navigation }) => {
   const [articles, setArticles] = useState<Article[]>([]); // 초기화
   const token = useSelector((state: RootState) => state.auth.token);
   const userId = useSelector((state: RootState) => state.auth.userId); // userId 가져오기
+  const user = useSelector((state: RootState) => state.auth.user);
 
 
+  const [isEditing, setIsEditing] = useState(false); // 수정 상태
+  const [selectedArticle, setSelectedArticle] = useState(null); // 선택된 게시글
 
 
 
@@ -68,18 +72,109 @@ const ArtistScreen = ({ route, navigation }) => {
     try {
       const response = await axios.get(`http://localhost:8080/api/articles/artist/${artistId}`, {
         params: {
-          categoryType: "FREE_BOARD" || "NEW_CONCERT"
+          categoryType: "FREE_BOARD", // 필요에 따라 다른 카테고리 타입 사용
         },
       });
-      setBoardArticles(response.data);
+
+      const formattedArticles = response.data
+        .map((article) => ({
+          id: article.id,
+          title: article.title,
+          content: article.content,
+          categoryType: article.categoryType,
+          artistName: article.artistName || "Unknown Artist",
+          userName: article.userName || "Anonymous",
+          concertTitle: article.concertTitle || "",
+          likeCount: article.likeCount || 0,
+          commentCount: article.commentCount || 0,
+          createdAt: new Date(article.createdAt), // 날짜 필드를 Date 객체로 변환
+        }))
+        .sort((a, b) => b.createdAt - a.createdAt); // 최신순 정렬
+
+      setBoardArticles(formattedArticles);
     } catch (error) {
-      console.error("게시글 데이터를 불러오는 중 오류 발생:", error);
+      console.error("게시글 데이터를 불러오는 중 오류 발생:", error.response || error.message);
       Alert.alert("오류", "게시글 데이터를 불러올 수 없습니다.");
+    }
+};
+
+  
+  
+  
+  const handleDeleteArticle = async (article: Article) => {
+    if (!token) {
+      Alert.alert("오류", "로그인이 필요합니다.");
+      return;
+    }
+  
+    // 현재 사용자의 userName과 게시글 작성자의 userName을 비교
+    if (article.userName !== user) {
+      Alert.alert("권한 없음", "다른 사용자의 게시글을 삭제할 수 없습니다.");
+      return;
+    }
+  
+    Alert.alert("확인", "이 게시글을 정말 삭제하시겠습니까?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "삭제",
+        onPress: async () => {
+          try {
+            // 로컬 상태에서 먼저 게시글 제거
+            setBoardArticles((prevArticles) =>
+              prevArticles.filter((a) => a.id !== article.id)
+            );
+  
+            // 서버로 삭제 요청
+            await axios.delete(`http://localhost:8080/api/articles/${article.id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+  
+            Alert.alert("성공", "게시글이 삭제되었습니다.");
+          } catch (error) {
+            console.error("게시글 삭제 오류:", error.response || error.message);
+            Alert.alert("오류", "게시글을 삭제할 수 없습니다.");
+          }
+        },
+      },
+    ]);
+  };
+  
+  // 상태 변화 디버깅
+useEffect(() => {
+  console.log("현재 상태의 게시글 목록:", boardArticles);
+}, [boardArticles]);
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  // Fetch Articles Function
+  const fetchArticles = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8080/api/articles/artist/${artistId}`);
+      return response.data.map((article: any) => ({
+        id: article.id,
+        title: article.title,
+        content: article.content,
+        categoryType: article.categoryType,
+        artistName: article.artistName || "Unknown Artist",
+        userName: article.userName || "Anonymous",
+        concertTitle: article.concertTitle || "",
+        likeCount: article.likeCount || 0,
+        commentCount: article.commentCount || 0,
+      }));
+    } catch (error) {
+      console.error("Error fetching articles:", error.response || error.message);
+      return [];
     }
   };
   
-  
-  
+
 
   useEffect(() => {
     fetchBoardArticles();
@@ -233,6 +328,17 @@ const ArtistScreen = ({ route, navigation }) => {
     </View>
   );
 
+  const handleEditArticle = (article: Article) => {
+    if (article.userId !== userId) {
+      Alert.alert("권한 없음", "다른 사용자의 게시글을 수정할 수 없습니다.");
+      return;
+    }
+  
+    setIsEditing(true);
+    setSelectedArticle(article);
+  };
+  
+
   // 렌더링할 콘텐츠
   const renderBoardContent = () => {
     if (isCreating) {
@@ -255,26 +361,52 @@ const ArtistScreen = ({ route, navigation }) => {
           data={boardArticles}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              onPress={() => console.log(item)}
-              style={styles.boardItemContainer}
-            >
-              <Text style={styles.boardTitle}>{item.title}</Text>
-              <Text style={styles.boardContent} numberOfLines={2}>
-                {item.content}
-              </Text>
-              <View style={styles.boardFooter}>
-                <Text style={styles.boardFooterText}>{item.userName}</Text>
-                <Text style={styles.boardFooterText}>
-                  {item.likeCount} Likes · {item.commentCount} Comments
+            <View style={styles.boardItemContainer}>
+              {/* 게시글 제목과 내용 */}
+              <TouchableOpacity
+                onPress={() => console.log(item)}
+                style={styles.boardItemContent}
+              >
+                <Text style={styles.boardTitle}>{item.title}</Text>
+                <Text style={styles.boardContent} numberOfLines={2}>
+                  {item.content}
                 </Text>
-              </View>
-            </TouchableOpacity>
+                <View style={styles.boardFooter}>
+                  <Text style={styles.boardFooterText}>{item.userName || "Unknown"}</Text>
+                  <Text style={styles.boardFooterText}>
+                    {item.likeCount} Likes · {item.commentCount} Comments
+                  </Text>
+                </View>
+              </TouchableOpacity>
+    
+              {/* 수정/삭제 버튼: 작성자의 userName이 현재 사용자와 같을 경우에만 표시 */}
+              {item.userName === user && (
+                <View style={styles.boardActions}>
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => {
+                      setIsEditing(true);
+                      setSelectedArticle(item);
+                    }}
+                  >
+                    <Text style={styles.actionText}>수정</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDeleteArticle(item)}
+                  >
+                    <Text style={styles.actionText}>삭제</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
           )}
           ListEmptyComponent={
             <Text style={styles.emptyText}>게시글이 없습니다.</Text>
           }
         />
+    
+        {/* 글쓰기 버튼 */}
         <TouchableOpacity
           style={styles.writeButton}
           onPress={() => setIsCreating(true)}
@@ -283,7 +415,9 @@ const ArtistScreen = ({ route, navigation }) => {
         </TouchableOpacity>
       </View>
     );
+
   };
+  
   
 
   const renderContent = () => {
@@ -515,6 +649,77 @@ const ArtistScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
+
+
+  boardItemContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 16,
+    marginVertical: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  boardItemContent: {
+    marginBottom: 12,
+  },
+  boardTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 8,
+  },
+  boardContent: {
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 20,
+  },
+  boardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#f2f2f2",
+    paddingTop: 8,
+  },
+  boardFooterText: {
+    fontSize: 12,
+    color: "#999",
+  },
+  boardActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 8,
+  },
+  editButton: {
+    marginRight: 8,
+    backgroundColor: "#007BFF",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+  },
+  deleteButton: {
+    backgroundColor: "#FF5252",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+  },
+  actionText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  emptyText: {
+    textAlign: "center",
+    fontSize: 16,
+    color: "#999",
+    marginTop: 20,
+  },
+
   headerContainer: {
     marginTop: -55,
     paddingHorizontal: 16,
@@ -685,44 +890,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
     padding: 16,
   },
-  boardItemContainer: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: "#e6e6e6",
-  },
-  boardTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 8,
-  },
-  boardContent: {
-    fontSize: 14,
-    color: "#666",
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  boardFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: "#eee",
-    paddingTop: 8,
-    marginTop: 8,
-  },
-  boardFooterText: {
-    fontSize: 12,
-    color: "#999",
-  },
+  
   writeButton: {
     backgroundColor: "#000",
     padding: 14,
@@ -735,12 +903,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  emptyText: {
-    textAlign: "center",
-    color: "#999",
-    fontSize: 16,
-    marginTop: 20,
-  },
+  
+
   
 });
 

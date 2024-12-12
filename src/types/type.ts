@@ -6,6 +6,7 @@ export interface Comment {
   content: string;
   author: string;
   createdAt: string;
+  userName: string;
 }
 
 
@@ -16,6 +17,7 @@ export interface Post {
   content: string;
   comments: Comment[]; // 댓글 배열
   author: string; // 게시글 작성자
+  userName: string;
 }
 
 export interface Article {

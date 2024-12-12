@@ -249,22 +249,21 @@ const BoardScreen: React.FC = () => {
         />
       ) : (
         <FlatList
-        data={articles}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => setSelectedArticle(item)}>
-            <WriteItem
-              title={item.title}
-              content={item.content}
-              nickname={item.userName}
-            />
-          </TouchableOpacity>
-        )}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>게시글이 없습니다.</Text>
-        }
-      />
-      
+          data={articles}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => setSelectedArticle(item)}>
+              <WriteItem
+                title={item.title}
+                content={item.content}
+                nickname={item.userName}
+              />
+            </TouchableOpacity>
+          )}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No articles available.</Text>
+          }
+        />
       )}
 
       {!isCreating && !isEditing && (
@@ -291,30 +290,30 @@ const BoardScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f9f9f9",
     paddingHorizontal: 16,
   },
   header: {
     alignItems: "center",
     marginBottom: 20,
-    marginTop: 16,
+    paddingVertical: 10,
+    backgroundColor: "#007BFF",
+    borderRadius: 8,
   },
   artistName: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#000",
-    textAlign: "center",
+    color: "#fff",
   },
   artistSubName: {
     fontSize: 16,
-    color: "gray",
-    textAlign: "center",
-    marginTop: 4,
+    color: "#d1e7ff",
   },
   loaderContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#f9f9f9",
   },
   loaderText: {
     marginTop: 10,
@@ -322,7 +321,7 @@ const styles = StyleSheet.create({
     color: "#555",
   },
   createButton: {
-    backgroundColor: "#000",
+    backgroundColor: "#007BFF",
     padding: 14,
     alignItems: "center",
     marginVertical: 16,
@@ -335,38 +334,10 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: "center",
-    color: "gray",
+    color: "#555",
     fontSize: 16,
     marginTop: 20,
   },
-  artistImage: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    resizeMode: "cover",
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
-  backNavigation: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  backIcon: {
-    marginRight: 8,
-  },
-  backText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#007BFF",
-  },
-  globalListTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 12,
-  },
 });
-
 
 export default BoardScreen;
