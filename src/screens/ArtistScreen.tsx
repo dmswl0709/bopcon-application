@@ -251,24 +251,30 @@ const ArtistScreen = ({ route, navigation }) => {
   
     return (
       <View style={styles.container}>
-       <FlatList
-  data={boardArticles}
-  keyExtractor={(item) => item.id.toString()}
-  renderItem={({ item }) => (
-    <WriteItem
-      title={item.title}
-      content={item.content}
-      nickname={item.userName}
-      onPress={() => console.log(item)}
-    />
-  )}
-  ListEmptyComponent={
-    <Text style={{ textAlign: "center", color: "#999", fontSize: 16, marginTop: 20 }}>
-      게시글이 없습니다.
-    </Text>
-  }
-/>
-
+        <FlatList
+          data={boardArticles}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => console.log(item)}
+              style={styles.boardItemContainer}
+            >
+              <Text style={styles.boardTitle}>{item.title}</Text>
+              <Text style={styles.boardContent} numberOfLines={2}>
+                {item.content}
+              </Text>
+              <View style={styles.boardFooter}>
+                <Text style={styles.boardFooterText}>{item.userName}</Text>
+                <Text style={styles.boardFooterText}>
+                  {item.likeCount} Likes · {item.commentCount} Comments
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>게시글이 없습니다.</Text>
+          }
+        />
         <TouchableOpacity
           style={styles.writeButton}
           onPress={() => setIsCreating(true)}
@@ -278,6 +284,7 @@ const ArtistScreen = ({ route, navigation }) => {
       </View>
     );
   };
+  
 
   const renderContent = () => {
     switch (activeTab) {
@@ -641,18 +648,8 @@ const styles = StyleSheet.create({
   boardRow: {
     marginBottom: 16,
   },
-  boardTitle: {
-    fontSize: 15,
-    fontFamily: "Pretendard-Bold",
-    marginBottom: 10,
-    marginLeft: 18,
-  },
-  boardContent: {
-    fontSize: 14,
-    color: "gray",
-    marginBottom: 4,
-    marginLeft: 18,
-  },
+  
+  
   boardDate: {
     fontSize: 12,
     color: "gray",
@@ -678,24 +675,69 @@ const styles = StyleSheet.create({
  
   
 
+  
+  
+ 
+  
+
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f9f9f9",
+    padding: 16,
+  },
+  boardItemContainer: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#e6e6e6",
+  },
+  boardTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 8,
+  },
+  boardContent: {
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  boardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    paddingTop: 8,
+    marginTop: 8,
+  },
+  boardFooterText: {
+    fontSize: 12,
+    color: "#999",
   },
   writeButton: {
     backgroundColor: "#000",
-    padding: 12,
+    padding: 14,
     alignItems: "center",
-    marginVertical: 16,
     borderRadius: 8,
+    marginTop: 16,
   },
   writeButtonText: {
-    color: "#fff",
+    color: "#ffffff",
     fontSize: 16,
+    fontWeight: "bold",
   },
   emptyText: {
     textAlign: "center",
-    color: "gray",
+    color: "#999",
     fontSize: 16,
     marginTop: 20,
   },

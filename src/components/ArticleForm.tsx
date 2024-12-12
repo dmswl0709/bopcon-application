@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   submitButton: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#000",
     padding: 12,
     borderRadius: 8,
     flex: 1,
