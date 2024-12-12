@@ -3,8 +3,8 @@
 import React from 'react';
 import { View, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import logo from '../assets/icons/BOBCONIcon.png';
-import behindIcon from '../assets/icons/behind.png';
+import logo from '../assets/icons/BOPCONLogo.svg';
+import behindIcon from '../assets/icons/behind.svg';
 
 const BackNavigationBar = () => {
   const navigation = useNavigation();

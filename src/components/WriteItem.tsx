@@ -2,28 +2,26 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
 interface WriteItemProps {
-  title: string; // 제목
-  content: string; // 내용
-  nickname: string; // 작성자 닉네임
-  onPress?: () => void; // 클릭 핸들러
+  title: string;
+  content: string;
+  nickname: string;
+  onPress?: () => void;
 }
 
 const WriteItem: React.FC<WriteItemProps> = ({ title, content, nickname, onPress }) => {
   return (
     <TouchableOpacity onPress={onPress} style={styles.container}>
       <View style={styles.contentContainer}>
-        {/* 제목 */}
         <Text style={styles.title}>{title}</Text>
-        {/* 내용 */}
         <Text style={styles.content}>{content}</Text>
       </View>
       <View style={styles.footer}>
-        {/* 작성자 */}
         <Text style={styles.footerText}>{`작성자 | ${nickname}`}</Text>
       </View>
     </TouchableOpacity>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -65,5 +63,6 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
 });
+
 
 export default WriteItem;

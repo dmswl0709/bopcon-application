@@ -20,7 +20,7 @@ interface ArticleFormProps {
   artistName?: string;
   initialNewConcertId?: number | null;
   token: string;
-  userId: number; // userId 추가
+  userId: number;
   onSubmit: (
     title: string,
     content: string,
@@ -54,30 +54,26 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
   const [isModalVisible, setModalVisible] = useState(false);
   const userId = useSelector((state: any) => state.auth.userId);
 
-
   const handleSubmit = async () => {
-    if (!userId) {
-      Alert.alert("오류", "userId가 누락되었습니다. 다시 로그인해주세요.");
+    if (!token || token.trim() === "") {
+      Alert.alert("오류", "유효하지 않은 토큰입니다. 다시 로그인해주세요.");
       return;
     }
-  
+
+    if (!userId) {
+      Alert.alert("오류", "로그인이 필요합니다. 다시 로그인해주세요.");
+      return;
+    }
+
+    if (typeof onSubmit !== "function") {
+      console.error("onSubmit이 함수가 아닙니다. props를 확인해주세요.");
+      Alert.alert("오류", "onSubmit 함수가 정의되지 않았습니다.");
+      return;
+    }
+
     const validNewConcertId =
-      categoryType === "NEW_CONCERT" && newConcertId
-        ? newConcertId
-        : null;
-  
-    const requestData = {
-      title: title.trim(),
-      content: content.trim(),
-      categoryType,
-      artistId: fixedArtistId,
-      newConcertId: validNewConcertId,
-      token,
-      userId, // userId 포함
-    };
-  
-    console.log("요청 데이터:", requestData);
-  
+      categoryType === "NEW_CONCERT" && newConcertId ? newConcertId : null;
+
     try {
       await onSubmit(
         title.trim(),
@@ -86,18 +82,16 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
         fixedArtistId,
         validNewConcertId,
         token,
-        userId // 전달
+        userId
       );
-      Alert.alert("성공", "게시글이 작성되었습니다.");
     } catch (error) {
-      console.error("Error during submission:", error);
-      Alert.alert("오류", "게시글 처리 중 문제가 발생했습니다.");
+      console.error("게시글 작성 중 오류:", error);
+      Alert.alert("오류", "게시글 작성에 실패했습니다. 다시 시도해주세요.");
     }
   };
-  
 
   const options = [
-    { label: "자유게시판", value: "FREE_BOARD" },
+    { label: "자유 게시판", value: "FREE_BOARD" },
     { label: "콘서트 게시판", value: "NEW_CONCERT" },
   ];
 
@@ -193,59 +187,71 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    backgroundColor: "white",
-    borderRadius: 8,
+    padding: 20,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+    margin: 10,
   },
   heading: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 16,
+    color: "#333",
+    marginBottom: 20,
+    textAlign: "center",
   },
   artistInfo: {
     marginBottom: 16,
-    padding: 8,
+    padding: 12,
     borderWidth: 1,
-    borderColor: "#ddd",
-    backgroundColor: "#f9f9f9",
+    borderColor: "#e0e0e0",
+    backgroundColor: "#fff",
     borderRadius: 8,
   },
   artistLabel: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "#555",
+    color: "#888",
+    marginBottom: 4,
   },
   artistName: {
     fontSize: 16,
-    color: "#333",
+    fontWeight: "bold",
+    color: "#555",
   },
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 8,
-    padding: 12,
+    padding: 14,
     marginBottom: 16,
+    backgroundColor: "#fff",
   },
   textarea: {
-    height: 100,
+    height: 120,
     textAlignVertical: "top",
   },
   label: {
-    fontSize: 14,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "500",
     marginBottom: 8,
+    color: "#555",
   },
   dropdownButton: {
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 8,
-    padding: 12,
-    backgroundColor: "#f9f9f9",
+    padding: 14,
+    backgroundColor: "#fff",
     marginBottom: 16,
   },
   dropdownButtonText: {
     fontSize: 16,
-    color: "#333",
+    color: "#555",
   },
   modalContainer: {
     flex: 1,
@@ -255,14 +261,14 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "80%",
-    backgroundColor: "white",
+    backgroundColor: "#fff",
     borderRadius: 8,
-    padding: 16,
+    padding: 20,
   },
   modalItem: {
-    padding: 12,
+    padding: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
+    borderBottomColor: "#eee",
   },
   modalItemText: {
     fontSize: 16,
@@ -273,7 +279,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   submitButton: {
-    backgroundColor: "#000",
+    backgroundColor: "#007BFF",
     padding: 12,
     borderRadius: 8,
     flex: 1,
@@ -281,16 +287,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelButton: {
-    backgroundColor: "#555",
+    backgroundColor: "#6c757d",
     padding: 12,
     borderRadius: 8,
     flex: 1,
     alignItems: "center",
   },
   buttonText: {
-    color: "white",
+    color: "#fff",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "600",
   },
 });
 

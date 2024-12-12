@@ -22,7 +22,7 @@ interface WriteItemProps {
   date?: string;
   nickname?: string;
   artistName?: string;
-  // userId: number;
+  userId: number;
 }
 
 
@@ -45,13 +45,13 @@ const ArtistScreen = ({ route, navigation }) => {
   const [boardArticles, setBoardArticles] = useState<Article[]>([]);
   const [articles, setArticles] = useState<Article[]>([]); // 초기화
   const token = useSelector((state: RootState) => state.auth.token);
-  const userId = useSelector((state: RootState) => state.auth.user); // userId 가져오기
+  const userId = useSelector((state: RootState) => state.auth.userId); // userId 가져오기
 
 
 
 
 
-  const WriteItem: React.FC<WriteItemProps> = ({ title, content, date, nickname, artistName }) => {
+  const WriteItem: React.FC<WriteItemProps> = ({ title, content, date, nickname, artistName}) => {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>{title}</Text>
@@ -68,7 +68,7 @@ const ArtistScreen = ({ route, navigation }) => {
     try {
       const response = await axios.get(`http://localhost:8080/api/articles/artist/${artistId}`, {
         params: {
-          categoryType: "FREE_BOARD", // or "NEW_CONCERT"
+          categoryType: "FREE_BOARD" || "NEW_CONCERT"
         },
       });
       setBoardArticles(response.data);
@@ -242,6 +242,7 @@ const ArtistScreen = ({ route, navigation }) => {
           mode="create"
           fixedArtistId={artistId}
           token={token} // 유효한 token을 전달
+          userId={userId}
           onSubmit={handleCreateArticle} // 글쓰기 완료 시 호출
           onCancel={() => setIsCreating(false)} // 취소 시 글쓰기 모드 종료
         />
@@ -267,11 +268,6 @@ const ArtistScreen = ({ route, navigation }) => {
     </Text>
   }
 />
-
-
-
-  
-
 
         <TouchableOpacity
           style={styles.writeButton}
@@ -302,9 +298,18 @@ const ArtistScreen = ({ route, navigation }) => {
     content,
     categoryType,
     artistId,
-    newConcertId
+    newConcertId,
+    token,
+    id
   ) => {
-    if (!token || !userId) {
+    // 필수 입력값 검증
+    if (!title.trim() || !content.trim()) {
+      Alert.alert("오류", "제목과 내용을 모두 입력해주세요.");
+      return;
+    }
+  
+    // 사용자 인증 정보 검증
+    if (!token || !id) {
       Alert.alert("로그인이 필요합니다.", "로그인 페이지로 이동합니다.", [
         {
           text: "확인",
@@ -315,26 +320,27 @@ const ArtistScreen = ({ route, navigation }) => {
       return;
     }
   
-    // `newConcertId` 검증 및 처리
+    // newConcertId 검증 및 처리
     const validNewConcertId =
-      categoryType === "NEW_CONCERT" && typeof newConcertId === "number"
+      categoryType === "NEW_CONCERT" && typeof newConcertId === "number" && newConcertId > 0
         ? newConcertId
         : null;
   
+    // 요청 데이터 생성
     const requestData = {
       title,
       content,
       categoryType,
       artistId,
-      userId,
-      newConcertId: validNewConcertId, // 유효한 값만 포함
+      newConcertId: validNewConcertId,
     };
-  
+    
+    
     console.log("요청 데이터:", requestData);
   
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/articles",
+        `http://localhost:8080/api/articles`,
         requestData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -343,23 +349,25 @@ const ArtistScreen = ({ route, navigation }) => {
   
       console.log("응답 데이터:", response.data);
       Alert.alert("성공", "게시글이 작성되었습니다.");
-      setIsCreating(false);
-      fetchBoardArticles(); // 게시글 목록 새로고침
+      setIsCreating(false); // 게시글 작성 상태 업데이트
+      await fetchBoardArticles(); // 게시글 목록 새로고침
     } catch (error) {
       if (error.response) {
-        console.error("서버 응답 오류:", error.response.data);
+        console.error("서버 응답 오류:", error.response.status, error.response.data);
         Alert.alert(
           "오류",
-          `게시글 작성 실패: ${
-            error.response.data.message || "알 수 없는 오류"
-          }`
+          `게시글 작성 실패: ${error.response.data.message || "알 수 없는 오류"}`
         );
       } else {
         console.error("요청 오류:", error.message);
-        Alert.alert("오류", "게시글 작성 중 문제가 발생했습니다.");
+        Alert.alert("오류", "서버와 통신 중 문제가 발생했습니다. 네트워크를 확인해주세요.");
       }
     }
   };
+
+  
+  
+  
   
   
   

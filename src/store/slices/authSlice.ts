@@ -26,60 +26,55 @@ export const registerUser = createAsyncThunk(
 
 // 로그인 비동기 액션
 export const loginUser = createAsyncThunk(
-  'auth/loginUser',
-  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+  "auth/loginUser",
+  async (credentials, { rejectWithValue }) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/login`, credentials);
-      console.log('[로그인 응답 데이터]:', response.data);
+      console.log("[로그인 응답 데이터]:", response.data);
 
-      const { accessToken, nickname} = response.data;
+      const { id, accessToken, nickname } = response.data; // 올바른 키로 매핑
 
-      // 데이터 검증
-      if (!accessToken || typeof accessToken !== 'string') {
-        console.error('[유효하지 않은 accessToken]:', accessToken);
-        throw new Error(`유효하지 않은 accessToken: ${accessToken}`);
-      }
-      if (!nickname || typeof nickname !== 'string') {
-        console.error('[유효하지 않은 nickname]:', nickname);
-        throw new Error(`유효하지 않은 nickname: ${nickname}`);
+      // 검증 로직
+      if (!accessToken || !id || !nickname) {
+        throw new Error("로그인 응답 데이터가 유효하지 않습니다.");
       }
 
-      console.log('[AsyncStorage에 저장 시작]:', { accessToken, nickname});
+      console.log("[AsyncStorage에 저장 시작]:", { accessToken, id, nickname });
 
-      // AsyncStorage 저장
-      await AsyncStorage.setItem('authToken', accessToken);
-      await AsyncStorage.setItem('userNickname', nickname);
+      // AsyncStorage에 저장
+      await AsyncStorage.setItem("authToken", accessToken);
+      await AsyncStorage.setItem("userNickname", nickname);
+      await AsyncStorage.setItem("userId", id.toString()); // 숫자를 문자열로 변환하여 저장
 
+      // 저장된 데이터 확인
+      const storedToken = await AsyncStorage.getItem("authToken");
+      const storedNickname = await AsyncStorage.getItem("userNickname");
+      const storedUserId = await AsyncStorage.getItem("userId");
 
-      // AsyncStorage에 저장된 데이터 확인
-      const storedToken = await AsyncStorage.getItem('authToken');
-      const storedNickname = await AsyncStorage.getItem('userNickname');
-      const storedUserId = await AsyncStorage.getItem('userId');
+      console.log("[저장된 AsyncStorage 데이터]:", {
+        storedToken,
+        storedNickname,
+        storedUserId,
+      });
 
-      console.log('[저장된 AsyncStorage 데이터]:', { storedToken, storedNickname, storedUserId });
-
-      // 검증 실패 시 예외 처리
-      if (!storedToken || !storedNickname) {
-        console.error('[AsyncStorage 저장 실패]: 저장된 값이 유효하지 않습니다.');
-        throw new Error('AsyncStorage 저장 실패: 저장된 값이 undefined');
-      }
-
-      return { token: storedToken, user: storedNickname };
-    } catch (error: any) {
-      // console.error('[로그인 실패]:', error.message || error);
-      return rejectWithValue(error?.response?.data?.error || '로그인 중 오류가 발생했습니다.');
+      return { token: storedToken, user: storedNickname, id: storedUserId };
+    } catch (error) {
+      console.error("[로그인 실패]:", error.message || error);
+      return rejectWithValue("로그인 중 오류가 발생했습니다.");
     }
   }
 );
 
+
+
+
+
 // 로그아웃 비동기 액션
 export const logoutUser = createAsyncThunk('auth/logoutUser', async (_, { dispatch }) => {
   try {
-    console.log('[로그아웃]: AsyncStorage에서 항목 제거 시작');
     await AsyncStorage.removeItem('authToken');
-    await AsyncStorage.removeItem('userNickname');
-    console.log('[로그아웃]: AsyncStorage 항목 제거 완료');
-
+    await AsyncStorage.removeItem('authId');
+    await AsyncStorage.removeItem('authUser');
     dispatch(logout());
   } catch (error: any) {
     console.error('[로그아웃 중 오류 발생]:', error.message);
@@ -101,7 +96,7 @@ const authSlice = createSlice({
       console.log('[Redux 상태 업데이트 중 (setAuthState)]:', action.payload);
       state.user = action.payload?.user || null;
       state.token = action.payload?.token || null;
-      state.userId = action.payload.userId || null; // 추가
+      state.userId = action.payload?.id || null; // userId를 id로 업데이트
       state.error = null;
     },
     logout(state) {
@@ -113,10 +108,6 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(registerUser.fulfilled, (state, action) => {
-        state.user = action.payload;
-        state.error = null;
-      })
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -125,20 +116,17 @@ const authSlice = createSlice({
         console.log('[Redux 상태 업데이트 (fulfilled)]:', action.payload);
         state.user = action.payload.user;
         state.token = action.payload.token;
+        state.userId = action.payload.id; // userId를 id로 업데이트
         state.loading = false;
         state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || '로그인 중 오류가 발생했습니다.';
-        // console.error('[로그인 실패 Redux 상태 업데이트]:', action.payload);
-      })
-      .addCase(registerUser.rejected, (state, action) => {
-        state.error = action.payload || '회원가입 중 오류가 발생했습니다.';
-        console.error('[회원가입 실패 Redux 상태 업데이트]:', action.payload);
       });
   },
 });
+
 
 // 액션 및 리듀서 내보내기
 export const { logout, setAuthState } = authSlice.actions;

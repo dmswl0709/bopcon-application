@@ -2,6 +2,6 @@
 export interface JoinProps {
     accessToken: string;
     refreshToken: string;
-    userId: number;
+    id?: number;
     nickname?: string; // 회원가입에만 필요한 필드
   }
