@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, Alert } from "react-native";
+import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, Alert, Modal, TextInput, Button,ScrollView } from "react-native";
 import Header from "../components/Header";
 import FavoriteButton from "../components/FavoriteButton"; // 즐겨찾기 버튼 임포트
 import ConcertRow from "../components/ConcertRow";
@@ -48,6 +48,9 @@ const ArtistScreen = ({ route, navigation }) => {
   const token = useSelector((state: RootState) => state.auth.token);
   const userId = useSelector((state: RootState) => state.auth.userId); // userId 가져오기
   const user = useSelector((state: RootState) => state.auth.user);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
 
 
   const [isEditing, setIsEditing] = useState(false); // 수정 상태
@@ -97,6 +100,9 @@ const ArtistScreen = ({ route, navigation }) => {
       Alert.alert("오류", "게시글 데이터를 불러올 수 없습니다.");
     }
 };
+
+
+
 
   
   
@@ -460,11 +466,16 @@ const handleEditPress = (article) => {
               data={boardArticles}
               keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => (
-                <View style={styles.boardItemContainer}>
+                <TouchableOpacity
+                  style={styles.boardItemContainer}
+                  onPress={() => handleArticlePress(item)} // 게시글 클릭 시 모달 열기
+                >
+                  {/* 게시글 상단 */}
                   <View style={styles.headerRow}>
                     <Text style={styles.boardTitle}>{item.title}</Text>
                     {item.userName === user && (
                       <View style={styles.boardActions}>
+                        {/* 수정 버튼 */}
                         <TouchableOpacity
                           style={styles.editButton}
                           onPress={() => {
@@ -474,6 +485,7 @@ const handleEditPress = (article) => {
                         >
                           <Text style={styles.actionText}>수정</Text>
                         </TouchableOpacity>
+                        {/* 삭제 버튼 */}
                         <TouchableOpacity
                           style={styles.deleteButton}
                           onPress={() => handleDeleteArticle(item)}
@@ -485,20 +497,17 @@ const handleEditPress = (article) => {
                   </View>
     
                   {/* 게시글 내용 */}
-                  <TouchableOpacity
-                    onPress={() => console.log(item)} // 상세 화면 이동 로직
-                    style={styles.boardItemContent}
-                  >
-                    <Text style={styles.boardContent} numberOfLines={2}>
-                      {item.content}
+                  <Text style={styles.boardContent} numberOfLines={2}>
+                    {item.content}
+                  </Text>
+    
+                  {/* 게시글 하단 */}
+                  <View style={styles.boardFooter}>
+                    <Text style={styles.boardFooterText}>
+                      작성자 | {item.userName || "Unknown"}
                     </Text>
-                    <View style={styles.boardFooter}>
-                      <Text style={styles.boardFooterText}>
-                        작성자 | {item.userName || "Unknown"}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                </View>
+                  </View>
+                </TouchableOpacity>
               )}
               ListEmptyComponent={
                 <Text style={styles.emptyText}>게시글이 없습니다.</Text>
@@ -514,13 +523,136 @@ const handleEditPress = (article) => {
                 <Text style={styles.writeButtonText}>글쓰기</Text>
               </TouchableOpacity>
             )}
+    
+            {/* 게시글 상세 보기 모달 */}
+            <Modal
+  visible={isModalVisible}
+  transparent={true}
+  animationType="slide"
+  onRequestClose={closeModal}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContent}>
+      {/* selectedArticle이 null이 아닐 때만 FlatList 렌더링 */}
+      {selectedArticle ? (
+        <FlatList
+          data={[{ key: "header" }, ...comments]} // 헤더와 댓글 데이터 결합
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => {
+            // 헤더 렌더링
+            if (item.key === "header") {
+              return (
+                <>
+                  <Text style={styles.modalTitle}>{selectedArticle.title}</Text>
+                  <Text style={styles.modalAuthor}>
+                    작성자: {selectedArticle.userName || "Unknown"}
+                  </Text>
+                  <Text style={styles.modalBody}>{selectedArticle.content}</Text>
+                  <Text style={styles.commentTitle}>댓글</Text>
+                </>
+              );
+            }
+            // 댓글 렌더링
+            return (
+              <View style={styles.commentItemContainer}>
+                <Text style={styles.commentUser}>
+                  {item.nickname || "익명"}:
+                </Text>
+                <Text style={styles.commentItem}>{item.content}</Text>
+              </View>
+            );
+          }}
+          ListFooterComponent={
+            <View style={styles.commentInputContainer}>
+              <TextInput
+                style={styles.commentInput}
+                placeholder="댓글 작성..."
+                value={newComment}
+                onChangeText={setNewComment}
+              />
+              <TouchableOpacity
+                style={styles.commentButton}
+                onPress={handleAddComment}
+              >
+                <Text style={styles.commentButtonText}>댓글 추가</Text>
+              </TouchableOpacity>
+            </View>
+          }
+        />
+      ) : (
+        // 데이터 로딩 또는 예외 처리
+        <Text style={styles.emptyText}>데이터를 불러오는 중...</Text>
+      )}
+
+      {/* 닫기 버튼 */}
+      <TouchableOpacity
+        onPress={() => {
+          setNewComment(""); // 입력창 초기화
+          closeModal(); // 모달 닫기
+        }}
+        style={styles.closeButton}
+      >
+        <Text style={styles.closeButtonText}>닫기</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
+
           </>
         )}
       </View>
     );
     
+    
   };
   
+
+   
+
+  // 댓글 불러오기
+  const fetchComments = async (id) => {
+    try {
+      const response = await axios.get(`http://localhost:8080/api/comments/article/${id}`);
+      console.log("댓글 데이터:", response.data); // 응답 데이터 로그 확인
+      setComments(response.data);
+    } catch (error) {
+      console.error("댓글 데이터를 불러오는 중 오류 발생:", error);
+      Alert.alert("오류", "댓글 데이터를 불러올 수 없습니다.");
+    }
+  };
+
+  // 댓글 추가
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return;
+
+    try {
+      const response = await axios.post(`http://localhost:8080/api/comments/article`, {
+        postId: selectedArticle.id,
+        content: newComment,
+      });
+      setComments((prevComments) => [...prevComments, response.data]);
+      setNewComment("");
+    } catch (error) {
+      console.error("댓글 작성 중 오류 발생:", error);
+      Alert.alert("오류", "댓글 작성에 실패했습니다.");
+    }
+  };
+
+  // 게시글 클릭 시 모달 열기
+  const handleArticlePress = (article) => {
+    setSelectedArticle(article);
+    setIsModalVisible(true);
+    fetchComments(article.id);
+  };
+
+  // 모달 닫기
+  const closeModal = () => {
+    setSelectedArticle(null);
+    setIsModalVisible(false);
+    setComments([]);
+  };
+
   
   
   
@@ -754,7 +886,99 @@ const handleEditPress = (article) => {
 };
 
 const styles = StyleSheet.create({
-
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+    maxHeight: "80%",
+  },
+  modalScroll: {
+    flexGrow: 1,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 8,
+    textAlign: "left",
+  },
+  modalAuthor: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 16,
+    textAlign: "left",
+  },
+  modalBody: {
+    fontSize: 16,
+    marginBottom: 16,
+    textAlign: "left",
+  },
+  commentSection: {
+    flex: 1,
+    marginBottom: 16,
+  },
+  commentTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  commentItemContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  commentUser: {
+    fontWeight: "bold",
+    marginRight: 8,
+  },
+  commentItem: {
+    flexShrink: 1,
+  },
+  commentInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 16,
+  },
+  commentInput: {
+    flex: 1,
+    height: 40,
+    borderColor: "#ddd",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginRight: 8,
+  },
+  commentButton: {
+    backgroundColor: "#007BFF",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  commentButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  closeButton: {
+    marginTop: 16,
+    paddingVertical: 12,
+    backgroundColor: "#ccc",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  closeButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+  },
+ 
+  
   container: {
     flex: 1,
     backgroundColor: "#f9f9f9",
@@ -1000,35 +1224,6 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     marginBottom: 12,
   },
- 
-  
-
-  
-  
- 
-  
-
-  container: {
-    flex: 1,
-    backgroundColor: "#f9f9f9",
-    padding: 16,
-  },
-  
-  writeButton: {
-    backgroundColor: "#000",
-    padding: 14,
-    alignItems: "center",
-    borderRadius: 8,
-    marginTop: 16,
-  },
-  writeButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  
-
-  
 });
 
 export default ArtistScreen;
