@@ -1,28 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ActivityIndicator, 
-  TouchableOpacity, 
-  FlatList, 
-  Alert 
-} from 'react-native';
-import axios from 'axios';
-import WriteItem from './WriteItem';
-import ArticleModal from './ArticleModal';
-import ArticleForm from './ArticleForm';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+  FlatList,
+  Alert,
+  Modal,
+} from "react-native";
+import axios from "axios";
+import WriteItem from "./WriteItem";
+import ArticleForm from "./ArticleForm";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
 
 interface ArticleData {
-  post_id: number;
+  id: number;
   artist_id: number;
   title: string;
   content: string;
+  categoryType: string;
   created_at: string;
   updated_at?: string;
   userName: string;
+  artistName: string;
 }
 
 interface MyWriteListProps {
@@ -33,240 +35,193 @@ const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
   const [articles, setArticles] = useState<ArticleData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedArticle, setSelectedArticle] = useState<ArticleData | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedArticle, setSelectedArticle] = useState<ArticleData | null>(
+    null
+  );
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
-  const userToken = useSelector((state) => state.auth.token);
+  const userToken = useSelector((state: RootState) => state.auth.token);
+  const userId = useSelector((state: RootState) => state.auth.user);
 
-  // Fetch articles on component mount
+  // 게시글 가져오기
   useEffect(() => {
-    if (!userToken) {
-      setError('로그인이 필요합니다.');
-      setLoading(false);
-      return;
-    }
-
     const fetchArticles = async () => {
+      if (!userToken) {
+        setError("로그인이 필요합니다.");
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
-      setError(null);
-    
       try {
-        const response = await axios.get(`http://localhost:8080/api/articles/user`, {
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-          },
+        const response = await axios.get("http://localhost:8080/api/articles/user", {
+          headers: { Authorization: `Bearer ${userToken}` },
         });
-    
-        if (response.status === 200) {
-          setArticles(response.data);
-        } else {
-          throw new Error(`Unexpected response status: ${response.status}`);
-        }
-      } catch (err: any) {
-        if (err.response?.status === 401) {
-          setError('로그인이 만료되었습니다. 다시 로그인해주세요.');
-        } else if (err.response?.status === 404) {
-          setError('게시글을 찾을 수 없습니다.');
-        } else {
-          setError('네트워크 에러가 발생했습니다. 다시 시도해주세요.');
-        }
+        setArticles(response.data);
+      } catch (err) {
+        setError("게시글을 불러올 수 없습니다.");
       } finally {
         setLoading(false);
       }
     };
-    
 
     fetchArticles();
   }, [userToken]);
 
-  // Delete article
-  const handleDelete = async (id: number) => {
+  // 게시글 수정
+  const handleUpdateArticle = async (
+    title: string,
+    content: string,
+    categoryType: string,
+    concertId: number
+  ) => {
+    if (!selectedArticle) return;
+  
     if (!userToken) {
-      Alert.alert('오류', '로그인이 필요합니다.');
+      Alert.alert("오류", "로그인이 필요합니다. 다시 로그인해주세요.");
       return;
     }
+  
+    try {
+      const updatedArticle = {
+        title,
+        content,
+        categoryType,
+        newConcertId: concertId,
+      };
+  
+      const response = await axios.put(
+        `http://localhost:8080/api/articles/${selectedArticle.id}`,
+        updatedArticle,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        }
+      );
+  
+      // 상태 업데이트
+      setArticles((prev) =>
+        prev.map((a) =>
+          a.id === selectedArticle.id ? { ...a, ...response.data } : a
+        )
+      );
+  
+      setIsEditing(false);
+      setSelectedArticle(null);
+      Alert.alert("성공", "게시글이 수정되었습니다.");
+    } catch (err) {
+      console.error("게시글 수정 오류:", err.response?.data || err.message);
+      Alert.alert("오류", "게시글 수정에 실패했습니다.");
+    }
+  };
+  
+  
 
-    Alert.alert('확인', '정말로 삭제하시겠습니까?', [
-      { text: '취소', style: 'cancel' },
+  // 게시글 삭제
+  const handleDelete = async (article: ArticleData) => {
+    Alert.alert("확인", "정말로 삭제하시겠습니까?", [
+      { text: "취소", style: "cancel" },
       {
-        text: '확인',
+        text: "삭제",
         onPress: async () => {
           try {
-            const response = await axios.delete(`/api/articles/${id}`, {
-              headers: {
-                Authorization: `Bearer ${userToken}`,
-              },
+            await axios.delete(`http://localhost:8080/api/articles/${article.id}`, {
+              headers: { Authorization: `Bearer ${userToken}` },
             });
-
-            if (response.status === 200) {
-              setArticles((prevArticles) =>
-                prevArticles.filter((article) => article.post_id !== id)
-              );
-              setIsModalOpen(false);
-              Alert.alert('성공', '게시글이 삭제되었습니다.');
-            } else {
-              Alert.alert('오류', '게시글 삭제에 실패했습니다.');
-            }
+            setArticles((prev) =>
+              prev.filter((a) => a.id !== article.id)
+            );
+            Alert.alert("성공", "게시글이 삭제되었습니다.");
           } catch (err) {
-            console.error('게시글 삭제 실패:', err.message);
-            Alert.alert('오류', '게시글 삭제에 실패했습니다.');
+            Alert.alert("오류", "게시글 삭제에 실패했습니다.");
           }
         },
       },
     ]);
   };
 
-  // Edit article
-  const handleEdit = async (id: number, title: string, content: string) => {
-    if (!token) {
-      Alert.alert('오류', '로그인이 필요합니다.');
-      return;
-    }
-
-    try {
-      const updatedArticle = { title, content };
-
-      const response = await axios.put(`/api/articles/${id}`, updatedArticle, {
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      });
-
-      if (response.status === 200) {
-        setArticles((prevArticles) =>
-          prevArticles.map((article) =>
-            article.post_id === id ? { ...article, ...response.data } : article
-          )
-        );
-        setIsEditing(false);
-        setSelectedArticle(null);
-        Alert.alert('성공', '게시글이 수정되었습니다.');
-      } else {
-        Alert.alert('오류', '게시글 수정에 실패했습니다.');
-      }
-    } catch (err) {
-      console.error('게시글 수정 실패:', err.message);
-      Alert.alert('오류', '게시글 수정에 실패했습니다.');
-    }
-  };
-
-  // Modal open/close handlers
-  const openModal = (article: ArticleData) => {
+  // 수정 시작
+  const handleEdit = (article: ArticleData) => {
     setSelectedArticle(article);
-    setIsModalOpen(true);
+    setIsEditing(true);
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedArticle(null);
-  };
-
-  // Render states
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#888" />
-        <Text style={styles.loadingText}>로딩 중...</Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
-    );
-  }
-
-  if (articles.length === 0) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.noArticlesText}>게시글이 없습니다.</Text>
-      </View>
-    );
-  }
-
-  // Visible articles based on isExpanded
-  const visibleArticles = isExpanded ? articles : articles.slice(0, 2);
+  if (loading) return <ActivityIndicator style={styles.centered} size="large" />;
+  if (error) return <Text style={styles.errorText}>{error}</Text>;
 
   return (
-    <>
+    <View style={styles.container}>
      <FlatList
-  data={visibleArticles}
-  keyExtractor={(item) => item?.post_id?.toString() || `unknown-${Math.random()}`}
+  data={isExpanded ? articles : articles.slice(0, 2)}
+  keyExtractor={(item, index) =>
+    item?.id?.toString() || `fallback-key-${index}`
+  }
   renderItem={({ item }) => (
-    <TouchableOpacity
-      onPress={() => openModal(item)}
-      style={styles.itemContainer}
-    >
-      <WriteItem
-        title={item.title}
-        content={item.content}
-        nickname={item.userName || '익명'}
-      />
-    </TouchableOpacity>
-  )}
-  contentContainerStyle={styles.listContainer}
-  ListEmptyComponent={() => (
-    <View style={styles.centered}>
-      <Text style={styles.noArticlesText}>게시글이 없습니다.</Text>
-    </View>
+    <WriteItem
+      title={item.title}
+      content={item.content}
+      nickname={item.userName || "익명"}
+      artistName={`아티스트: ${item.artistName || "정보 없음"}`}
+      onEdit={() => handleEdit(item)}
+      onDelete={() => handleDelete(item)}
+    />
   )}
 />
 
-      {isModalOpen && selectedArticle && !isEditing && (
-        <ArticleModal
-          article={selectedArticle}
-          onClose={closeModal}
-          onEdit={() => setIsEditing(true)}
-          onDelete={() => handleDelete(selectedArticle.post_id)}
-        />
-      )}
-      {isEditing && selectedArticle && (
-        <ArticleForm
-          mode="edit"
-          token={userToken} // 유효한 token을 전달
 
-          initialTitle={selectedArticle.title}
-          initialContent={selectedArticle.content}
-          onSubmit={(title, content) =>
-            handleEdit(selectedArticle.post_id, title, content)
-          }
-          onCancel={() => setIsEditing(false)}
-        />
+      {/* 수정 폼 */}
+      {isEditing && selectedArticle && (
+        <Modal visible={isEditing} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <ArticleForm
+                mode="edit"
+                initialTitle={selectedArticle.title}
+                initialContent={selectedArticle.content}
+                initialCategoryType={selectedArticle.categoryType}
+                fixedArtistId={selectedArticle.artist_id}
+                token={userToken}
+                userId={userId}
+                onSubmit={handleUpdateArticle}
+                onCancel={() => {
+                  setIsEditing(false);
+                  setSelectedArticle(null);
+                }}
+              />
+            </View>
+          </View>
+        </Modal>
       )}
-    </>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+  },
   centered: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 8,
-    fontSize: 16,
-    color: '#888',
+    justifyContent: "center",
+    alignItems: "center",
   },
   errorText: {
     fontSize: 16,
-    color: 'red',
+    color: "red",
   },
-  noArticlesText: {
-    fontSize: 16,
-    color: '#888',
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  itemContainer: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  listContainer: {
-    paddingBottom: 16,
+  modalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    width: "90%",
   },
 });
 

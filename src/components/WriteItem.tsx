@@ -5,29 +5,28 @@ interface WriteItemProps {
   title: string;
   content: string;
   nickname: string;
-  onPress?: () => void;
-  onEdit?: () => void; // 수정 핸들러
-  onDelete?: () => void; // 삭제 핸들러
+  artistName: string;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 const WriteItem: React.FC<WriteItemProps> = ({
   title,
   content,
   nickname,
-  onPress,
+  artistName,
   onEdit,
   onDelete,
 }) => {
   return (
-    <TouchableOpacity onPress={onPress} style={styles.container}>
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.content}>{content}</Text>
-      </View>
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>{`작성자 | ${nickname}`}</Text>
-      </View>
-      <View style={styles.buttonRow}>
+    <View style={styles.container}>
+      <Text style={styles.artistName}>{artistName}</Text>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.content}>{content}</Text>
+      <Text style={styles.footer}>{`작성자 | ${nickname}`}</Text>
+
+      {/* 수정 및 삭제 버튼 */}
+      <View style={styles.buttonContainer}>
         <TouchableOpacity onPress={onEdit} style={styles.editButton}>
           <Text style={styles.buttonText}>수정</Text>
         </TouchableOpacity>
@@ -35,69 +34,64 @@ const WriteItem: React.FC<WriteItemProps> = ({
           <Text style={styles.buttonText}>삭제</Text>
         </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#ffffff",
-    borderRadius: 8,
+    backgroundColor: "#fff",
     padding: 16,
-    marginBottom: 12,
+    marginVertical: 8,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#eeeeee",
+    borderColor: "#ddd",
     shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
   },
-  contentContainer: {
-    marginBottom: 8,
+  artistName: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#007BFF",
+    marginBottom: 4,
   },
   title: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#333333",
-    marginBottom: 4,
+    marginBottom: 8,
+    color: "#333",
   },
   content: {
     fontSize: 14,
-    color: "#666666",
-    lineHeight: 20,
+    color: "#555",
+    marginBottom: 8,
   },
   footer: {
-    marginTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#f2f2f2",
-    paddingTop: 8,
-  },
-  footerText: {
     fontSize: 12,
-    color: "#999999",
+    color: "#888",
     textAlign: "right",
   },
-  buttonRow: {
+  buttonContainer: {
     flexDirection: "row",
     justifyContent: "flex-end",
     marginTop: 10,
   },
   editButton: {
-    backgroundColor: "#007BFF",
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    backgroundColor: "#80B5E7",
+    padding: 8,
     borderRadius: 4,
     marginRight: 8,
   },
   deleteButton: {
-    backgroundColor: "#FF4D4F",
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    backgroundColor: "#ED9CA5",
+    padding: 8,
     borderRadius: 4,
   },
   buttonText: {
-    color: "#ffffff",
+    color: "#fff",
     fontSize: 12,
     fontWeight: "bold",
   },

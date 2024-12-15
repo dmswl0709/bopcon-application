@@ -61,8 +61,7 @@ export const loginUser = createAsyncThunk(
 
       return { token: storedToken, user: storedNickname, id: storedUserId };
     } catch (error) {
-      console.error("[로그인 실패]:", error.message || error);
-      return rejectWithValue("로그인 중 오류가 발생했습니다.");
+            return rejectWithValue("로그인 중 오류가 발생했습니다.");
     }
   }
 );

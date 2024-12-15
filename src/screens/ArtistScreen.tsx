@@ -345,16 +345,55 @@ const handleEditPress = (article) => {
   };
 
    // 수정 완료 이벤트
-   const handleUpdateArticle = (title, content) => {
-    const updatedArticles = boardArticles.map((article) =>
-      article.id === selectedArticle.id
-        ? { ...article, title, content }
-        : article
-    );
-    setBoardArticles(updatedArticles);
-    setIsEditing(false);
-    setSelectedArticle(null);
+   const handleUpdateArticle = async (
+    title,
+    content,
+    categoryType,
+    artistId,
+    concertId,
+    token,
+    userId
+  ) => {
+    try {
+      const updatedArticle = {
+        title,
+        content,
+        categoryType,
+        newConcertId: concertId,
+      };
+  
+      console.log("수정 요청 데이터:", updatedArticle);
+  
+      const response = await axios.put(
+        `http://localhost:8080/api/articles/${selectedArticle.id}`,
+        updatedArticle,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+  
+      console.log("수정된 게시글 응답:", response.data);
+  
+      // 수정된 게시글로 상태 업데이트
+      setBoardArticles((prev) =>
+        prev.map((article) =>
+          article.id === selectedArticle.id
+            ? { ...article, ...response.data } // 수정된 데이터 반영
+            : article
+        )
+      );
+  
+      setIsEditing(false);
+      setSelectedArticle(null);
+      Alert.alert("성공", "게시글이 수정되었습니다.");
+    } catch (error) {
+      console.error(
+        "게시글 수정 오류:",
+        error.response?.data || error.message
+      );
+      Alert.alert("오류", "게시글 수정에 실패했습니다.");
+    }
   };
+  
+  
 
   const handleEditArticle = (article: Article) => {
     if (article.userId !== userId) {
@@ -375,90 +414,114 @@ const handleEditPress = (article) => {
         <ArticleForm
           mode="create"
           fixedArtistId={artistId}
-          token={token} // 유효한 token을 전달
+          token={token}
           userId={userId}
-          onSubmit={handleCreateArticle} // 글쓰기 완료 시 호출
-          onCancel={() => setIsCreating(false)} // 취소 시 글쓰기 모드 종료
+          onSubmit={handleCreateArticle}
+          onCancel={() => setIsCreating(false)}
         />
       );
     }
   
+    if (isEditing && selectedArticle) {
+      // 수정 모드
+      return (
+        <ArticleForm
+          mode="edit"
+          initialTitle={selectedArticle.title}
+          initialContent={selectedArticle.content}
+          initialCategoryType={selectedArticle.categoryType}
+          fixedArtistId={selectedArticle.artistId}
+          token={token}
+          userId={userId}
+          onSubmit={handleUpdateArticle} // 수정 로직 전달
+          onCancel={() => {
+            setIsEditing(false);
+            setSelectedArticle(null);
+          }}
+        />
+      );
+    }
+  
+    // 게시글 목록
     return (
       <View style={styles.container}>
-        {isEditing && selectedArticle ? (
+        {isCreating ? (
           <ArticleForm
-            mode="edit"
-            initialTitle={selectedArticle.title}
-            initialContent={selectedArticle.content}
-            onSubmit={(title, content) => handleUpdateArticle(title, content)}
-            onCancel={() => setIsEditing(false)}
+            mode="create"
+            fixedArtistId={artistId}
+            token={token}
+            userId={userId}
+            onSubmit={handleCreateArticle} // 글쓰기 완료 핸들러
+            onCancel={() => setIsCreating(false)} // 글쓰기 모드 취소
           />
         ) : (
-          <FlatList
-            data={boardArticles}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.boardItemContainer}>
-                <View style={styles.headerRow}>
-                  <Text style={styles.boardTitle}>{item.title}</Text>
-                  {item.userName === user && (
-                    <View style={styles.boardActions}>
-                      {/* 수정 버튼 */}
-                      <TouchableOpacity
-                        style={styles.editButton}
-                        onPress={() => handleEditPress(item)}
-                      >
-                        <Text style={styles.actionText}>수정</Text>
-                      </TouchableOpacity>
-    
-                      {/* 삭제 버튼 */}
-                      <TouchableOpacity
-                        style={styles.deleteButton}
-                        onPress={() => handleDeleteArticle(item)} // 삭제 핸들러 호출
-                      >
-                        <Text style={styles.actionText}>삭제</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </View>
-    
-                {/* 게시글 내용 */}
-                <TouchableOpacity
-                  onPress={() => console.log(item)} // 상세 화면 이동 로직 추가 가능
-                  style={styles.boardItemContent}
-                >
-                  <Text style={styles.boardContent} numberOfLines={2}>
-                    {item.content}
-                  </Text>
-                  <View style={styles.boardFooter}>
-                    <Text style={styles.boardFooterText}>
-                      작성자 | {item.userName || "Unknown"}
-                    </Text>
+          <>
+            <FlatList
+              data={boardArticles}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <View style={styles.boardItemContainer}>
+                  <View style={styles.headerRow}>
+                    <Text style={styles.boardTitle}>{item.title}</Text>
+                    {item.userName === user && (
+                      <View style={styles.boardActions}>
+                        <TouchableOpacity
+                          style={styles.editButton}
+                          onPress={() => {
+                            setIsEditing(true);
+                            setSelectedArticle(item);
+                          }}
+                        >
+                          <Text style={styles.actionText}>수정</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.deleteButton}
+                          onPress={() => handleDeleteArticle(item)}
+                        >
+                          <Text style={styles.actionText}>삭제</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </View>
-                </TouchableOpacity>
-              </View>
-            )}
-            ListEmptyComponent={
-              <Text style={styles.emptyText}>게시글이 없습니다.</Text>
-            }
-          />
-        )}
     
-        {/* 글쓰기 버튼 */}
-        {!isEditing && (
-          <TouchableOpacity
-            style={styles.writeButton}
-            onPress={() => setIsCreating(true)}
-          >
-            <Text style={styles.writeButtonText}>글쓰기</Text>
-          </TouchableOpacity>
+                  {/* 게시글 내용 */}
+                  <TouchableOpacity
+                    onPress={() => console.log(item)} // 상세 화면 이동 로직
+                    style={styles.boardItemContent}
+                  >
+                    <Text style={styles.boardContent} numberOfLines={2}>
+                      {item.content}
+                    </Text>
+                    <View style={styles.boardFooter}>
+                      <Text style={styles.boardFooterText}>
+                        작성자 | {item.userName || "Unknown"}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              )}
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>게시글이 없습니다.</Text>
+              }
+            />
+    
+            {/* 글쓰기 버튼 */}
+            {!isEditing && !isCreating && (
+              <TouchableOpacity
+                style={styles.writeButton}
+                onPress={() => setIsCreating(true)}
+              >
+                <Text style={styles.writeButtonText}>글쓰기</Text>
+              </TouchableOpacity>
+            )}
+          </>
         )}
       </View>
     );
     
-    
-
   };
+  
+  
   
   
 
