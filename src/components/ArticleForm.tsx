@@ -10,30 +10,9 @@ import {
   FlatList,
 } from "react-native";
 import { useSelector } from "react-redux";
+import { useNavigation } from "@react-navigation/native"; // navigation 추가
 
-interface ArticleFormProps {
-  mode: "create" | "edit";
-  initialTitle?: string;
-  initialContent?: string;
-  initialCategoryType?: "FREE_BOARD" | "NEW_CONCERT";
-  fixedArtistId?: number | null;
-  artistName?: string;
-  initialNewConcertId?: number | null;
-  token: string;
-  userId: number;
-  onSubmit: (
-    title: string,
-    content: string,
-    categoryType: "FREE_BOARD" | "NEW_CONCERT",
-    artistId: number | null,
-    newConcertId: number | null,
-    token: string,
-    userId: number
-  ) => void;
-  onCancel: () => void;
-}
-
-const ArticleForm: React.FC<ArticleFormProps> = ({
+const ArticleForm = ({
   mode,
   initialTitle = "",
   initialContent = "",
@@ -42,17 +21,17 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
   artistName,
   initialNewConcertId = null,
   token,
+  userId,
   onSubmit,
   onCancel,
 }) => {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
   const [categoryType, setCategoryType] = useState(initialCategoryType);
-  const [newConcertId, setNewConcertId] = useState<number | null>(
-    initialNewConcertId
-  );
+  const [newConcertId, setNewConcertId] = useState(initialNewConcertId);
   const [isModalVisible, setModalVisible] = useState(false);
-  const userId = useSelector((state: any) => state.auth.userId);
+
+  const navigation = useNavigation(); // navigation 사용
 
   const handleSubmit = async () => {
     if (!token || token.trim() === "") {
@@ -164,7 +143,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
                 <TouchableOpacity
                   style={styles.modalItem}
                   onPress={() => {
-                    setCategoryType(item.value as "FREE_BOARD" | "NEW_CONCERT");
+                    setCategoryType(item.value);
                     setModalVisible(false);
                   }}
                 >
@@ -284,7 +263,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   submitButton: {
-    backgroundColor: "#000",
+    backgroundColor: "#007BFF",
     padding: 12,
     borderRadius: 8,
     flex: 1,

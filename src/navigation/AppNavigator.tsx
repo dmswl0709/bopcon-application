@@ -19,6 +19,8 @@ import MyPageScreen from '../screens/MyPageScreen';
 import SearchScreen from '../screens/SearchScreen';
 
 
+
+
 const Stack = createStackNavigator<AppNavigationParamList>();
 
 const AppNavigator = () => {
@@ -38,6 +40,8 @@ const AppNavigator = () => {
           <Stack.Screen name="ArtistScreen" component={ArtistScreen} />
           <Stack.Screen name="MyPageScreen" component={MyPageScreen} />
           <Stack.Screen name="SearchScreen" component={SearchScreen} />
+          
+
 
         </Stack.Navigator>
         <StatusBar style="auto" />

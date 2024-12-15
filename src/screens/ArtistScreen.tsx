@@ -328,6 +328,34 @@ useEffect(() => {
     </View>
   );
 
+  // 수정 버튼 핸들러 함수
+const handleEditPress = (article) => {
+  if (article.userName !== user) {
+    Alert.alert("권한 없음", "다른 사용자의 게시글은 수정할 수 없습니다.");
+    return;
+  }
+
+  setIsEditing(true);
+  setSelectedArticle(article); // 선택된 게시글 상태 설정
+};
+
+  const handleCancelEdit = () => {
+    setIsEditing(false); // 수정 모드 비활성화
+    setSelectedArticle(null); // 선택된 게시글 초기화
+  };
+
+   // 수정 완료 이벤트
+   const handleUpdateArticle = (title, content) => {
+    const updatedArticles = boardArticles.map((article) =>
+      article.id === selectedArticle.id
+        ? { ...article, title, content }
+        : article
+    );
+    setBoardArticles(updatedArticles);
+    setIsEditing(false);
+    setSelectedArticle(null);
+  };
+
   const handleEditArticle = (article: Article) => {
     if (article.userId !== userId) {
       Alert.alert("권한 없음", "다른 사용자의 게시글을 수정할 수 없습니다.");
@@ -357,64 +385,78 @@ useEffect(() => {
   
     return (
       <View style={styles.container}>
-        <FlatList
-          data={boardArticles}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.boardItemContainer}>
-              {/* 게시글 제목과 내용 */}
-              <TouchableOpacity
-                onPress={() => console.log(item)}
-                style={styles.boardItemContent}
-              >
-                <Text style={styles.boardTitle}>{item.title}</Text>
-                <Text style={styles.boardContent} numberOfLines={2}>
-                  {item.content}
-                </Text>
-                <View style={styles.boardFooter}>
-                  <Text style={styles.boardFooterText}>{item.userName || "Unknown"}</Text>
-                  <Text style={styles.boardFooterText}>
-                    {item.likeCount} Likes · {item.commentCount} Comments
-                  </Text>
-                </View>
-              </TouchableOpacity>
+        {isEditing && selectedArticle ? (
+          <ArticleForm
+            mode="edit"
+            initialTitle={selectedArticle.title}
+            initialContent={selectedArticle.content}
+            onSubmit={(title, content) => handleUpdateArticle(title, content)}
+            onCancel={() => setIsEditing(false)}
+          />
+        ) : (
+          <FlatList
+            data={boardArticles}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <View style={styles.boardItemContainer}>
+                <View style={styles.headerRow}>
+                  <Text style={styles.boardTitle}>{item.title}</Text>
+                  {item.userName === user && (
+                    <View style={styles.boardActions}>
+                      {/* 수정 버튼 */}
+                      <TouchableOpacity
+                        style={styles.editButton}
+                        onPress={() => handleEditPress(item)}
+                      >
+                        <Text style={styles.actionText}>수정</Text>
+                      </TouchableOpacity>
     
-              {/* 수정/삭제 버튼: 작성자의 userName이 현재 사용자와 같을 경우에만 표시 */}
-              {item.userName === user && (
-                <View style={styles.boardActions}>
-                  <TouchableOpacity
-                    style={styles.editButton}
-                    onPress={() => {
-                      setIsEditing(true);
-                      setSelectedArticle(item);
-                    }}
-                  >
-                    <Text style={styles.actionText}>수정</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => handleDeleteArticle(item)}
-                  >
-                    <Text style={styles.actionText}>삭제</Text>
-                  </TouchableOpacity>
+                      {/* 삭제 버튼 */}
+                      <TouchableOpacity
+                        style={styles.deleteButton}
+                        onPress={() => handleDeleteArticle(item)} // 삭제 핸들러 호출
+                      >
+                        <Text style={styles.actionText}>삭제</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
-              )}
-            </View>
-          )}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>게시글이 없습니다.</Text>
-          }
-        />
+    
+                {/* 게시글 내용 */}
+                <TouchableOpacity
+                  onPress={() => console.log(item)} // 상세 화면 이동 로직 추가 가능
+                  style={styles.boardItemContent}
+                >
+                  <Text style={styles.boardContent} numberOfLines={2}>
+                    {item.content}
+                  </Text>
+                  <View style={styles.boardFooter}>
+                    <Text style={styles.boardFooterText}>
+                      작성자 | {item.userName || "Unknown"}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            )}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>게시글이 없습니다.</Text>
+            }
+          />
+        )}
     
         {/* 글쓰기 버튼 */}
-        <TouchableOpacity
-          style={styles.writeButton}
-          onPress={() => setIsCreating(true)}
-        >
-          <Text style={styles.writeButtonText}>글쓰기</Text>
-        </TouchableOpacity>
+        {!isEditing && (
+          <TouchableOpacity
+            style={styles.writeButton}
+            onPress={() => setIsCreating(true)}
+          >
+            <Text style={styles.writeButtonText}>글쓰기</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
+    
+    
 
   };
   
@@ -650,76 +692,94 @@ useEffect(() => {
 
 const styles = StyleSheet.create({
 
-
+  container: {
+    flex: 1,
+    backgroundColor: "#f9f9f9",
+    paddingHorizontal: 16,
+  },
   boardItemContainer: {
+    padding: 16, // 게시글 전체 패딩
     backgroundColor: "#fff",
     borderRadius: 8,
-    padding: 16,
-    marginVertical: 8,
+    marginVertical: 8, // 게시글 간 간격
     shadowColor: "#000",
-    shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 4,
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
     elevation: 2,
-    borderWidth: 1,
-    borderColor: "#ddd",
   },
-  boardItemContent: {
-    marginBottom: 12,
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8, // 제목과 내용 사이 간격
   },
   boardTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
-    color: "#333",
-    marginBottom: 8,
+    flex: 1, // 제목이 버튼을 밀지 않도록 flex로 공간 확보
+    marginRight: 8, // 버튼과 간격
+  },
+  boardActions: {
+    flexDirection: "row",
+  },
+  editButton: {
+    marginRight: 8,
+    backgroundColor: "#80B5E7",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+  },
+  deleteButton: {
+    backgroundColor: "#ED9CA5",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+  },
+  actionText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  boardItemContent: {
+    marginTop: 8, // 제목과 내용 사이 간격
   },
   boardContent: {
     fontSize: 14,
-    color: "#666",
-    lineHeight: 20,
+    color: "#555",
+    marginBottom: 8, // 내용과 작성자 정보 사이 간격
   },
   boardFooter: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#f2f2f2",
-    paddingTop: 8,
+    justifyContent: "flex-start",
   },
   boardFooterText: {
     fontSize: 12,
     color: "#999",
   },
-  boardActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 8,
-  },
-  editButton: {
-    marginRight: 8,
-    backgroundColor: "#007BFF",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-  },
-  deleteButton: {
-    backgroundColor: "#FF5252",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-  },
-  actionText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 14,
-  },
   emptyText: {
     textAlign: "center",
+    color: "#555",
     fontSize: 16,
-    color: "#999",
     marginTop: 20,
   },
+  writeButton: {
+    backgroundColor: "#000",
+    padding: 14,
+    alignItems: "center",
+    marginVertical: 16,
+    borderRadius: 8,
+  },
+  writeButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 
+
+ 
+
+  
   headerContainer: {
     marginTop: -55,
     paddingHorizontal: 16,
