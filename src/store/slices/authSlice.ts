@@ -42,12 +42,14 @@ export const loginUser = createAsyncThunk(
       console.log("[AsyncStorage에 저장 시작]:", { accessToken, id, nickname });
 
       // AsyncStorage에 저장
+      console.log('AsyncStorage에 저장할 토큰:', accessToken); // 저장하려는 토큰 확인
       await AsyncStorage.setItem("authToken", accessToken);
       await AsyncStorage.setItem("userNickname", nickname);
       await AsyncStorage.setItem("userId", id.toString()); // 숫자를 문자열로 변환하여 저장
 
       // 저장된 데이터 확인
       const storedToken = await AsyncStorage.getItem("authToken");
+      console.log('AsyncStorage에 저장된 토큰:', storedToken); // 저장된 토큰 확인
       const storedNickname = await AsyncStorage.getItem("userNickname");
       const storedUserId = await AsyncStorage.getItem("userId");
 
@@ -65,10 +67,6 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-
-
-
-
 // 로그아웃 비동기 액션
 export const logoutUser = createAsyncThunk('auth/logoutUser', async (_, { dispatch }) => {
   try {
@@ -83,11 +81,15 @@ export const logoutUser = createAsyncThunk('auth/logoutUser', async (_, { dispat
 
 // Redux Slice 생성
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState: {
     user: null,
     token: null,
     userId: null,
+    favorites: {
+      artists: [], // 빈 배열로 초기화
+      concerts: [], // 빈 배열로 초기화
+    },
     loading: false,
     error: null,
   },
@@ -126,7 +128,37 @@ const authSlice = createSlice({
       });
   },
 });
+// 좋아요 상태 변경 (즐겨찾기 추가/삭제)
+export const toggleFavoriteOnServer = createAsyncThunk(
+  "auth/toggleFavorite",
+  async (
+    { id, type }: { id: number; type: "artist" | "concert" },
+    { rejectWithValue, getState }
+  ) => {
+    try {
+      const token = await AsyncStorage.getItem("authToken");
+      if (!token) throw new Error("로그인 토큰이 없습니다.");
 
+      const endpoint =
+        type === "artist"
+          ? `${API_BASE_URL}/favorites/artist/${id}`
+          : `${API_BASE_URL}/favorites/concert/${id}`;
+
+      const method = type === "artist" ? "post" : "delete";
+      const response = await axios({
+        method,
+        url: endpoint,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("즐겨찾기 요청 응답:", response.data);
+      return { id, type };
+    } catch (error: any) {
+      console.error("[좋아요 요청 오류]:", error.message || error);
+      return rejectWithValue("좋아요 요청 중 오류가 발생했습니다.");
+    }
+  }
+);
 
 // 액션 및 리듀서 내보내기
 export const { logout, setAuthState } = authSlice.actions;

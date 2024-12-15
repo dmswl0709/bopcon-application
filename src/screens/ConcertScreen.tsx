@@ -121,8 +121,13 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
             <Text style={styles.title}>{concertData.title}</Text>
             <Text style={styles.subTitle}>{concertData.subTitle}</Text>
           </View>
-          <FavoriteButton id={concertId} type="concert" />
-        </View>
+          <FavoriteButton
+              id={concertId}
+              type="concert"
+              newConcertId={concertData?.newConcertId || null} // newConcertId 전달
+              artistId={concertData?.artistId || null} // artistId 전달
+            />
+          </View>
 
         <View style={styles.infoContainer}>
           <View style={styles.infoRow}>
