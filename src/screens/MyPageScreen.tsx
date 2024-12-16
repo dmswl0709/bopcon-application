@@ -28,7 +28,7 @@ const MyPageScreen = () => {
   const [isExpanded, setIsExpanded] = useState([false, false, false, false]);
   const [loading, setLoading] = useState(true);
 
-  const dispatch = useDispatch(); 
+  const dispatch = useDispatch();
   const navigation = useNavigation();
   const { user, token } = useSelector((state: RootState) => state.auth);
 
@@ -92,6 +92,7 @@ const MyPageScreen = () => {
             <View style={styles.spacer} />
             <GlobalList title="댓글" />
             <View style={styles.contentWrapper}>
+              {/* 댓글을 표시하는 컴포넌트를 여기 추가 */}
               <MyCommentList isExpanded={isExpanded[3]} />
             </View>
             <MoreButton
@@ -165,6 +166,7 @@ const MyPageScreen = () => {
     />
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

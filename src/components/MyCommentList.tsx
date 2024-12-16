@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, FlatList } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store'; // Redux 스토어 타입
-import WriteItem from './WriteItem'; // React Native로 변환된 WriteItem 컴포넌트를 가져옵니다.
 
 interface CommentData {
   nickname: string;
   comment_id: number; // Comment ID
-  post_id: number; // Post ID
+  article_id: number; // Post ID
   content: string; // 댓글 내용
   created_at: string; // 생성일
   updated_at?: string; // 수정일 (Optional)
+  artist_name: string; // 아티스트 이름
+  article_title: string; // 게시글 제목
 }
 
 interface MyCommentListProps {
@@ -34,7 +35,7 @@ const MyCommentList: React.FC<MyCommentListProps> = ({ isExpanded }) => {
 
     setLoading(true);
     axios
-      .get(`/api/comments/user`, {
+      .get(`https://api.bopcon.site/api/comments/user`, {
         headers: {
           Authorization: `Bearer ${token}`, // 토큰만 Authorization 헤더에 추가
         },
@@ -80,19 +81,29 @@ const MyCommentList: React.FC<MyCommentListProps> = ({ isExpanded }) => {
 
   return (
     <FlatList
-      data={visibleComments}
-      keyExtractor={(item) => item.comment_id.toString()}
-      renderItem={({ item }) => (
-        <WriteItem
-          key={item.comment_id}
-          title={item.content}
-          nickname={item.nickname}
-          content={''} // 필요한 경우 내용을 추가
-          date={item.created_at} // 작성일 추가
-        />
-      )}
-      contentContainerStyle={styles.listContainer}
-    />
+  data={visibleComments}
+  keyExtractor={(item) => (item.comment_id ? item.comment_id.toString() : `default_key_${item.article_id}`)}  // comment_id가 없을 경우 대체 값 사용
+  renderItem={({ item }) => (
+    <View style={styles.commentCard}>
+      <Text style={styles.artistName}>아티스트: {item.artist_name}</Text> {/* 아티스트 이름 */}
+      <Text style={styles.postTitle}>게시글 제목: {item.article_title}</Text> {/* 게시글 제목 */}
+      <Text style={styles.commentText}>{item.content}</Text>
+      <View style={styles.footer}>
+        <Text style={styles.nickname}>{item.nickname}</Text>
+        <Text style={styles.date}>{item.created_at}</Text>
+      </View>
+      <View style={styles.actions}>
+        <TouchableOpacity style={styles.editButton}>
+          <Text style={styles.buttonText}>수정</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.deleteButton}>
+          <Text style={styles.buttonText}>삭제</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  )}
+  contentContainerStyle={styles.listContainer}
+/>
   );
 };
 
@@ -119,6 +130,67 @@ const styles = StyleSheet.create({
   listContainer: {
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  commentCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginBottom: 16,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  artistName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#555',
+    marginBottom: 4,
+  },
+  postTitle: {
+    fontSize: 14,
+    color: '#777',
+    marginBottom: 8,
+  },
+  commentText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 8,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  nickname: {
+    fontSize: 14,
+    color: '#888',
+  },
+  date: {
+    fontSize: 14,
+    color: '#888',
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  editButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  deleteButton: {
+    backgroundColor: '#FF6347',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 14,
   },
 });
 
