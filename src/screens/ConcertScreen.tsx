@@ -104,7 +104,16 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       <Header title="Concert" onBackPress={handleBackPress} />
-      <ScrollView contentContainerStyle={{ paddingBottom: 16 }}>
+      <ScrollView
+            contentContainerStyle={{
+              paddingBottom: 16,
+              flexGrow: 1,
+              justifyContent: "flex-start",
+            }}
+            showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+            horizontal={false}
+          >
         <View style={styles.imageContainer}>
           <Image
             source={
