@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-const API_BASE_URL = 'https://api.bopcon.site/api/auth';
+const API_BASE_URL = 'http://localhost:8080/api/auth';
 
 // 회원가입 비동기 액션
 export const registerUser = createAsyncThunk(
@@ -59,7 +59,7 @@ export const loginUser = createAsyncThunk(
         storedUserId,
       });
 
-      return { token: storedToken, user: storedNickname, id: storedUserId };
+      return { token: storedToken, user: storedNickname, id: storedUserId,  };
     } catch (error) {
             return rejectWithValue("로그인 중 오류가 발생했습니다.");
     }
@@ -162,3 +162,7 @@ export const toggleFavoriteOnServer = createAsyncThunk(
 // 액션 및 리듀서 내보내기
 export const { logout, setAuthState } = authSlice.actions;
 export default authSlice.reducer;
+function jwtDecode<T>(token: any) {
+  throw new Error('Function not implemented.');
+}
+

@@ -574,7 +574,7 @@ const handleEditPress = (article) => {
                 style={styles.commentButton}
                 onPress={handleAddComment}
               >
-                <Text style={styles.commentButtonText}>댓글 추가</Text>
+                <Text style={styles.commentButtonText}>작성</Text>
               </TouchableOpacity>
             </View>
           }
@@ -955,7 +955,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   commentButton: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#000",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
