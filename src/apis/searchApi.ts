@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // API 기본 URL을 설정하세요
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "https://api.bopcon.site";
 
 // 검색 결과 타입 정의
 export interface SearchResult {

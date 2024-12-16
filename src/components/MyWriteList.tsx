@@ -54,7 +54,7 @@ const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
 
       setLoading(true);
       try {
-        const response = await axios.get("http://localhost:8080/api/articles/user", {
+        const response = await axios.get("https://api.bopcon.site/api/articles/user", {
           headers: { Authorization: `Bearer ${userToken}` },
         });
         setArticles(response.data);
@@ -91,7 +91,7 @@ const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
       };
   
       const response = await axios.put(
-        `http://localhost:8080/api/articles/${selectedArticle.id}`,
+        `https://api.bopcon.site/api/articles/${selectedArticle.id}`,
         updatedArticle,
         {
           headers: {
@@ -126,7 +126,7 @@ const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
         text: "삭제",
         onPress: async () => {
           try {
-            await axios.delete(`http://localhost:8080/api/articles/${article.id}`, {
+            await axios.delete(`https://api.bopcon.site/api/articles/${article.id}`, {
               headers: { Authorization: `Bearer ${userToken}` },
             });
             setArticles((prev) =>

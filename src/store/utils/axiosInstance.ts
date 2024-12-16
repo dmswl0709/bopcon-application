@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Axios 인스턴스 생성
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api', // API의 기본 URL 설정
+  baseURL: 'https://api.bopcon.site/api', // API의 기본 URL 설정
   timeout: 5000, // 요청 제한 시간 설정 (5초)
 });
 

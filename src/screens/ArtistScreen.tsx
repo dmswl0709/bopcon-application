@@ -73,7 +73,7 @@ const ArtistScreen = ({ route, navigation }) => {
 
   const fetchBoardArticles = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/articles/artist/${artistId}`, {
+      const response = await axios.get(`https://api.bopcon.site/api/articles/artist/${artistId}`, {
         params: {
           categoryType: "FREE_BOARD", // 필요에 따라 다른 카테고리 타입 사용
         },
@@ -131,7 +131,7 @@ const ArtistScreen = ({ route, navigation }) => {
             );
   
             // 서버로 삭제 요청
-            await axios.delete(`http://localhost:8080/api/articles/${article.id}`, {
+            await axios.delete(`https://api.bopcon.site/api/articles/${article.id}`, {
               headers: { Authorization: `Bearer ${token}` },
             });
   
@@ -162,7 +162,7 @@ useEffect(() => {
   // Fetch Articles Function
   const fetchArticles = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/articles/artist/${artistId}`);
+      const response = await axios.get(`https://api.bopcon.site/api/articles/artist/${artistId}`);
       return response.data.map((article: any) => ({
         id: article.id,
         title: article.title,
@@ -196,7 +196,7 @@ useEffect(() => {
 
     const fetchArtistData = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/artists/${artistId}`);
+        const response = await axios.get(`https://api.bopcon.site/api/artists/${artistId}`);
         console.log("Artist API Response:", response.data);
         setArtistData(response.data);
       } catch (error) {
@@ -241,7 +241,7 @@ useEffect(() => {
         }
 
         console.log(`Fetching song rankings for artistId: ${artistId}`);
-        const response = await axios.get(`http://localhost:8080/api/artists/${artistId}/song-ranking`);
+        const response = await axios.get(`https://api.bopcon.site/api/artists/${artistId}/song-ranking`);
         console.log("Fetched song rankings:", response.data);
 
         setVisibleSongs(response.data || []); // 데이터가 없으면 빈 배열로 설정
@@ -371,7 +371,7 @@ const handleEditPress = (article) => {
       console.log("수정 요청 데이터:", updatedArticle);
   
       const response = await axios.put(
-        `http://localhost:8080/api/articles/${selectedArticle.id}`,
+        `https://api.bopcon.site/api/articles/${selectedArticle.id}`,
         updatedArticle,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -613,7 +613,7 @@ const handleEditPress = (article) => {
   // 댓글 불러오기
   const fetchComments = async (id) => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/comments/article/${id}`);
+      const response = await axios.get(`https://api.bopcon.site/api/comments/article/${id}`);
       console.log("댓글 데이터:", response.data); // 응답 데이터 로그 확인
       setComments(response.data);
     } catch (error) {
@@ -627,7 +627,7 @@ const handleEditPress = (article) => {
     if (!newComment.trim()) return;
 
     try {
-      const response = await axios.post(`http://localhost:8080/api/comments/article`, {
+      const response = await axios.post(`https://api.bopcon.site/api/comments/article`, {
         postId: selectedArticle.id,
         content: newComment,
       });
@@ -718,7 +718,7 @@ const handleEditPress = (article) => {
   
     try {
       const response = await axios.post(
-        `http://localhost:8080/api/articles`,
+        `https://api.bopcon.site/api/articles`,
         requestData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -763,7 +763,7 @@ const handleEditPress = (article) => {
           return;
         }
     
-        const response = await axios.get(`http://localhost:8080/api/artists/${artistId}/past-concerts`);
+        const response = await axios.get(`https://api.bopcon.site/api/artists/${artistId}/past-concerts`);
         console.log("Past concerts response:", response.data); // 응답 데이터 확인
     
         if (Array.isArray(response.data)) {

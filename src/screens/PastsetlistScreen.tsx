@@ -24,7 +24,7 @@ interface PastConcert {
   date: number[]; // Updated to reflect array format, e.g., [2024, 12, 5]
 }
 
-const API_BASE_URL = "http://localhost:8080"; // 개발 환경 URL
+const API_BASE_URL = "https://api.bopcon.site"; // 개발 환경 URL
 
 const PastSetlistScreen: React.FC = () => {
   const route = useRoute<PastSetlistScreenRouteProp>();

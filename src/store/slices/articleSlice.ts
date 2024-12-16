@@ -5,7 +5,7 @@ export const fetchUserArticles = createAsyncThunk(
   'articles/fetchUserArticles',
   async (token: string, { rejectWithValue }) => {
     try {
-      const response = await axios.get('http://localhost:8080/api/articles/user', {
+      const response = await axios.get('https://api.bopcon.site/api/articles/user', {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;

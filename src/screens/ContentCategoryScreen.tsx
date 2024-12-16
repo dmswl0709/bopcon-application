@@ -9,7 +9,7 @@ import axios from "axios";
 
 export type ContentCategoryScreenProps = StackScreenProps<AppNavigationParamList, "ContentCategoryScreen">;
 
-const API_BASE_URL = "http://localhost:8080"; // API 서버 주소
+const API_BASE_URL = "https://api.bopcon.site"; // API 서버 주소
 
 const ContentCategoryScreen = ({ route, navigation }: ContentCategoryScreenProps) => {
   const { name } = route.params; // 전달받은 카테고리 이름

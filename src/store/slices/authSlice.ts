@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api/auth';
+const API_BASE_URL = 'https://api.bopcon.site/api/auth';
 
 // 회원가입 비동기 액션
 export const registerUser = createAsyncThunk(

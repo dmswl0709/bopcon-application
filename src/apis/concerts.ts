@@ -2,7 +2,7 @@
 import axios from "axios";
 
 // API 기본 URL
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "https://api.bopcon.site";
 
 // Concert 데이터 타입 정의
 export interface Concert {
@@ -238,7 +238,7 @@ const fetchConcertsByGenre = async () => {
 
 export const fetchUpcomingConcerts = async (artistId: number) => {
   try {
-    const response = await axios.get(`http://localhost:8080/api/artists/${artistId}/concerts`);
+    const response = await axios.get(`https://api.bopcon.site/api/artists/${artistId}/concerts`);
     console.log("Fetched upcoming concerts:", response.data);
 
     // id가 없는 경우 index를 기반으로 기본 id 생성
@@ -311,7 +311,7 @@ export const fetchSongRanking = async (artistId) => {
   }
 
   try {
-    const response = await axios.get(`http://localhost:8080/api/artists/${artistId}/song-ranking`);
+    const response = await axios.get(`https://api.bopcon.site/api/artists/${artistId}/song-ranking`);
     const topSongs = Object.entries(response.data)
       .sort(([, a], [, b]) => b - a) // 점수 내림차순 정렬
       .slice(0, 10) // 상위 10개 선택

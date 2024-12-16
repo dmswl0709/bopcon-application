@@ -33,7 +33,7 @@ interface SetListScreenProps {
   navigation: any;
 }
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "https://api.bopcon.site";
 
 const SetListScreen: React.FC<SetListScreenProps> = ({ route, navigation }) => {
   const { artistId, pastConcertId, title, cityName, venueName } = route.params;

@@ -26,7 +26,7 @@ export const fetchFavorites = createAsyncThunk(
       const token = await AsyncStorage.getItem("authToken");
       if (!token) throw new Error("로그인 토큰이 없습니다.");
 
-      const response = await axios.get("http://localhost:8080/api/favorites", {
+      const response = await axios.get("https://api.bopcon.site/api/favorites", {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;
@@ -49,8 +49,8 @@ export const toggleFavoriteOnServer = createAsyncThunk(
 
       const endpoint =
         type === "artist"
-          ? `http://localhost:8080/api/favorites/artist/${id}` // artistId와 매칭
-          : `http://localhost:8080/api/favorites/concert/${id}`; // concertId와 매칭
+          ? `https://api.bopcon.site/api/favorites/artist/${id}` // artistId와 매칭
+          : `https://api.bopcon.site/api/favorites/concert/${id}`; // concertId와 매칭
 
       // 요청 데이터 생성
       const requestData =

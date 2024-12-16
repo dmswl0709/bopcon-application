@@ -26,7 +26,7 @@ export const fetchFavorites = createAsyncThunk(
   'artistFavorites/fetchFavorites',
   async (token: string, { rejectWithValue }) => {
     try {
-      const response = await axios.get('http://localhost:8080/api/favorites', {
+      const response = await axios.get('https://api.bopcon.site/api/favorites', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -44,7 +44,7 @@ export const addFavoriteAsync = createAsyncThunk(
   async ({ favorite, token }: { favorite: Favorite; token: string }, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        'http://localhost:8080/api/favorites',
+        'https://api.bopcon.site/api/favorites',
         favorite,
         {
           headers: {

@@ -2,7 +2,7 @@ import axios from "axios";
 
 // React Native 환경에 맞는 API Base URL 설정
 // localhost 대신 실제 서버 IP 주소를 사용해야 함
-const API_BASE_URL = "http://localhost:8080"; // 컴퓨터의 로컬 IP 주소로 변경 필요
+const API_BASE_URL = "https://api.bopcon.site"; // 컴퓨터의 로컬 IP 주소로 변경 필요
 
 // Axios 인스턴스 생성
 const apiClient = axios.create({

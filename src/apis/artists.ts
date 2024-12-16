@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // API URL의 기본 경로를 설정합니다. 환경변수에서 가져오거나 기본값으로 localhost 사용
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "https://api.bopcon.site";
 
 // Axios 인스턴스 생성
 const apiClient = axios.create({
