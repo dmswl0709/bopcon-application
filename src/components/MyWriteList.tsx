@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  TouchableOpacity,
   FlatList,
   Alert,
   Modal,
@@ -29,15 +28,14 @@ interface ArticleData {
 
 interface MyWriteListProps {
   isExpanded: boolean;
+  onArticlePress?: (article: ArticleData) => void; // 추가: 게시글 클릭 시 상위로 이벤트 전달
 }
 
-const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
+const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded, onArticlePress }) => {
   const [articles, setArticles] = useState<ArticleData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedArticle, setSelectedArticle] = useState<ArticleData | null>(
-    null
-  );
+  const [selectedArticle, setSelectedArticle] = useState<ArticleData | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const userToken = useSelector((state: RootState) => state.auth.token);
@@ -110,14 +108,12 @@ const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
       setIsEditing(false);
       setSelectedArticle(null);
       Alert.alert("성공", "게시글이 수정되었습니다.");
-    } catch (err) {
+    } catch (err: any) {
       console.error("게시글 수정 오류:", err.response?.data || err.message);
       Alert.alert("오류", "게시글 수정에 실패했습니다.");
     }
   };
   
-  
-
   // 게시글 삭제
   const handleDelete = async (article: ArticleData) => {
     Alert.alert("확인", "정말로 삭제하시겠습니까?", [
@@ -152,25 +148,28 @@ const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
 
   return (
     <View style={styles.container}>
-     <FlatList
-  data={isExpanded ? articles : articles.slice(0, 2)}
-  keyExtractor={(item, index) =>
-    item?.id?.toString() || `fallback-key-${index}`
-  }
-  renderItem={({ item }) => (
-    <WriteItem
-      title={item.title}
-      content={item.content}
-      nickname={item.userName || "익명"}
-      artistName={`아티스트: ${item.artistName || "정보 없음"}`}
-      onEdit={() => handleEdit(item)}
-      onDelete={() => handleDelete(item)}
-    />
-  )}
-/>
+      <FlatList
+        data={isExpanded ? articles : articles.slice(0, 2)}
+        keyExtractor={(item, index) =>
+          item?.id?.toString() || `fallback-key-${index}`
+        }
+        renderItem={({ item }) => (
+          <WriteItem
+            title={item.title}
+            content={item.content}
+            nickname={item.userName || "익명"}
+            artistName={`${item.artistName || "정보 없음"}`}
+            onEdit={() => handleEdit(item)}
+            onDelete={() => handleDelete(item)}
+            onPress={() => {
+              // 게시글 클릭 시 상위 컴포넌트에 전달 (MyPageScreen에서 바텀 시트 표시)
+              onArticlePress?.(item);
+            }}
+          />
+        )}
+      />
 
-
-      {/* 수정 폼 */}
+      {/* 수정 폼 (이 부분은 수정 로직을 MyWriteList 내부에서 유지) */}
       {isEditing && selectedArticle && (
         <Modal visible={isEditing} transparent animationType="slide">
           <View style={styles.modalOverlay}>
@@ -198,30 +197,30 @@ const MyWriteList: React.FC<MyWriteListProps> = ({ isExpanded }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
   centered: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
   },
   errorText: {
     fontSize: 16,
-    color: "red",
+    color: 'red',
+  },
+  container: {
+    // styling as needed
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 10,
-    width: "90%",
+    width: '90%',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
   },
 });
 

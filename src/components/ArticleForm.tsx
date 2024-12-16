@@ -9,8 +9,7 @@ import {
   Modal,
   FlatList,
 } from "react-native";
-import { useSelector } from "react-redux";
-import { useNavigation } from "@react-navigation/native"; // navigation 추가
+import { useNavigation } from "@react-navigation/native";
 
 const ArticleForm = ({
   mode,
@@ -18,12 +17,13 @@ const ArticleForm = ({
   initialContent = "",
   initialCategoryType = "FREE_BOARD",
   fixedArtistId = null,
-  artistName,
+  artistName, // 아티스트 이름 prop
   initialNewConcertId = null,
   token,
   userId,
   onSubmit,
   onCancel,
+  visible = true, // 모달 표시 여부
 }) => {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
@@ -31,7 +31,7 @@ const ArticleForm = ({
   const [newConcertId, setNewConcertId] = useState(initialNewConcertId);
   const [isModalVisible, setModalVisible] = useState(false);
 
-  const navigation = useNavigation(); // navigation 사용
+  const navigation = useNavigation();
 
   const handleSubmit = async () => {
     if (!token || token.trim() === "") {
@@ -43,7 +43,7 @@ const ArticleForm = ({
       Alert.alert("오류", "로그인이 필요합니다. 다시 로그인해주세요.", [
         {
           text: "확인",
-          onPress: () => navigation.navigate("LoginScreen"), // 로그인 스크린으로 이동
+          onPress: () => navigation.navigate("LoginScreen"),
         },
       ]);
       return;
@@ -69,8 +69,8 @@ const ArticleForm = ({
         userId
       );
     } catch (error) {
-      console.error("게시글 작성 중 오류:", error);
-      Alert.alert("오류", "게시글 작성에 실패했습니다. 다시 시도해주세요.");
+      console.error("게시글 작성/수정 중 오류:", error);
+      Alert.alert("오류", "게시글 작성(수정)에 실패했습니다. 다시 시도해주세요.");
     }
   };
 
@@ -79,107 +79,144 @@ const ArticleForm = ({
     { label: "콘서트 게시판", value: "NEW_CONCERT" },
   ];
 
+  const categoryLabel =
+    options.find((opt) => opt.value === categoryType)?.label || "게시판 선택";
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>
-        {mode === "create" ? "글쓰기" : "글 수정"}
-      </Text>
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={onCancel}
+    >
+      <View style={styles.formModalOverlay}>
+        <View style={styles.formModalContainer}>
+          {/* 상단 아티스트 정보 영역 */}
+          {artistName && (
+            <View style={styles.topBar}>
+              <Text style={styles.topBarArtistName}>{artistName}</Text>
+              <Text style={styles.topBarCategory}>{categoryLabel}</Text>
+            </View>
+          )}
 
-      {fixedArtistId && artistName && (
-        <View style={styles.artistInfo}>
-          <Text style={styles.artistLabel}>아티스트</Text>
-          <Text style={styles.artistName}>{artistName}</Text>
-        </View>
-      )}
+          <Text style={styles.heading}>
+            {mode === "create" ? "글쓰기" : "글 수정"}
+          </Text>
 
-      <TextInput
-        value={title}
-        onChangeText={setTitle}
-        placeholder="제목"
-        style={styles.input}
-        maxLength={50}
-      />
-      <TextInput
-        value={content}
-        onChangeText={setContent}
-        placeholder="내용"
-        style={[styles.input, styles.textarea]}
-        multiline
-        maxLength={500}
-      />
+          {/* 아티스트 지정된 경우 표시 (optional) */}
+          {fixedArtistId && artistName && (
+            <View style={styles.artistInfo}>
+              <Text style={styles.artistLabel}>아티스트</Text>
+              <Text style={styles.artistName}>{artistName}</Text>
+            </View>
+          )}
 
-      <Text style={styles.label}>게시판 선택</Text>
-      <TouchableOpacity
-        style={styles.dropdownButton}
-        onPress={() => setModalVisible(true)}
-      >
-        <Text style={styles.dropdownButtonText}>
-          {options.find((opt) => opt.value === categoryType)?.label || "선택"}
-        </Text>
-      </TouchableOpacity>
+          <TextInput
+            value={title}
+            onChangeText={setTitle}
+            placeholder="제목"
+            style={styles.input}
+            maxLength={50}
+          />
+          <TextInput
+            value={content}
+            onChangeText={setContent}
+            placeholder="내용"
+            style={[styles.input, styles.textarea]}
+            multiline
+            maxLength={500}
+          />
 
-      {categoryType === "NEW_CONCERT" && (
-        <TextInput
-          style={styles.input}
-          placeholder="콘서트 ID 입력"
-          keyboardType="number-pad"
-          value={newConcertId ? newConcertId.toString() : ""}
-          onChangeText={(text) => setNewConcertId(Number(text) || null)}
-        />
-      )}
+          <Text style={styles.label}>게시판 선택</Text>
+          <TouchableOpacity
+            style={styles.dropdownButton}
+            onPress={() => setModalVisible(true)}
+          >
+            <Text style={styles.dropdownButtonText}>
+              {categoryLabel}
+            </Text>
+          </TouchableOpacity>
 
-      <Modal
-        transparent={true}
-        visible={isModalVisible}
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <FlatList
-              data={options}
-              keyExtractor={(item) => item.value}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setCategoryType(item.value);
-                    setModalVisible(false);
-                  }}
-                >
-                  <Text style={styles.modalItemText}>{item.label}</Text>
-                </TouchableOpacity>
-              )}
+          {categoryType === "NEW_CONCERT" && (
+            <TextInput
+              style={styles.input}
+              placeholder="콘서트 ID 입력"
+              keyboardType="number-pad"
+              value={newConcertId ? newConcertId.toString() : ""}
+              onChangeText={(text) => setNewConcertId(Number(text) || null)}
             />
+          )}
+
+          {/* 게시판 선택 모달 */}
+          <Modal
+            transparent={true}
+            visible={isModalVisible}
+            animationType="slide"
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <FlatList
+                  data={options}
+                  keyExtractor={(item) => item.value}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={styles.modalItem}
+                      onPress={() => {
+                        setCategoryType(item.value);
+                        setModalVisible(false);
+                      }}
+                    >
+                      <Text style={styles.modalItemText}>{item.label}</Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              </View>
+            </View>
+          </Modal>
+
+          <View style={styles.buttonRow}>
+            <TouchableOpacity onPress={handleSubmit} style={styles.submitButton}>
+              <Text style={styles.buttonText}>
+                {mode === "create" ? "작성" : "수정"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={onCancel} style={styles.cancelButton}>
+              <Text style={styles.buttonText}>취소</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </Modal>
-
-      <View style={styles.buttonRow}>
-        <TouchableOpacity onPress={handleSubmit} style={styles.submitButton}>
-          <Text style={styles.buttonText}>
-            {mode === "create" ? "작성" : "수정"}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onCancel} style={styles.cancelButton}>
-          <Text style={styles.buttonText}>취소</Text>
-        </TouchableOpacity>
       </View>
-    </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
+  formModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  formModalContainer: {
+    width: '90%',
     backgroundColor: "#f9f9f9",
     borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-    margin: 10,
+    padding: 20,
+  },
+  topBar: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  topBarArtistName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: "#333",
+    marginBottom: 4,
+  },
+  topBarCategory: {
+    fontSize: 14,
+    color: "#555",
   },
   heading: {
     fontSize: 20,
@@ -263,7 +300,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   submitButton: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#000",
     padding: 12,
     borderRadius: 8,
     flex: 1,

@@ -8,6 +8,7 @@ interface WriteItemProps {
   artistName: string;
   onEdit?: () => void;
   onDelete?: () => void;
+  onPress?: () => void; // 게시글 클릭 시 호출될 콜백
 }
 
 const WriteItem: React.FC<WriteItemProps> = ({
@@ -17,24 +18,24 @@ const WriteItem: React.FC<WriteItemProps> = ({
   artistName,
   onEdit,
   onDelete,
+  onPress,
 }) => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.artistName}>{artistName}</Text>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.container}>
+      <Text style={styles.artistName}>아티스트: {artistName}</Text>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.content}>{content}</Text>
-      <Text style={styles.footer}>{`작성자 | ${nickname}`}</Text>
 
-      {/* 수정 및 삭제 버튼 */}
-      <View style={styles.buttonContainer}>
+      <View style={styles.actionsContainer}>
         <TouchableOpacity onPress={onEdit} style={styles.editButton}>
-          <Text style={styles.buttonText}>수정</Text>
+          <Text style={styles.actionButtonText}>수정</Text>
         </TouchableOpacity>
+        <View style={styles.separator} />
         <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
-          <Text style={styles.buttonText}>삭제</Text>
+          <Text style={styles.actionButtonText}>삭제</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -69,31 +70,36 @@ const styles = StyleSheet.create({
     color: "#555",
     marginBottom: 8,
   },
-  footer: {
-    fontSize: 12,
-    color: "#888",
-    textAlign: "right",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 10,
+  actionsContainer: {
+    backgroundColor: '#eeeeee',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    marginRight: 10,
+    marginLeft: 240,
   },
   editButton: {
-    backgroundColor: "#80B5E7",
-    padding: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
     borderRadius: 4,
-    marginRight: 8,
   },
   deleteButton: {
-    backgroundColor: "#ED9CA5",
-    padding: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
     borderRadius: 4,
   },
-  buttonText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "bold",
+  actionButtonText: {
+    color: '#777',
+    fontSize: 14,
+  },
+  separator: {
+    width: 1,
+    height: '60%',
+    backgroundColor: '#ccc',
+    marginHorizontal: 8,
   },
 });
 

@@ -206,18 +206,23 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   editButton: {
-    backgroundColor: '#4CAF50',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
   },
   deleteButton: {
-    backgroundColor: '#F44336',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+  },
+  buttonText: {
+    color: '#777',
+    fontSize: 14,
   },
   closeButton: {
     backgroundColor: '#555',
   },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-  },
+ 
 });
 
 export default ArticleModal;

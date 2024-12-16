@@ -482,7 +482,9 @@ const handleEditPress = (article) => {
                 >
                   {/* 게시글 상단 */}
                   <View style={styles.headerRow}>
-                    <Text style={styles.boardTitle}>{item.title}</Text>
+                    <Text style={styles.boardTitle} numberOfLines={1}>
+                      {item.title}
+                    </Text>
                     {item.userName === user && (
                       <View style={styles.boardActions}>
                         {/* 수정 버튼 */}
@@ -493,24 +495,27 @@ const handleEditPress = (article) => {
                             setSelectedArticle(item);
                           }}
                         >
-                          <Text style={styles.actionText}>수정</Text>
+                          <Text style={styles.buttonText}>수정</Text>
                         </TouchableOpacity>
+  
+                        <View style={styles.separator} />
+  
                         {/* 삭제 버튼 */}
                         <TouchableOpacity
                           style={styles.deleteButton}
                           onPress={() => handleDeleteArticle(item)}
                         >
-                          <Text style={styles.actionText}>삭제</Text>
+                          <Text style={styles.buttonText}>삭제</Text>
                         </TouchableOpacity>
                       </View>
                     )}
                   </View>
-    
+  
                   {/* 게시글 내용 */}
                   <Text style={styles.boardContent} numberOfLines={2}>
                     {item.content}
                   </Text>
-    
+  
                   {/* 게시글 하단 */}
                   <View style={styles.boardFooter}>
                     <Text style={styles.boardFooterText}>
@@ -523,7 +528,7 @@ const handleEditPress = (article) => {
                 <Text style={styles.emptyText}>게시글이 없습니다.</Text>
               }
             />
-    
+  
             {/* 글쓰기 버튼 */}
             {!isEditing && !isCreating && (
               <TouchableOpacity
@@ -533,17 +538,16 @@ const handleEditPress = (article) => {
                 <Text style={styles.writeButtonText}>글쓰기</Text>
               </TouchableOpacity>
             )}
-    
+  
             {/* 게시글 상세 보기 모달 */}
             <Modal
   visible={isModalVisible}
   transparent={true}
-  animationType="slide"
+  animationType="fade"
   onRequestClose={closeModal}
 >
   <View style={styles.modalOverlay}>
     <View style={styles.modalContent}>
-      {/* selectedArticle이 null이 아닐 때만 FlatList 렌더링 */}
       {selectedArticle ? (
         <FlatList
           data={[{ key: "header" }, ...comments]} // 헤더와 댓글 데이터 결합
@@ -608,11 +612,11 @@ const handleEditPress = (article) => {
   </View>
 </Modal>
 
-
           </>
         )}
       </View>
     );
+
     
     
   };
@@ -930,109 +934,100 @@ const handleEditPress = (article) => {
 };
 
 const styles = StyleSheet.create({
+
   modalOverlay: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',   // 중앙 정렬
+    alignItems: 'center',       // 중앙 정렬
   },
   modalContent: {
-    width: "90%",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 20,
-    maxHeight: "80%",
-  },
-  modalScroll: {
-    flexGrow: 1,
+    width: '85%',               // 적당한 너비
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    maxHeight: '80%',           // 필요 시 스크롤에 대응
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 18,
+    fontWeight: 'bold',
     marginBottom: 8,
-    textAlign: "left",
   },
   modalAuthor: {
     fontSize: 14,
-    color: "#666",
-    marginBottom: 16,
-    textAlign: "left",
+    color: '#777',
+    marginBottom: 8,
   },
   modalBody: {
-    fontSize: 16,
-    marginBottom: 16,
-    textAlign: "left",
-  },
-  commentSection: {
-    flex: 1,
+    fontSize: 14,
+    color: '#333',
     marginBottom: 16,
   },
   commentTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: '600',
     marginBottom: 8,
   },
   commentItemContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
+    marginBottom: 8,
   },
   commentUser: {
-    fontWeight: "bold",
-    marginRight: 8,
+    fontWeight: '600',
   },
   commentItem: {
-    flexShrink: 1,
+    color: '#333',
   },
   commentInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
     marginTop: 16,
+    alignItems: 'center',
   },
   commentInput: {
     flex: 1,
-    height: 40,
-    borderColor: "#ddd",
     borderWidth: 1,
+    borderColor: '#ccc',
     borderRadius: 8,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
+    height: 40,
     marginRight: 8,
   },
   commentButton: {
-    backgroundColor: "#000",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: '#000',
     borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
   commentButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
+    color: '#fff',
     fontSize: 14,
   },
   closeButton: {
     marginTop: 16,
-    paddingVertical: 12,
-    backgroundColor: "#ccc",
+    alignSelf: 'flex-end',
+    backgroundColor: '#999',
     borderRadius: 8,
-    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
   closeButtonText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
+    color: '#fff',
+    fontSize: 14,
   },
- 
-  
+  emptyText: {
+    textAlign: 'center',
+    color: '#555',
+    marginVertical: 20,
+  },
   container: {
     flex: 1,
     backgroundColor: "#f9f9f9",
     paddingHorizontal: 16,
   },
   boardItemContainer: {
-    padding: 16, // 게시글 전체 패딩
+    padding: 16, 
     backgroundColor: "#fff",
     borderRadius: 8,
-    marginVertical: 8, // 게시글 간 간격
+    marginVertical: 8, 
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.3,
@@ -1043,42 +1038,49 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8, // 제목과 내용 사이 간격
+    marginBottom: 8, 
   },
   boardTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    flex: 1, // 제목이 버튼을 밀지 않도록 flex로 공간 확보
-    marginRight: 8, // 버튼과 간격
+    flex: 1, 
+    marginRight: 8,
   },
   boardActions: {
-    flexDirection: "row",
+    backgroundColor: '#eeeeee',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    
   },
   editButton: {
-    marginRight: 8,
-    backgroundColor: "#80B5E7",
     paddingVertical: 4,
     paddingHorizontal: 8,
-    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   deleteButton: {
-    backgroundColor: "#ED9CA5",
     paddingVertical: 4,
     paddingHorizontal: 8,
-    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  actionText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "bold",
+  buttonText: {
+    color: '#777',
+    fontSize: 14,
   },
-  boardItemContent: {
-    marginTop: 8, // 제목과 내용 사이 간격
+  separator: {
+    width: 1,
+    height: 16,
+    backgroundColor: '#999',
+    marginHorizontal: 8,
   },
   boardContent: {
     fontSize: 14,
     color: "#555",
-    marginBottom: 8, // 내용과 작성자 정보 사이 간격
+    marginBottom: 8, 
   },
   boardFooter: {
     flexDirection: "row",
@@ -1088,12 +1090,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999",
   },
-  emptyText: {
-    textAlign: "center",
-    color: "#555",
-    fontSize: 16,
-    marginTop: 20,
-  },
+  
   writeButton: {
     backgroundColor: "#000",
     padding: 14,
@@ -1106,6 +1103,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+
+  
+  
+  boardItemContent: {
+    marginTop: 8, // 제목과 내용 사이 간격
+  },
+ 
 
 
  
