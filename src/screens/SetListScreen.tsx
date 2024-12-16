@@ -138,8 +138,13 @@ const SetListScreen: React.FC<SetListScreenProps> = ({ route, navigation }) => {
               index === self.findIndex((t) => t.order === item.order && t.title === item.title)
           )}
           keyExtractor={(item) => `${item.order}-${item.title}`}
-          renderItem={({ item }) => (
-            <SetlistItem index={item.order} songTitle={item.title} ytLink={item.ytLink} />
+          renderItem={({ item, index }) => (
+            <SetlistItem
+            index={index + 1} // 순차적인 번호
+            songTitle={item.title} // 노래 제목
+            ytLink={item.ytLink} // YouTube 링크 (있을 경우)
+            artistId={artistId} // artistId 추가 전달
+          />
           )}
         />
       ) : (

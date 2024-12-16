@@ -169,6 +169,7 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
               index={song.order}
               songTitle={song.songTitle}
               ytLink={song.ytLink || null}
+              hideIcon={true} // 아이콘 숨기기
             />
           ))
         ) : (

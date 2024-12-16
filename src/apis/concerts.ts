@@ -112,7 +112,9 @@ export const fetchConcertData = async (concertId: string): Promise<Concert> => {
 export const fetchConcerts = async (): Promise<Concert[]> => {
   try {
     const response = await apiClient.get<Concert[]>("/api/new-concerts");
+    // `newConcertId` 포함하여 데이터 매핑
     return response.data.map((concert) => ({
+      newConcertId: concert.newConcertId, // 추가된 필드
       id: concert.newConcertId || concert.id || "", // id 매핑
       artistId: concert.artistId,
       title: concert.title,
@@ -238,7 +240,7 @@ const fetchConcertsByGenre = async () => {
 
 export const fetchUpcomingConcerts = async (artistId: number) => {
   try {
-    const response = await axios.get(`https://api.bopcon.site/api/artists/${artistId}/concerts`);
+    const response = await axios.get(`http://api.bopcon.site/api/artists/${artistId}/concerts`);
     console.log("Fetched upcoming concerts:", response.data);
 
     // id가 없는 경우 index를 기반으로 기본 id 생성
@@ -320,5 +322,34 @@ export const fetchSongRanking = async (artistId) => {
   } catch (error) {
     console.error("Error fetching song ranking:", error.response?.data || error.message);
     throw error;
+  }
+};
+
+export const fetchLyrics = async (artistId: string, songTitle: string): Promise<string> => {
+  try {
+    // API 호출로 과거 콘서트 데이터를 가져옵니다.
+    const response = await axios.get(
+      `https://api.bopcon.site/api/artists/${artistId}/past-concerts`
+    );
+
+    // setlists 배열 내부에서 songTitle과 일치하는 가사 찾기
+    let foundLyrics: string | null = null;
+
+    response.data.forEach((concert: any) => {
+      if (concert.setlists) {
+        const matchedSong = concert.setlists.find(
+          (item: any) => item.song?.title === songTitle
+        );
+
+        if (matchedSong && matchedSong.song?.lyrics) {
+          foundLyrics = matchedSong.song.lyrics;
+        }
+      }
+    });
+
+    return foundLyrics || "가사 정보가 없습니다.";
+  } catch (error) {
+    console.error("Error fetching lyrics:", error);
+    return "가사를 불러오는 중 오류가 발생했습니다.";
   }
 };
