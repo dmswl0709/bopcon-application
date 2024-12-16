@@ -14,6 +14,9 @@ import { Linking } from "react-native";
 import { useSelector } from "react-redux";
 import { RootState } from '../store';
 import { Article } from "../types/type";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { jwtDecode } from "jwt-decode"; // 수정된 import 문
+import {addComment} from "../apis/comments";
 
 
 
@@ -104,46 +107,53 @@ const ArtistScreen = ({ route, navigation }) => {
 
 
 
+
   
   
-  
-  const handleDeleteArticle = async (article: Article) => {
-    if (!token) {
-      Alert.alert("오류", "로그인이 필요합니다.");
-      return;
-    }
-  
-    // 현재 사용자의 userName과 게시글 작성자의 userName을 비교
-    if (article.userName !== user) {
-      Alert.alert("권한 없음", "다른 사용자의 게시글을 삭제할 수 없습니다.");
-      return;
-    }
-  
-    Alert.alert("확인", "이 게시글을 정말 삭제하시겠습니까?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "삭제",
-        onPress: async () => {
-          try {
-            // 로컬 상태에서 먼저 게시글 제거
-            setBoardArticles((prevArticles) =>
-              prevArticles.filter((a) => a.id !== article.id)
-            );
-  
-            // 서버로 삭제 요청
-            await axios.delete(`https://api.bopcon.site/api/articles/${article.id}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-  
-            Alert.alert("성공", "게시글이 삭제되었습니다.");
-          } catch (error) {
-            console.error("게시글 삭제 오류:", error.response || error.message);
-            Alert.alert("오류", "게시글을 삭제할 수 없습니다.");
-          }
-        },
+
+const handleDeleteArticle = async (article: Article) => {
+  if (!token) {
+    Alert.alert("오류", "로그인이 필요합니다.");
+    return;
+  }
+
+  // 현재 사용자의 userName과 게시글 작성자의 userName을 비교
+  if (article.userName !== user) {
+    Alert.alert("권한 없음", "다른 사용자의 게시글을 삭제할 수 없습니다.");
+    return;
+  }
+
+  Alert.alert("확인", "이 게시글을 정말 삭제하시겠습니까?", [
+    { text: "취소", style: "cancel" },
+    {
+      text: "삭제",
+      onPress: async () => {
+        try {
+          // 로컬 상태에서 먼저 게시글 제거
+          setBoardArticles((prevArticles) =>
+            prevArticles.filter((a) => a.id !== article.id)
+          );
+
+          // 서버로 삭제 요청
+          await axios.delete(`https://api.bopcon.site/api/articles/${article.id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          Alert.alert("성공", "게시글이 삭제되었습니다.");
+        } catch (error) {
+          console.error("게시글 삭제 오류:", error.response || error.message);
+          Alert.alert("오류", "게시글을 삭제할 수 없습니다.");
+        }
       },
-    ]);
-  };
+    },
+  ]);
+};
+
+
+
+
+
+
   
   // 상태 변화 디버깅
 useEffect(() => {
@@ -624,20 +634,54 @@ const handleEditPress = (article) => {
 
   // 댓글 추가
   const handleAddComment = async () => {
-    if (!newComment.trim()) return;
-
+    if (!newComment.trim()) {
+      Alert.alert('알림', '댓글을 입력해주세요.');
+      return;
+    }
+  
     try {
-      const response = await axios.post(`https://api.bopcon.site/api/comments/article`, {
-        postId: selectedArticle.id,
-        content: newComment,
-      });
-      setComments((prevComments) => [...prevComments, response.data]);
-      setNewComment("");
+      const token = await AsyncStorage.getItem('authToken');
+      if (!token) {
+        Alert.alert('오류', '로그인이 필요합니다.');
+        return;
+      }
+  
+      const decodedToken = jwtDecode(token);
+      const fullNickname = decodedToken.sub || '익명';
+      const nickname = fullNickname.includes('@')
+        ? fullNickname.split('@')[0] // 이메일일 경우 '@' 앞부분만 가져옴
+        : fullNickname;
+  
+      const requestData = {
+        articleId: selectedArticle.id,
+        content: newComment.trim(),
+      };
+  
+      const response = await axios.post(
+        'https://api.bopcon.site/api/comments',
+        requestData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+  
+      const newCommentData = {
+        ...response.data,
+        nickname: nickname, // 프론트에서 임시 닉네임 추가
+      };
+  
+      setComments((prevComments) => [...prevComments, newCommentData]);
+      setNewComment('');
+      Alert.alert('성공', '댓글이 작성되었습니다.');
     } catch (error) {
-      console.error("댓글 작성 중 오류 발생:", error);
-      Alert.alert("오류", "댓글 작성에 실패했습니다.");
+      console.error('댓글 작성 오류:', error);
+      Alert.alert('오류', '댓글 작성 중 문제가 발생했습니다.');
     }
   };
+
 
   // 게시글 클릭 시 모달 열기
   const handleArticlePress = (article) => {

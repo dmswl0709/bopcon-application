@@ -2,8 +2,10 @@ import { Alert } from 'react-native';
 import { AxiosResponse } from 'axios';
 import { httpClient } from './http';
 import { Article } from '../types/type';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const ARTICLE_API_BASE_URL = '/api/articles';
+
+const ARTICLE_API_BASE_URL = 'https://api.bopcon.site/api/articles';
 
 export const getAllArticles = async (): Promise<Article[]> => {
   try {
@@ -84,14 +86,20 @@ export const updateArticle = async (
 
 export const deleteArticle = async (id: number, token: string): Promise<void> => {
   try {
+    console.log("삭제 요청 URL:", `${ARTICLE_API_BASE_URL}/${id}`);
+    console.log("Authorization 헤더:", `Bearer ${token}`);
+
     await httpClient.delete(`${ARTICLE_API_BASE_URL}/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
+
+    console.log("게시글 삭제 성공");
   } catch (error) {
+    console.error(`게시글 삭제 오류:`, error.response || error.message);
     Alert.alert('오류', `게시글 ID ${id} 삭제 중 문제가 발생했습니다.`);
-    console.error(`Error deleting article with ID ${id}:`, error);
     throw error;
   }
 };
+

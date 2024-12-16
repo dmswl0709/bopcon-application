@@ -1,7 +1,7 @@
 import { Alert } from 'react-native';
-import { httpClient } from './http'; // httpClient를 import
+import { httpClient} from './http'; // httpClient를 import
 
-const API_BASE_URL = '/api/comments';
+const API_BASE_URL = 'https://api.bopcon.site/api/comments';
 
 // 댓글 추가
 export const addComment = async (

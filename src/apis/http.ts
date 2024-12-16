@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native'; // React Native Alert 사용
 import { navigate } from '../navigation/RootNavigation'; // RootNavigation 유틸리티로 페이지 이동 관리 (선택 사항)
 
-const httpClient = axios.create({
+export const httpClient = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL || 'https://api.bopcon.site', // 기본 URL
   headers: {
     'Content-Type': 'application/json', // 기본 헤더
