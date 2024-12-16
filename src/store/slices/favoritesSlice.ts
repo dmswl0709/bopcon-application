@@ -31,7 +31,9 @@ export const fetchFavorites = createAsyncThunk(
       });
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || "데이터를 가져오는 중 오류 발생");
+      return rejectWithValue(
+        error.response?.data?.message || "데이터를 가져오는 중 오류 발생"
+      );
     }
   }
 );
@@ -40,7 +42,11 @@ export const fetchFavorites = createAsyncThunk(
 export const toggleFavoriteOnServer = createAsyncThunk(
   "favorites/toggleFavorite",
   async (
-    { id, type, artistId, newConcertId }: { id: number; type: "artist" | "concert"; artistId?: number | null; newConcertId?: number | null },
+    {
+      id,
+      type,
+      isFavorite,
+    }: { id: number; type: "artist" | "concert"; isFavorite: boolean },
     { rejectWithValue }
   ) => {
     try {
@@ -49,23 +55,36 @@ export const toggleFavoriteOnServer = createAsyncThunk(
 
       const endpoint =
         type === "artist"
-          ? `https://api.bopcon.site/api/favorites/artist/${id}` // artistId와 매칭
-          : `https://api.bopcon.site/api/favorites/concert/${id}`; // concertId와 매칭
+          ? `https://api.bopcon.site/api/favorites/artist/${id}`
+          : `https://api.bopcon.site/api/favorites/concert/${id}`;
 
-      // 요청 데이터 생성
-      const requestData =
-        type === "artist"
-          ? { artistId: id, newConcertId: null }
-          : { artistId: null, newConcertId: id };
+      console.log(
+        `${isFavorite ? "삭제" : "추가"} 요청 시작 - 엔드포인트: ${endpoint}`
+      );
 
-      console.log("좋아요 API 요청 데이터:", requestData); // 요청 데이터 확인
+      if (isFavorite) {
+        // 삭제 요청
+        const response = await axios.delete(endpoint, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log("즐겨찾기 삭제 응답:", response.data);
+      } else {
+        // 추가 요청
+        const requestData =
+          type === "artist"
+            ? { artistId: id, newConcertId: null }
+            : { artistId: null, newConcertId: id };
 
-      const response = await axios.post(endpoint, requestData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        console.log("추가 요청 데이터:", requestData);
 
-      console.log("즐겨찾기 요청 응답:", response.data);
-      return { id, type };
+        const response = await axios.post(endpoint, requestData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log("즐겨찾기 추가 응답:", response.data);
+      }
+
+      // 상태 업데이트를 위해 id와 type 반환
+      return { id, type, isFavorite };
     } catch (error: any) {
       console.error("[좋아요 요청 오류]:", error.response?.data || error.message || error);
       return rejectWithValue("좋아요 요청 중 오류가 발생했습니다.");
@@ -79,28 +98,26 @@ const favoritesSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchFavorites.fulfilled, (state, action: PayloadAction<any>) => {
-        state.artists = action.payload.filter((item: any) => item.artistId);
-        state.concerts = action.payload.filter((item: any) => item.id);
-        state.loading = false;
-      })
-      .addCase(toggleFavoriteOnServer.fulfilled, (state, action: PayloadAction<any>) => {
-        const { id, type } = action.payload;
+      .addCase(toggleFavoriteOnServer.fulfilled, (state, action) => {
+        const { id, type, isFavorite } = action.payload;
+
         if (type === "artist") {
-          const existing = state.artists.find((fav) => fav.favoriteId === id);
-          if (existing) {
+          if (isFavorite) {
             state.artists = state.artists.filter((fav) => fav.favoriteId !== id);
           } else {
             state.artists.push({ id, name: `Artist ${id}`, favoriteId: id });
           }
-        } else {
-          const existing = state.concerts.find((fav) => fav.favoriteId === id);
-          if (existing) {
+        } else if (type === "concert") {
+          if (isFavorite) {
             state.concerts = state.concerts.filter((fav) => fav.favoriteId !== id);
           } else {
             state.concerts.push({ id, title: `Concert ${id}`, favoriteId: id });
           }
         }
+      })
+      .addCase(toggleFavoriteOnServer.rejected, (state, action) => {
+        console.error("즐겨찾기 요청 오류:", action.payload);
+        state.error = action.payload as string;
       });
   },
 });

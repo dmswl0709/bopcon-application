@@ -5,6 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { useDispatch } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loginUser } from '../store/slices/authSlice';
+import { fetchFavorites } from '../store/slices/favoritesSlice';
 import BOPCONLogo from '../assets/icons/BOPCONLogo.svg';
 
 export interface LoginFormValues {
@@ -31,6 +32,10 @@ const LoginScreen = () => {
         await AsyncStorage.setItem('authToken', token);
         await AsyncStorage.setItem('userNickname', user);
 
+        // Fetch favorite status after successful login
+        console.log("로그인 성공 후 좋아요 상태 가져오기 시작");
+        await dispatch(fetchFavorites());
+
         Alert.alert(`환영합니다, ${user}님!`);
         navigation.navigate('HomeScreen');
       } catch (storageError) {
@@ -38,7 +43,6 @@ const LoginScreen = () => {
         Alert.alert('오류', '로그인 정보를 저장하는 중 오류가 발생했습니다.');
       }
     } catch (error: any) {
-      // console.error('로그인 실패:', error.message || error);
       Alert.alert('로그인 실패', error.message || '이메일 또는 비밀번호를 확인해주세요.');
     } finally {
       setLoading(false);
