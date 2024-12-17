@@ -61,7 +61,6 @@ export const loginUser = createAsyncThunk(
 
       return { token: accessToken, user: nickname, id: id };
     } catch (error) {
-      console.error("[로그인 오류]:", error.message);
       return rejectWithValue("로그인 중 오류가 발생했습니다.");
     }
   }

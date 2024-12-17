@@ -41,7 +41,6 @@ const LoginForm = () => {
         routes: [{ name: 'HomeScreen' }],
       });
     } catch (error: any) {
-      console.error('로그인 실패:', error.response?.data || error.message);
       Alert.alert(
         '로그인 실패',
         error.response?.data?.error || '알 수 없는 오류가 발생했습니다.'
