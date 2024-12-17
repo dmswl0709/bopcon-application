@@ -4,6 +4,7 @@ import axios from "axios";
 import Header from "../components/Header";
 import FavoriteButton from "../components/FavoriteButton";
 import SetlistItem from "../components/SetlistItem";
+import { fetchLyrics } from "../apis/concerts"; // fetchLyrics 함수 import 추가
 
 interface SongType {
   order: number;
@@ -144,6 +145,7 @@ const SetListScreen: React.FC<SetListScreenProps> = ({ route, navigation }) => {
             songTitle={item.title} // 노래 제목
             ytLink={item.ytLink} // YouTube 링크 (있을 경우)
             artistId={artistId} // artistId 추가 전달
+            fetchLyrics={() => fetchLyrics(artistId, item.title)} // 기존 fetchLyrics 사용
           />
           )}
         />

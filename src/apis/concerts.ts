@@ -353,3 +353,23 @@ export const fetchLyrics = async (artistId: string, songTitle: string): Promise<
     return "가사를 불러오는 중 오류가 발생했습니다.";
   }
 };
+
+// 예상 가사 불러오기 함수
+export const fetchPredictLyrics = async (newConcertId: string, songTitle: string): Promise<string> => {
+  if (!newConcertId || !songTitle) {
+    throw new Error("newConcertId 또는 songTitle이 없습니다.");
+  }
+
+  try {
+    const response = await axios.get(
+      `https://api.bopcon.site/api/new-concerts/${newConcertId}/predicted-setlist`
+    );
+
+    console.log("API Response:", response.data); // 디버깅 로그
+    const foundSong = response.data.find((item: any) => item.songTitle === songTitle);
+    return foundSong?.lyrics || "가사 정보가 없습니다.";
+  } catch (error) {
+    console.error("Error fetching predicted lyrics:", error);
+    throw new Error("예상 가사를 불러오는 중 오류가 발생했습니다.");
+  }
+};

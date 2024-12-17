@@ -1,46 +1,33 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, ScrollView } from "react-native";
-import axios from "axios";
 
 interface SetlistItemProps {
   index: number;
   songTitle: string;
   ytLink?: string | null;
-  artistId: string; // 아티스트 ID를 추가로 받음
-  hideIcon?: boolean; // 아이콘 숨김 여부 설정
+  fetchLyrics: () => Promise<string>; // 가사를 불러오는 함수
+  artistId: string;
 }
 
-const SetlistItem: React.FC<SetlistItemProps> = ({ index, songTitle, ytLink, artistId, hideIcon = false }) => {
+const SetlistItem: React.FC<SetlistItemProps> = ({ index, songTitle, fetchLyrics }) => {
   const [isExpanded, setIsExpanded] = useState(false); // 토글 상태
   const [lyrics, setLyrics] = useState<string | null>(null); // 가사 데이터
   const [loading, setLoading] = useState(false); // 로딩 상태
 
-  // 가사 불러오는 함수
-  const fetchLyrics = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`https://api.bopcon.site/api/artists/${artistId}/past-concerts`);
-      const foundSong = response.data
-        .flatMap((concert: any) => concert.setlists) // 모든 setlists를 평탄화
-        .find((item: any) => item.song?.title === songTitle);
-
-      if (foundSong?.song?.lyrics) {
-        setLyrics(foundSong.song.lyrics);
-      } else {
-        setLyrics("가사 정보가 없습니다.");
-      }
-    } catch (error) {
-      console.error("Error fetching lyrics:", error);
-      setLyrics("가사를 불러오는 중 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleToggle = () => {
+  // 토글 및 가사 불러오기
+  const handleToggle = async () => {
     setIsExpanded((prev) => !prev);
-    if (!isExpanded && lyrics === null) {
-      fetchLyrics();
+    if (!isExpanded && !lyrics) {
+      try {
+        setLoading(true);
+        const fetchedLyrics = await fetchLyrics();
+        setLyrics(fetchedLyrics);
+      } catch (error) {
+        console.error("Error fetching lyrics:", error);
+        setLyrics("가사를 불러오는 중 오류가 발생했습니다.");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -48,29 +35,20 @@ const SetlistItem: React.FC<SetlistItemProps> = ({ index, songTitle, ytLink, art
     <View style={styles.itemContainer}>
       {/* 상단 행 */}
       <View style={styles.container}>
-        <Text style={styles.index}>
-          {index < 10 ? `0${index}` : index}
-        </Text>
-
-        {/* 곡 제목 */}
+        <Text style={styles.index}>{index < 10 ? `0${index}` : index}</Text>
         <Text style={styles.songName}>{songTitle}</Text>
 
-        {/* down 아이콘 - hideIcon이 true면 렌더링하지 않음 */}
-        {!hideIcon && (
-          <TouchableOpacity onPress={handleToggle} style={styles.iconContainer}>
-            <Image
-              source={require("../assets/icons/down.png")}
-              style={[
-                styles.icon,
-                isExpanded && { transform: [{ rotate: "180deg" }] }, // 회전 적용
-              ]}
-            />
-          </TouchableOpacity>
-        )}
+        {/* 아이콘 */}
+        <TouchableOpacity onPress={handleToggle} style={styles.iconContainer}>
+          <Image
+            source={require("../assets/icons/down.png")}
+            style={[styles.icon, isExpanded && { transform: [{ rotate: "180deg" }] }]}
+          />
+        </TouchableOpacity>
       </View>
 
-      {/* 토글된 가사 표시 영역 */}
-      {!hideIcon && isExpanded && (
+      {/* 가사 표시 */}
+      {isExpanded && (
         <View style={styles.lyricsContainer}>
           {loading ? (
             <ActivityIndicator size="small" color="#000" />
@@ -91,7 +69,7 @@ const SetlistItem: React.FC<SetlistItemProps> = ({ index, songTitle, ytLink, art
 
 const styles = StyleSheet.create({
   itemContainer: {
-    marginBottom: 2, // 각 항목 간 여백
+    marginBottom: 2,
   },
   container: {
     flexDirection: "row",

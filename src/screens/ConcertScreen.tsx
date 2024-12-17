@@ -6,9 +6,11 @@ import ButtonGroup from "../components/ButtonGroup";
 import FavoriteButton from "../components/FavoriteButton";
 import SetlistItem from "../components/SetlistItem";
 import AppNavigationParamList from "../navigation/AppNavigatorParamList";
-import { fetchConcertData, fetchPredictedSetlist } from "../apis/concerts";
+import { fetchConcertData, fetchPredictedSetlist, fetchPredictLyrics } from "../apis/concerts";
 import SampleImage from "../assets/images/sampleimg2.png";
 import TicketButton from "../components/TicketButton";
+import { fetchLyrics } from "../apis/concerts";
+
 
 type ConcertScreenProps = StackScreenProps<AppNavigationParamList, "ConcertScreen">;
 
@@ -169,7 +171,7 @@ const ConcertScreen: React.FC<ConcertScreenProps> = ({ route, navigation }) => {
               index={song.order}
               songTitle={song.songTitle}
               ytLink={song.ytLink || null}
-              hideIcon={true} // 아이콘 숨기기
+              fetchLyrics={() => fetchPredictLyrics(concertData.newConcertId, song.songTitle)} // fetchPredictLyrics 사용
             />
           ))
         ) : (
