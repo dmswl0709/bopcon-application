@@ -899,7 +899,7 @@ const handleEditPress = (article) => {
                 <Text style={styles.artistKrName}>{artistData?.krName || krName}</Text>
               </View>
               {/* 즐겨찾기 버튼 추가 */}
-              <FavoriteButton id={artistId} type="artist" />
+              <FavoriteButton id={artistId} type="artist" artistId={artistId} />
             </View>
             <Text style={styles.upcomingTitle}>내한 예정</Text>
             {renderUpcomingConcerts()}

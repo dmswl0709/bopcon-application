@@ -95,7 +95,14 @@ export const toggleFavoriteOnServer = createAsyncThunk(
 const favoritesSlice = createSlice({
   name: "favorites",
   initialState,
-  reducers: {},
+  reducers: {
+    // 좋아요 상태 초기화
+    resetFavorites: (state) => {
+      state.artists = [];
+      state.concerts = [];
+      state.error = null; // 에러도 초기화
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(toggleFavoriteOnServer.fulfilled, (state, action) => {
@@ -122,4 +129,5 @@ const favoritesSlice = createSlice({
   },
 });
 
+export const { resetFavorites } = favoritesSlice.actions;
 export default favoritesSlice.reducer;
