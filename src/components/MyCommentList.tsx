@@ -22,6 +22,7 @@ interface CommentData {
   createdAt: string; // 실제 데이터 형식에 맞게 수정 (예: ISO 문자열)
   nickname: string;
   updatedAt: string; // 실제 데이터 형식에 맞게 수정 (예: ISO 문자열)
+  articleTitle: string;
 }
 
 interface MyCommentListProps {
@@ -162,61 +163,58 @@ const MyCommentList: React.FC<MyCommentListProps> = ({ isExpanded }) => {
     <FlatList
       data={visibleComments}
       keyExtractor={(item) => String(item.id)}
-      renderItem={({ item }) => {
-        // article_id가 존재하는지 확인
-        const articleId = item.article_id ? Number(item.article_id) : undefined;
-        const articleTitle = articleId 
-          ? (articles.find(article => article.id === articleId)?.title || '게시글 제목 없음') 
-          : '게시글 제목 없음';
-
-        return (
-          <View style={styles.commentCard}>
-            <Text style={styles.label}>게시글 제목:</Text>
-            <Text style={styles.postTitleValue}>{articleTitle}</Text>
-
+      renderItem={({ item }) => (
+        <View style={styles.commentCard}>
+          {/* 게시글 제목 표시 */}
+          <Text style={styles.articleTitle}>
+            게시글 제목: {item.articleTitle || '제목 없음'}
+          </Text>
+  
+          {/* 댓글 내용 또는 수정 모드 */}
+          {editingCommentId === item.id ? (
+            <TextInput
+              style={styles.input}
+              value={editedContent}
+              onChangeText={setEditedContent}
+              placeholder="댓글 내용을 수정하세요."
+            />
+          ) : (
+            <Text style={styles.commentText}>{item.content}</Text>
+          )}
+  
+          {/* 댓글 수정/삭제 버튼 */}
+          <View style={styles.actions}>
             {editingCommentId === item.id ? (
-              <TextInput
-                style={styles.input}
-                value={editedContent}
-                onChangeText={setEditedContent}
-                placeholder="댓글 내용을 수정하세요."
-              />
+              <>
+                <TouchableOpacity onPress={() => updateComment(item.id, editedContent)}>
+                  <Text style={styles.buttonText}>저장</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setEditingCommentId(null)}>
+                  <Text style={styles.buttonText}>취소</Text>
+                </TouchableOpacity>
+              </>
             ) : (
-              <Text style={styles.commentText}>{item.content}</Text>
+              <>
+                <TouchableOpacity
+                  onPress={() => {
+                    setEditingCommentId(item.id);
+                    setEditedContent(item.content);
+                  }}
+                >
+                  <Text style={styles.buttonText}>수정</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => deleteComment(item.id)}>
+                  <Text style={styles.buttonText}>삭제</Text>
+                </TouchableOpacity>
+              </>
             )}
-
-            <View style={styles.actions}>
-              {editingCommentId === item.id ? (
-                <>
-                  <TouchableOpacity onPress={() => updateComment(item.id, editedContent)}>
-                    <Text style={styles.buttonText}>저장</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => setEditingCommentId(null)}>
-                    <Text style={styles.buttonText}>취소</Text>
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setEditingCommentId(item.id);
-                      setEditedContent(item.content);
-                    }}
-                  >
-                    <Text style={styles.buttonText}>수정</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => deleteComment(item.id)}>
-                    <Text style={styles.buttonText}>삭제</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-            </View>
           </View>
-        );
-      }}
+        </View>
+      )}
       contentContainerStyle={styles.listContainer}
     />
   );
+  
 };
 
 const styles = StyleSheet.create({
@@ -281,6 +279,12 @@ const styles = StyleSheet.create({
     borderRadius: 4, 
     padding: 8, 
     marginVertical: 8 
+  },
+  articleTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#555',
+    marginBottom: 4,
   },
 });
 

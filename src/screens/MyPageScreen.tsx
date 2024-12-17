@@ -39,6 +39,10 @@ const MyPageScreen = () => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
 
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+const [editingContent, setEditingContent] = useState('');
+
+
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const { user, token } = useSelector((state: RootState) => state.auth);
@@ -65,6 +69,52 @@ const MyPageScreen = () => {
   const handleGoBack = () => {
     navigation.goBack();
   };
+
+// 수정 시작
+const handleEditComment = (commentId: number, currentContent: string) => {
+  setEditingCommentId(commentId);
+  setEditingContent(currentContent);
+};
+
+// 댓글 업데이트
+const handleUpdateComment = async (commentId: number) => {
+  if (!editingContent.trim()) {
+    Alert.alert('알림', '수정할 내용을 입력해주세요.');
+    return;
+  }
+
+  try {
+    const authToken = await AsyncStorage.getItem('authToken');
+    await axios.put(
+      `https://api.bopcon.site/api/comments/${commentId}`,
+      { content: editingContent },
+      { headers: { Authorization: `Bearer ${authToken}` } }
+    );
+    Alert.alert('성공', '댓글이 수정되었습니다.');
+    setEditingCommentId(null);
+    fetchComments(selectedArticle.id); // 수정 후 댓글 새로 불러오기
+  } catch (error) {
+    console.error('댓글 수정 오류:', error);
+    Alert.alert('오류', '댓글 수정 중 문제가 발생했습니다.');
+  }
+};
+
+// 댓글 삭제
+const handleDeleteComment = async (commentId: number) => {
+  try {
+    const authToken = await AsyncStorage.getItem('authToken');
+    await axios.delete(`https://api.bopcon.site/api/comments/${commentId}`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    Alert.alert('성공', '댓글이 삭제되었습니다.');
+    fetchComments(selectedArticle.id); // 삭제 후 댓글 새로 불러오기
+  } catch (error) {
+    console.error('댓글 삭제 오류:', error);
+    Alert.alert('오류', '댓글 삭제 중 문제가 발생했습니다.');
+  }
+};
+
+
 
   const fetchComments = async (id: number) => {
     try {
@@ -266,25 +316,86 @@ const MyPageScreen = () => {
     <View style={styles.modalContainer}>
       {selectedArticle ? (
         <>
+          {/* 게시글 제목 */}
           <Text style={styles.modalTitle}>{selectedArticle.title}</Text>
           <Text style={styles.modalAuthor}>
             작성자: {selectedArticle.userName || "Unknown"}
           </Text>
           <Text style={styles.modalBody}>{selectedArticle.content}</Text>
+
+          {/* 댓글 리스트 */}
           <Text style={styles.commentTitle}>댓글</Text>
           {comments.length > 0 ? (
-            comments.map((comment: any, index: number) => (
-              <View key={index} style={styles.commentItem}>
-                <Text style={styles.commentNickname}>
-                  {comment.nickname || "익명"}:
-                </Text>
-                <Text style={styles.commentText}>{comment.content}</Text>
-              </View>
-            ))
+            <FlatList
+              data={comments}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={({ item }) => {
+                const isCurrentUser = item.nickname === user;
+                const isEditing = editingCommentId === item.id;
+
+                return (
+                  <View style={styles.commentItemContainer}>
+                    {/* 댓글 내용 또는 수정 필드 */}
+                    <View style={styles.commentContent}>
+                      <Text style={styles.commentNickname}>
+                        {item.nickname || "익명"}:
+                      </Text>
+                      {isEditing ? (
+                        <TextInput
+                          style={styles.editInput}
+                          value={editingContent}
+                          onChangeText={setEditingContent}
+                        />
+                      ) : (
+                        <Text style={styles.commentText}>{item.content}</Text>
+                      )}
+                    </View>
+
+                    {/* 수정 및 삭제 버튼 */}
+                    {isCurrentUser && (
+                      <View style={styles.commentActions}>
+                        {isEditing ? (
+                          <>
+                            <TouchableOpacity
+                              style={styles.actionButton}
+                              onPress={() => handleUpdateComment(item.id)}
+                            >
+                              <Text style={styles.saveButtonText}>저장</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.actionButton}
+                              onPress={() => setEditingCommentId(null)}
+                            >
+                              <Text style={styles.cancelButtonText}>취소</Text>
+                            </TouchableOpacity>
+                          </>
+                        ) : (
+                          <>
+                            <TouchableOpacity
+                              style={styles.actionButton}
+                              onPress={() => handleEditComment(item.id, item.content)}
+                            >
+                              <Text style={styles.editButtonText}>수정</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.actionButton}
+                              onPress={() => handleDeleteComment(item.id)}
+                            >
+                              <Text style={styles.deleteButtonText}>삭제</Text>
+                            </TouchableOpacity>
+                          </>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                );
+              }}
+            />
           ) : (
             <Text style={styles.noComments}>댓글이 없습니다.</Text>
           )}
 
+          {/* 댓글 입력 필드 */}
           <View style={styles.commentInputContainer}>
             <TextInput
               style={styles.commentInput}
@@ -304,21 +415,51 @@ const MyPageScreen = () => {
         <Text style={styles.emptyText}>데이터를 불러오는 중...</Text>
       )}
 
-      <TouchableOpacity
-        onPress={closeModal}
-        style={styles.closeButton}
-      >
+      {/* 닫기 버튼 */}
+      <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
         <Text style={styles.closeButtonText}>닫기</Text>
       </TouchableOpacity>
     </View>
   </View>
 </Modal>
+
     </View>
   );
 };
 
 
 const styles = StyleSheet.create({
+  commentItemContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+    backgroundColor: '#f9f9f9',
+    padding: 8,
+    borderRadius: 8,
+  },
+  commentContent: {
+    flex: 1,
+    marginRight: 8,
+  },
+  commentActions: {
+    flexDirection: 'row',
+  },
+  actionButton: {
+    marginLeft: 8,
+    padding: 4,
+  },
+  editButtonText: { color: '#999', fontSize: 12 },
+  deleteButtonText: { color: '#999', fontSize: 12 },
+  saveButtonText: { color: '#999', fontSize: 12 },
+  cancelButtonText: { color: '#999', fontSize: 12 },
+  editInput: {
+    borderBottomWidth: 1,
+    borderColor: '#ccc',
+    paddingHorizontal: 4,
+    fontSize: 14,
+  },
+  
   // 중앙 모달 오버레이
   modalOverlay: {
     flex: 1,
