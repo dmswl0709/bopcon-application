@@ -696,7 +696,6 @@ const handleEditPress = (article) => {
     }
   };
 
-  // 댓글 추가
   const handleAddComment = async () => {
     if (!newComment.trim()) {
       Alert.alert('알림', '댓글을 입력해주세요.');
@@ -704,17 +703,12 @@ const handleEditPress = (article) => {
     }
   
     try {
-      const token = await AsyncStorage.getItem('authToken');
-      if (!token) {
+      const authToken = await AsyncStorage.getItem('authToken');
+      if (!authToken) {
         Alert.alert('오류', '로그인이 필요합니다.');
         return;
       }
   
-      const decodedToken = jwtDecode(token);
-      const fullNickname = decodedToken.sub || '익명';
-      const nickname = fullNickname.includes('@')
-        ? fullNickname.split('@')[0] // 이메일일 경우 '@' 앞부분만 가져옴
-        : fullNickname;
   
       const requestData = {
         articleId: selectedArticle.id,
@@ -726,15 +720,16 @@ const handleEditPress = (article) => {
         requestData,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${authToken}`,
             'Content-Type': 'application/json',
           },
         }
       );
   
+      // 서버에서 받은 데이터에 닉네임을 추가
       const newCommentData = {
         ...response.data,
-        nickname: nickname, // 프론트에서 임시 닉네임 추가
+        nickname: user, // 현재 사용자 닉네임 반영
       };
   
       setComments((prevComments) => [...prevComments, newCommentData]);
@@ -745,6 +740,8 @@ const handleEditPress = (article) => {
       Alert.alert('오류', '댓글 작성 중 문제가 발생했습니다.');
     }
   };
+  
+  
 
   const handleDeleteComment = async (commentId: number) => {
     Alert.alert(
