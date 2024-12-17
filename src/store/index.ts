@@ -2,6 +2,8 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
 import favoritesReducer from "./slices/favoritesSlice"; // favorites 슬라이스 추가
 import { useDispatch } from "react-redux";
+import articlesReducer from '../store/slices/articleSlice'; // 새로 만든 articlesSlice
+
 
 
 // 스토어 구성
@@ -9,6 +11,8 @@ const store = configureStore({
   reducer: {
     auth: authReducer, // auth 슬라이스 등록
     favorites: favoritesReducer, // favorites 슬라이스 등록
+    articles: articlesReducer, // articles 슬라이스 추가
+
   },
 });
 

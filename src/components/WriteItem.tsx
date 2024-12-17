@@ -27,11 +27,11 @@ const WriteItem: React.FC<WriteItemProps> = ({
       <Text style={styles.content}>{content}</Text>
 
       <View style={styles.actionsContainer}>
-        <TouchableOpacity onPress={onEdit} style={styles.editButton}>
+        <TouchableOpacity onPress={onEdit} style={styles.buttonText}>
           <Text style={styles.actionButtonText}>수정</Text>
         </TouchableOpacity>
         <View style={styles.separator} />
-        <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+        <TouchableOpacity onPress={onDelete} style={styles.buttonText}>
           <Text style={styles.actionButtonText}>삭제</Text>
         </TouchableOpacity>
       </View>
@@ -71,36 +71,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   actionsContainer: {
-    backgroundColor: '#eeeeee',
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-    marginRight: 10,
-    marginLeft: 240,
+    flexDirection: 'row', 
+    justifyContent: 'flex-end', 
+    alignItems: 'center' 
   },
-  editButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-  },
-  deleteButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
+  buttonText: { 
+    color: '#999', 
+    fontSize: 14, 
+    marginHorizontal: 8 
   },
   actionButtonText: {
-    color: '#777',
+    color: '#999',
     fontSize: 14,
   },
-  separator: {
-    width: 1,
-    height: '60%',
-    backgroundColor: '#ccc',
-    marginHorizontal: 8,
-  },
+ 
 });
 
 export default WriteItem;

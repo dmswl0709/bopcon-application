@@ -497,9 +497,7 @@ const handleEditPress = (article) => {
                         >
                           <Text style={styles.buttonText}>수정</Text>
                         </TouchableOpacity>
-  
-                        <View style={styles.separator} />
-  
+    
                         {/* 삭제 버튼 */}
                         <TouchableOpacity
                           style={styles.deleteButton}
@@ -702,7 +700,106 @@ const handleEditPress = (article) => {
   };
 
   
-  
+
+// 댓글 컴포넌트 렌더링
+const renderComment = (comment) => {
+  const [editingComment, setEditingComment] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleEditComment = async (commentId) => {
+    if (!editingComment.trim()) {
+      Alert.alert('알림', '수정할 댓글을 입력해주세요.');
+      return;
+    }
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      await axios.patch(
+        `https://api.bopcon.site/api/comments/${commentId}`,
+        { content: editingComment.trim() },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setComments((prevComments) =>
+        prevComments.map((c) =>
+          c.id === commentId ? { ...c, content: editingComment.trim() } : c
+        )
+      );
+      setIsEditing(false);
+      Alert.alert('성공', '댓글이 수정되었습니다.');
+    } catch (error) {
+      console.error('댓글 수정 오류:', error);
+      Alert.alert('오류', '댓글 수정 중 문제가 발생했습니다.');
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      await axios.delete(`https://api.bopcon.site/api/comments/${commentId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setComments((prevComments) => prevComments.filter((c) => c.id !== commentId));
+      Alert.alert('성공', '댓글이 삭제되었습니다.');
+    } catch (error) {
+      console.error('댓글 삭제 오류:', error);
+      Alert.alert('오류', '댓글 삭제 중 문제가 발생했습니다.');
+    }
+  };
+
+  const renderEditMode = () => (
+    <>
+      <TextInput
+        value={editingComment}
+        onChangeText={setEditingComment}
+        placeholder="댓글을 수정해주세요."
+        style={styles.commentInput}
+      />
+      <Button title="저장" onPress={() => handleEditComment(comment.id)} />
+      <Button title="취소" onPress={() => setIsEditing(false)} />
+    </>
+  );
+
+  // 현재 로그인한 닉네임 가져오기
+  const [currentUserNickname, setCurrentUserNickname] = useState('');
+
+  useEffect(() => {
+    const fetchNickname = async () => {
+      const token = await AsyncStorage.getItem('authToken');
+      if (token) {
+        const decodedToken = jwtDecode(token);
+        const fullNickname = decodedToken.sub || '익명';
+        setCurrentUserNickname(
+          fullNickname.includes('@') ? fullNickname.split('@')[0] : fullNickname
+        );
+      }
+    };
+    fetchNickname();
+  }, []);
+
+  return (
+    <View style={styles.commentCard}>
+      <Text style={styles.commentContent}>{comment.content}</Text>
+      <Text style={styles.commentAuthor}>{comment.nickname}</Text>
+
+      {comment.nickname === currentUserNickname && (
+        <View style={styles.actions}>
+          {!isEditing ? (
+            <>
+              <TouchableOpacity onPress={() => setIsEditing(true)}>
+                <Text style={styles.actionText}>수정</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleDeleteComment(comment.id)}>
+                <Text style={styles.actionText}>삭제</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            renderEditMode()
+          )}
+        </View>
+      )}
+    </View>
+  );
+};
+
   
 
   const renderContent = () => {
@@ -1047,29 +1144,16 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   boardActions: {
-    backgroundColor: '#eeeeee',
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    flexDirection: 'row', 
+    justifyContent: 'flex-end', 
+    alignItems: 'center' 
     
   },
-  editButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  deleteButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  
   buttonText: {
-    color: '#777',
-    fontSize: 14,
+    color: '#999', 
+    fontSize: 14, 
+    marginHorizontal: 8 
   },
   separator: {
     width: 1,
@@ -1272,6 +1356,33 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     marginBottom: 12,
   },
+
+
+
+
+
+
+  commentCard: {
+    backgroundColor: '#f9f9f9',
+    padding: 12,
+    marginVertical: 8,
+    borderRadius: 8,
+  },
+  commentContent: {
+    fontSize: 14,
+    color: '#333',
+  },
+  commentAuthor: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 4,
+  },
+ 
+  actionText: {
+    color: '#007BFF',
+    marginHorizontal: 8,
+  },
+ 
 });
 
 export default ArtistScreen;

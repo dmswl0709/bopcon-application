@@ -3,8 +3,10 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { fetchFavorites } from "../slices/favoritesSlice";
+import {jwtDecode} from 'jwt-decode';
 
-const API_BASE_URL = 'http://localhost:8080/api/auth';
+
+const API_BASE_URL = 'https://api.bopcon.site/api/auth';
 
 // 회원가입 비동기 액션
 export const registerUser = createAsyncThunk(
@@ -25,6 +27,7 @@ export const registerUser = createAsyncThunk(
 );
 
 // 로그인 비동기 액션
+// 로그인 비동기 액션
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async (credentials, { rejectWithValue, dispatch }) => {
@@ -32,11 +35,21 @@ export const loginUser = createAsyncThunk(
       const response = await axios.post(`${API_BASE_URL}/login`, credentials);
       console.log("[로그인 응답 데이터]:", response.data);
 
-      const { id, accessToken, nickname } = response.data;
+      const { accessToken, nickname } = response.data;
 
-      if (!accessToken || !id || !nickname) {
+      if (!accessToken || !nickname) {
         throw new Error("로그인 응답 데이터가 유효하지 않습니다.");
       }
+
+      // 토큰 디코딩 후 id 추출
+      const decodedToken: any = jwtDecode(accessToken);
+      const id = decodedToken?.id;
+
+      if (!id) {
+        throw new Error("토큰에서 ID를 찾을 수 없습니다.");
+      }
+
+      console.log("[디코딩된 토큰 ID]:", id);
 
       console.log("[AsyncStorage에 저장 시작]:", { accessToken, id, nickname });
 
@@ -48,6 +61,7 @@ export const loginUser = createAsyncThunk(
 
       return { token: accessToken, user: nickname, id: id };
     } catch (error) {
+      console.error("[로그인 오류]:", error.message);
       return rejectWithValue("로그인 중 오류가 발생했습니다.");
     }
   }

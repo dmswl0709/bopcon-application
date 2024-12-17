@@ -1,6 +1,8 @@
+// store/articlesSlice.ts
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
+// Thunk: 사용자 게시글 가져오기
 export const fetchUserArticles = createAsyncThunk(
   'articles/fetchUserArticles',
   async (token: string, { rejectWithValue }) => {
@@ -15,9 +17,16 @@ export const fetchUserArticles = createAsyncThunk(
   }
 );
 
+// 초기 상태를 'articles'로 변경
+const initialState = { 
+  articles: [], 
+  loading: false, 
+  error: null 
+};
+
 const articlesSlice = createSlice({
   name: 'articles',
-  initialState: { data: [], loading: false, error: null },
+  initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
@@ -27,7 +36,7 @@ const articlesSlice = createSlice({
       })
       .addCase(fetchUserArticles.fulfilled, (state, action) => {
         state.loading = false;
-        state.data = action.payload;
+        state.articles = action.payload; // 'data'에서 'articles'로 변경
       })
       .addCase(fetchUserArticles.rejected, (state, action) => {
         state.loading = false;
