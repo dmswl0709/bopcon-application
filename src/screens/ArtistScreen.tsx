@@ -59,8 +59,14 @@ const ArtistScreen = ({ route, navigation }) => {
   const [isEditing, setIsEditing] = useState(false); // 수정 상태
   const [selectedArticle, setSelectedArticle] = useState(null); // 선택된 게시글
 
+  const [isEditingComment, setIsEditingComment] = useState<number | null>(null); // 댓글 수정 상태
+const [editingContent, setEditingContent] = useState<string>(''); // 댓글 수정 내용
+
+const [isEditingCommentId, setIsEditingCommentId] = useState<number | null>(null); // 현재 수정 중인 댓글 ID
 
 
+
+  
   const WriteItem: React.FC<WriteItemProps> = ({ title, content, date, nickname, artistName}) => {
     return (
       <View style={styles.container}>
@@ -564,13 +570,67 @@ const handleEditPress = (article) => {
                 </>
               );
             }
-            // 댓글 렌더링
+
+            // 현재 사용자인지 확인
+            const isCurrentUser = item.nickname === user;
+
+            // 댓글 수정 UI 상태
+            const isEditingComment = isEditingCommentId === item.id;
+
             return (
               <View style={styles.commentItemContainer}>
-                <Text style={styles.commentUser}>
-                  {item.nickname || "익명"}:
-                </Text>
-                <Text style={styles.commentItem}>{item.content}</Text>
+                {/* 댓글 내용 */}
+                <View style={styles.commentContent}>
+                  <Text style={styles.commentUser}>{item.nickname || "익명"}:</Text>
+
+                  {isEditingComment ? (
+                    <TextInput
+                      style={styles.editInput}
+                      value={editingContent}
+                      onChangeText={setEditingContent}
+                      multiline
+                    />
+                  ) : (
+                    <Text style={styles.commentText}>{item.content}</Text>
+                  )}
+                </View>
+
+                {/* 수정 및 삭제 버튼 */}
+                {isCurrentUser && (
+                  <View style={styles.commentActions}>
+                    {isEditingComment ? (
+                      <>
+                        <TouchableOpacity
+                          style={styles.actionButton}
+                          onPress={() => submitEditComment(item.id)}
+                        >
+                          <Text style={styles.saveButtonText}>저장</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.actionButton}
+                          onPress={() => setIsEditingCommentId(null)}
+                        >
+                          <Text style={styles.cancelButtonText}>취소</Text>
+                        </TouchableOpacity>
+                      </>
+                    ) : (
+                      <>
+                        <TouchableOpacity
+                          style={styles.actionButton}
+                          onPress={() => handleEditComment(item.id, item.content)}
+                        >
+                          <Text style={styles.editButtonText}>수정</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.actionButton}
+                          onPress={() => handleDeleteComment(item.id)}
+                        >
+                          <Text style={styles.deleteButtonText}>삭제</Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
+                  </View>
+                )}
               </View>
             );
           }}
@@ -581,6 +641,7 @@ const handleEditPress = (article) => {
                 placeholder="댓글 작성..."
                 value={newComment}
                 onChangeText={setNewComment}
+                multiline
               />
               <TouchableOpacity
                 style={styles.commentButton}
@@ -592,7 +653,6 @@ const handleEditPress = (article) => {
           }
         />
       ) : (
-        // 데이터 로딩 또는 예외 처리
         <Text style={styles.emptyText}>데이터를 불러오는 중...</Text>
       )}
 
@@ -609,6 +669,8 @@ const handleEditPress = (article) => {
     </View>
   </View>
 </Modal>
+
+
 
           </>
         )}
@@ -684,6 +746,86 @@ const handleEditPress = (article) => {
     }
   };
 
+  const handleDeleteComment = async (commentId: number) => {
+    Alert.alert(
+      '댓글 삭제 확인', // 제목
+      '정말 이 댓글을 삭제하시겠습니까?', // 메시지
+      [
+        {
+          text: '취소',
+          style: 'cancel', // 취소 버튼 스타일
+        },
+        {
+          text: '삭제',
+          style: 'destructive', // 삭제 버튼 스타일
+          onPress: async () => {
+            try {
+              const token = await AsyncStorage.getItem('authToken'); // 토큰 가져오기
+              if (!token) {
+                Alert.alert('인증 오류', '로그인이 필요합니다.');
+                return;
+              }
+  
+              // 삭제 요청 수행
+              await axios.delete(`https://api.bopcon.site/api/comments/${commentId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+  
+              Alert.alert('성공', '댓글이 삭제되었습니다.');
+              fetchComments(selectedArticle.id); // 댓글 새로 불러오기
+            } catch (error: any) {
+              console.error('댓글 삭제 오류:', error.response || error.message);
+              if (error.response?.status === 403) {
+                Alert.alert('권한 오류', '이 댓글을 삭제할 권한이 없습니다.');
+              } else {
+                Alert.alert('오류', '댓글 삭제 중 문제가 발생했습니다.');
+              }
+            }
+          },
+        },
+      ],
+      { cancelable: true } // 바깥 클릭 시 닫기 가능
+    );
+  };
+  
+  
+
+  // 수정 모드 진입 함수
+  const handleEditComment = (commentId: number, content: string) => {
+    setIsEditingCommentId(commentId); // 수정 중인 댓글 ID 설정
+    setEditingContent(content);       // 기존 내용을 입력창에 설정
+  };
+  
+
+// 수정 실행 함수
+const submitEditComment = async (commentId: number) => {
+  if (!editingContent.trim()) {
+    Alert.alert('알림', '수정할 내용을 입력해주세요.');
+    return;
+  }
+
+  try {
+    const token = await AsyncStorage.getItem('authToken');
+    await axios.put(
+      `https://api.bopcon.site/api/comments/${commentId}`,
+      { content: editingContent.trim() },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    Alert.alert('성공', '댓글이 수정되었습니다.');
+    setIsEditingCommentId(null); // 수정 상태 초기화
+    fetchComments(selectedArticle.id); // 댓글 새로 불러오기
+  } catch (error) {
+    console.error('댓글 수정 오류:', error);
+    Alert.alert('오류', '댓글 수정 중 문제가 발생했습니다.');
+  }
+};
+
+
+  
+
+
+
 
   // 게시글 클릭 시 모달 열기
   const handleArticlePress = (article) => {
@@ -701,104 +843,6 @@ const handleEditPress = (article) => {
 
   
 
-// 댓글 컴포넌트 렌더링
-const renderComment = (comment) => {
-  const [editingComment, setEditingComment] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-
-  const handleEditComment = async (commentId) => {
-    if (!editingComment.trim()) {
-      Alert.alert('알림', '수정할 댓글을 입력해주세요.');
-      return;
-    }
-    try {
-      const token = await AsyncStorage.getItem('authToken');
-      await axios.patch(
-        `https://api.bopcon.site/api/comments/${commentId}`,
-        { content: editingComment.trim() },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setComments((prevComments) =>
-        prevComments.map((c) =>
-          c.id === commentId ? { ...c, content: editingComment.trim() } : c
-        )
-      );
-      setIsEditing(false);
-      Alert.alert('성공', '댓글이 수정되었습니다.');
-    } catch (error) {
-      console.error('댓글 수정 오류:', error);
-      Alert.alert('오류', '댓글 수정 중 문제가 발생했습니다.');
-    }
-  };
-
-  const handleDeleteComment = async (commentId) => {
-    try {
-      const token = await AsyncStorage.getItem('authToken');
-      await axios.delete(`https://api.bopcon.site/api/comments/${commentId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setComments((prevComments) => prevComments.filter((c) => c.id !== commentId));
-      Alert.alert('성공', '댓글이 삭제되었습니다.');
-    } catch (error) {
-      console.error('댓글 삭제 오류:', error);
-      Alert.alert('오류', '댓글 삭제 중 문제가 발생했습니다.');
-    }
-  };
-
-  const renderEditMode = () => (
-    <>
-      <TextInput
-        value={editingComment}
-        onChangeText={setEditingComment}
-        placeholder="댓글을 수정해주세요."
-        style={styles.commentInput}
-      />
-      <Button title="저장" onPress={() => handleEditComment(comment.id)} />
-      <Button title="취소" onPress={() => setIsEditing(false)} />
-    </>
-  );
-
-  // 현재 로그인한 닉네임 가져오기
-  const [currentUserNickname, setCurrentUserNickname] = useState('');
-
-  useEffect(() => {
-    const fetchNickname = async () => {
-      const token = await AsyncStorage.getItem('authToken');
-      if (token) {
-        const decodedToken = jwtDecode(token);
-        const fullNickname = decodedToken.sub || '익명';
-        setCurrentUserNickname(
-          fullNickname.includes('@') ? fullNickname.split('@')[0] : fullNickname
-        );
-      }
-    };
-    fetchNickname();
-  }, []);
-
-  return (
-    <View style={styles.commentCard}>
-      <Text style={styles.commentContent}>{comment.content}</Text>
-      <Text style={styles.commentAuthor}>{comment.nickname}</Text>
-
-      {comment.nickname === currentUserNickname && (
-        <View style={styles.actions}>
-          {!isEditing ? (
-            <>
-              <TouchableOpacity onPress={() => setIsEditing(true)}>
-                <Text style={styles.actionText}>수정</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleDeleteComment(comment.id)}>
-                <Text style={styles.actionText}>삭제</Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            renderEditMode()
-          )}
-        </View>
-      )}
-    </View>
-  );
-};
 
   
 
@@ -1032,89 +1076,159 @@ const renderComment = (comment) => {
 
 const styles = StyleSheet.create({
 
+  editInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 8,
+    fontSize: 14,
+    marginVertical: 4,
+    minHeight: 40,
+    color: '#333',
+  },
+  
+  commentItemContainer: {
+    position: 'relative', // 버튼 위치 고정을 위한 기준
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    padding: 12,
+    marginBottom: 12,
+  },
+  commentContent: {
+    paddingRight: 70, // 버튼 영역만큼 오른쪽 여백 추가
+  },
+  commentUser: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 4,
+  },
+  commentText: {
+    fontSize: 14,
+    color: '#555',
+    flexWrap: 'wrap', // 줄바꿈
+  },
+  commentActions: {
+    position: 'absolute', // 버튼 위치를 절대 위치로 설정
+    top: 12,
+    right: 12,
+    flexDirection: 'row',
+  },
+  actionButton: {
+    marginLeft: 8,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+  },
+  editButtonText: {
+    color: '#999',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  deleteButtonText: {
+    color: '#999',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+ 
+  commentItem: {
+    fontSize: 14,
+    color: '#555',
+    flexWrap: 'wrap', // 내용이 길어질 경우 줄바꿈
+  },
+ 
+  
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',   // 중앙 정렬
-    alignItems: 'center',       // 중앙 정렬
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContent: {
-    width: '85%',               // 적당한 너비
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    maxHeight: '80%',           // 필요 시 스크롤에 대응
+    width: '90%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    maxHeight: '90%',
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 10,
+    color: '#333',
   },
   modalAuthor: {
     fontSize: 14,
-    color: '#777',
-    marginBottom: 8,
+    color: '#666',
+    marginBottom: 10,
   },
   modalBody: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 16,
+    fontSize: 16,
+    color: '#444',
+    marginBottom: 20,
   },
   commentTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#222',
   },
-  commentItemContainer: {
-    marginBottom: 8,
+  
+  editButton: {
+    fontSize: 12,
+    color: '#999',
+    marginRight: 5,
+    fontWeight: 'bold',
   },
-  commentUser: {
-    fontWeight: '600',
-  },
-  commentItem: {
-    color: '#333',
+  deleteButton: {
+    fontSize: 12,
+    color: '#999',
+    fontWeight: 'bold',
   },
   commentInputContainer: {
     flexDirection: 'row',
-    marginTop: 16,
     alignItems: 'center',
+    marginTop: 10,
   },
   commentInput: {
     flex: 1,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
-    paddingHorizontal: 8,
-    height: 40,
-    marginRight: 8,
+    padding: 8,
+    fontSize: 14,
+    backgroundColor: '#FFF',
   },
   commentButton: {
+    marginLeft: 10,
     backgroundColor: '#000',
-    borderRadius: 8,
     paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 15,
+    borderRadius: 6,
   },
   commentButtonText: {
-    color: '#fff',
-    fontSize: 14,
-  },
-  closeButton: {
-    marginTop: 16,
-    alignSelf: 'flex-end',
-    backgroundColor: '#999',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  closeButtonText: {
-    color: '#fff',
-    fontSize: 14,
+    color: 'white',
+    fontWeight: 'bold',
   },
   emptyText: {
     textAlign: 'center',
-    color: '#555',
-    marginVertical: 20,
+    color: '#888',
+    marginTop: 20,
   },
+  closeButton: {
+    backgroundColor: '#ddd',
+    padding: 10,
+    borderRadius: 6,
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: '#444',
+    fontWeight: 'bold',
+  },
+  
   container: {
     flex: 1,
     backgroundColor: "#f9f9f9",
