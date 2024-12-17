@@ -16,6 +16,7 @@ import ConcertListComponent from "../components/ConcertListComponent";
 import AppNavigatorParamList from "../navigation/AppNavigatorParamList";
 import { fetchConcerts } from "../apis/concerts";
 import Svg, { Path } from "react-native-svg";
+import SliderContents from "../components/SliderContents";
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<AppNavigatorParamList>>();
@@ -86,35 +87,8 @@ const HomeScreen: React.FC = () => {
       }
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Featured Section */}
-        {concerts.length > 0 && (
-          <TouchableOpacity onPress={() => handleConcertPress(concerts[0])}>
-            <Image
-              source={
-                concerts[0].posterUrl
-                  ? { uri: concerts[0].posterUrl }
-                  : require("../assets/images/sampleimg1.jpg")
-              }
-              style={{
-                width: Dimensions.get("window").width,
-                height: Dimensions.get("window").width * 0.6,
-                resizeMode: "cover",
-              }}
-            />
-            <Text
-              style={{
-                position: "absolute",
-                fontWeight: "bold",
-                fontSize: 24,
-                color: "white",
-                paddingHorizontal: 16,
-                paddingTop: Dimensions.get("window").height * 0.2,
-              }}
-            >
-              {concerts[0].title}
-            </Text>
-          </TouchableOpacity>
-        )}
+        {/* SliderContents 추가 */}
+        <SliderContents />
 
         {/* NEW Section */}
         <View style={styles.sectionContainer}>

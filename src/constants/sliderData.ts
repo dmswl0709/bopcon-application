@@ -1,21 +1,23 @@
-// src/constants/sliderData.ts
-
-import sampleImg1 from '@/assets/images/sampleimg1.jpg';
-import sampleImg2 from '@/assets/images/sampleimg2.png';
-import sampleImg3 from '@/assets/images/sampleimg3.png';
-
 const sliderData = [
   {
-    image: sampleImg1,
-    title: '킹누 내한',
+    title: "벤슨 분 첫 단독 내한공연",
+    image: require("../assets/images/BensonBoone_concert.gif"),
+    concertId: "33", // 해당 콘서트 ID 추가
   },
   {
-    image: sampleImg2,
-    title: '카네코 아야노 내한',
+    title: "콜드플레이 내한공연",
+    image: require("../assets/images/coldplay_concert.gif"),
+    concertId: "38",
   },
   {
-    image: sampleImg3,
-    title: 'Jamie xx 내한',
+    title: "오아시스 내한공연",
+    image: require("../assets/images/oasis_concert.jpg"),
+    concertId: "2",
+  },
+  {
+    title: "요네즈 켄시 내한공연",
+    image: require("../assets/images/yonezukenshi_concert.gif"),
+    concertId: "30",
   },
 ];
 
