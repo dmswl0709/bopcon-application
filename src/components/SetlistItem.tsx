@@ -110,9 +110,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   lyricsText: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#333",
-    lineHeight: 20,
+    lineHeight: 13,
   },
 });
 
