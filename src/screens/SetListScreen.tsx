@@ -123,7 +123,7 @@ const SetListScreen: React.FC<SetListScreenProps> = ({ route, navigation }) => {
       <View style={styles.infoContainer}>
         <View style={styles.concertInfoRow}>
         <Text style={styles.venueName}>{concertInfo?.venueName || venueName || "Venue Name"}</Text>
-          <FavoriteButton />
+          
         </View>
         <Text style={styles.location}>{concertInfo?.cityName || cityName || "City Name"}</Text>
         <Text style={styles.date}>{concertInfo?.date}</Text>

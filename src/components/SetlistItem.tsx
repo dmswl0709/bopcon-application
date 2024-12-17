@@ -1,20 +1,28 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, ScrollView } from "react-native";
+import YoutubePlayer from "react-native-youtube-iframe";
 
 interface SetlistItemProps {
   index: number;
   songTitle: string;
-  ytLink?: string | null;
+  ytLink?: string | null; // YouTube 링크 추가
   fetchLyrics: () => Promise<string>; // 가사를 불러오는 함수
-  artistId: string;
 }
 
-const SetlistItem: React.FC<SetlistItemProps> = ({ index, songTitle, fetchLyrics }) => {
-  const [isExpanded, setIsExpanded] = useState(false); // 토글 상태
-  const [lyrics, setLyrics] = useState<string | null>(null); // 가사 데이터
-  const [loading, setLoading] = useState(false); // 로딩 상태
+const SetlistItem: React.FC<SetlistItemProps> = ({ index, songTitle, ytLink, fetchLyrics }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [lyrics, setLyrics] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // 토글 및 가사 불러오기
+// 유튜브 링크에서 비디오 ID 추출 함수
+const extractYouTubeId = (url: string): string | null => {
+  if (!url) return null;
+  const regExp =
+    /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/;
+  const match = url.match(regExp);
+  return match ? match[1] : null;
+};
+
   const handleToggle = async () => {
     setIsExpanded((prev) => !prev);
     if (!isExpanded && !lyrics) {
@@ -31,14 +39,14 @@ const SetlistItem: React.FC<SetlistItemProps> = ({ index, songTitle, fetchLyrics
     }
   };
 
+  const videoId = ytLink ? extractYouTubeId(ytLink) : null;
+
   return (
     <View style={styles.itemContainer}>
-      {/* 상단 행 */}
       <View style={styles.container}>
         <Text style={styles.index}>{index < 10 ? `0${index}` : index}</Text>
         <Text style={styles.songName}>{songTitle}</Text>
 
-        {/* 아이콘 */}
         <TouchableOpacity onPress={handleToggle} style={styles.iconContainer}>
           <Image
             source={require("../assets/icons/down.png")}
@@ -47,7 +55,18 @@ const SetlistItem: React.FC<SetlistItemProps> = ({ index, songTitle, fetchLyrics
         </TouchableOpacity>
       </View>
 
-      {/* 가사 표시 */}
+      {isExpanded && ytLink && (
+        <View style={styles.youtubeContainer}>
+          <YoutubePlayer
+            height={200}
+            play={false}
+            videoId={videoId} // 비디오 ID 추출 후 전달
+            onError={(e) => console.error("YouTube Player Error:", e)}
+          />
+        </View>
+      )}
+
+      {/* Lyrics */}
       {isExpanded && (
         <View style={styles.lyricsContainer}>
           {loading ? (
@@ -97,6 +116,11 @@ const styles = StyleSheet.create({
     width: 15,
     height: 15,
     resizeMode: "contain",
+  },
+  youtubeContainer: {
+    marginLeft: 40,
+    marginRight: 16,
+    marginBottom: 8,
   },
   lyricsContainer: {
     backgroundColor: "#F9F9F9",

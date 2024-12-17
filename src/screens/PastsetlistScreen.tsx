@@ -111,7 +111,7 @@ const PastSetlistScreen: React.FC = () => {
             <Text style={styles.artistName}>{artist.name}</Text>
             {artist.krName && <Text style={styles.artistKrName}>{artist.krName}</Text>}
           </View>
-          <FavoriteButton style={styles.favoriteButton} />
+        
         </View>
       </View>
 
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   artistTextContainer: { flex: 1 },
   artistName: { fontSize: 20, fontWeight: "bold" },
   artistKrName: { fontSize: 16, color: "gray" },
-  favoriteButton: { marginRight: 16 },
+ 
   sectionTitle: { fontSize: 18, fontWeight: "bold", marginHorizontal: 16, marginBottom: 8 },
   divider: { height: 2, backgroundColor: "black", marginHorizontal: 16, marginBottom: 16 },
   concertList: { paddingHorizontal: 16 },
