@@ -31,7 +31,7 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({ id, type, artistId, new
         setIsFavorite(response.favorite);
       }
     } catch (error) {
-      console.error("Error fetching favorite status:", error.message);
+      // console.error("Error fetching favorite status:", error.message);
     }
   };
 

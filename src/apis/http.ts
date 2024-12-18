@@ -47,7 +47,7 @@ httpClient.interceptors.response.use(
     }
 
     // 추가 에러 처리 가능
-    console.error('Response Error:', error);
+    // console.error('Response Error:', error);
     return Promise.reject(error);
   }
 );
