@@ -3,7 +3,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { fetchFavorites } from "../slices/favoritesSlice";
-import {jwtDecode} from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
 
 const API_BASE_URL = 'https://api.bopcon.site/api/auth';
@@ -66,13 +66,12 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-// 로그아웃 비동기 액션
 export const logoutUser = createAsyncThunk('auth/logoutUser', async (_, { dispatch }) => {
   try {
     await AsyncStorage.removeItem('authToken');
-    await AsyncStorage.removeItem('authId');
-    await AsyncStorage.removeItem('authUser');
-    dispatch(logout());
+    await AsyncStorage.removeItem('userNickname');
+    await AsyncStorage.removeItem('userId'); // userId도 삭제 확인
+    dispatch(logout()); // Redux 상태 초기화
   } catch (error: any) {
     console.error('[로그아웃 중 오류 발생]:', error.message);
   }

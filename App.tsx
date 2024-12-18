@@ -4,48 +4,34 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import store from './src/store'; // Redux store import
 import AppNavigator from './src/navigation/AppNavigator'; // 앱의 메인 네비게이션
 import { useDispatch } from 'react-redux';
-import { setAuthState, logout } from './src/store/slices/authSlice'; // 액션 추가
+import { logout } from './src/store/slices/authSlice'; // 로그아웃 액션 추가
 
+// AppInitializer 컴포넌트
 const AppInitializer = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const initializeAuth = async () => {
+    const initializeApp = async () => {
       try {
-        // AsyncStorage에서 토큰과 사용자 정보를 가져옵니다.
-        const token = await AsyncStorage.getItem('authToken');
-        const nickname = await AsyncStorage.getItem('userNickname');
+        // 저장된 키 목록을 가져온 뒤 개별적으로 삭제
+        const keys = await AsyncStorage.getAllKeys();
+        await AsyncStorage.multiRemove(keys);
 
-        if (token && nickname) {
-          // 유효성 검증을 위해 토큰을 서버에 확인하는 로직 추가 가능
-          // 예를 들어:
-          // const isValid = await validateToken(token); // 토큰 검증 API 호출
-          // if (isValid) {
-          //   dispatch(setAuthState({ token, nickname }));
-          // } else {
-          //   await AsyncStorage.clear();
-          //   dispatch(logout());
-          // }
-
-          // 현재는 토큰이 존재한다고 가정
-          dispatch(setAuthState({ token, nickname }));
-        } else {
-          console.log('No token found. User is not logged in.');
-        }
+        console.log('[앱 초기화] AsyncStorage 초기화 완료');
+        dispatch(logout()); // Redux 상태 초기화
+        console.log('[Redux 상태 초기화 완료]');
       } catch (error) {
-        console.error('Error loading auth state from AsyncStorage:', error);
-        // 필요하면 AsyncStorage를 초기화하거나 Redux 상태를 로그아웃 상태로 설정
-        await AsyncStorage.clear();
-        dispatch(logout());
+        console.error('[앱 초기화 오류 발생]:', error.message);
       }
     };
 
-    initializeAuth(); // 초기화 함수 실행
+    initializeApp(); // 초기화 함수 실행
   }, [dispatch]);
 
   return <AppNavigator />;
 };
 
+// 최상위 App 컴포넌트
 const App = () => (
   <Provider store={store}>
     <AppInitializer />
