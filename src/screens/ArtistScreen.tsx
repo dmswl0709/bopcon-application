@@ -1066,6 +1066,7 @@ const submitEditComment = async (commentId: number) => {
         data={[]} // 콘텐츠는 렌더링하지 않음
         renderItem={null}
         ListFooterComponent={renderContent()}
+        showsVerticalScrollIndicator={false} 
       />
     </SafeAreaView>
   );

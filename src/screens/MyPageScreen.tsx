@@ -303,6 +303,7 @@ const handleDeleteComment = async (commentId: number) => {
         )}
         ListFooterComponent={renderTabContent}
         keyExtractor={(item) => item.key}
+        showsVerticalScrollIndicator={false} 
       />
 
       {/* 바텀 시트 형태의 모달 */}
